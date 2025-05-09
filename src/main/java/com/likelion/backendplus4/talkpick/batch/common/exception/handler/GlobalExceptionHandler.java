@@ -4,6 +4,7 @@ import com.likelion.backendplus4.talkpick.batch.common.exception.CustomException
 import com.likelion.backendplus4.talkpick.batch.common.exception.error.ErrorCode;
 import com.likelion.backendplus4.talkpick.batch.common.response.ApiResponse;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
@@ -18,10 +19,10 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  * @modified 2025-05-03
  * @since 2025-04-16
  */
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // 에러 코드 상수 정의 (정수형 코드 사용)
     private static final int ILLEGAL_ARGUMENT_CODE = 300000;
     private static final int METHOD_ARGUMENT_NOT_VALID_CODE = 300001;
     private static final int BIND_EXCEPTION_CODE = 300002;
@@ -138,7 +139,7 @@ public class GlobalExceptionHandler {
      * @param errorCode 에러 코드 (정수형)
      * @param message   에러 메시지
      * @param ex        발생한 예외 객체
-     * @return ResponseEntity<ApiResponse < Void>> 형태의 에러 응답
+     * @return ResponseEntity<ApiResponse <Void>> 형태의 에러 응답
      * @author 박찬병
      * @modified 2025-05-03 박찬병
      * @since 2025-04-18
@@ -149,7 +150,7 @@ public class GlobalExceptionHandler {
             String message,
             Throwable ex
     ) {
-        //TODO log(LogLevel.ERROR, ex.getClass().getSimpleName() + ": " + ex.getMessage(), ex);
+        log.error("{}: {}", ex.getClass().getSimpleName(), ex.getMessage(), ex);
         return ApiResponse.error(status, String.valueOf(errorCode), message);
     }
 

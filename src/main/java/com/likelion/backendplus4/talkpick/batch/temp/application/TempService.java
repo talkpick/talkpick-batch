@@ -2,16 +2,18 @@ package com.likelion.backendplus4.talkpick.batch.temp.application;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.likelion.backendplus4.talkpick.batch.temp.application.in.TempUseCase;
 import com.likelion.backendplus4.talkpick.batch.temp.exception.TempException;
 import com.likelion.backendplus4.talkpick.batch.temp.exception.error.TempErrorCode;
 import org.springframework.stereotype.Service;
 
 @Service
-public class TempService {
+public class TempService implements TempUseCase {
 
     /**
      * 예외 처리 예시 로직입니다.
      */
+    @Override
     public String failCase1() {
         boolean somethingWrong = true;
         if (somethingWrong) {
@@ -24,7 +26,8 @@ public class TempService {
      * 예외 처리 예시 로직입니다.
      * e를 담아서 반환하는 경우 입니다.
      */
-    public String failCase2(ArrayNode arrayNode) {
+    @Override
+    public String failCase2(String arrayNode) {
         try {
             throw new JsonProcessingException("강제 예외 발생") { };
         } catch (JsonProcessingException e) {

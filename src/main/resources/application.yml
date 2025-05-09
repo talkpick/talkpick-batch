@@ -17,6 +17,10 @@ spring:
       hibernate:
         format_sql: true
     open-in-view: false
+  ai:
+    openai:
+      api-key: ${OPEN_API_KEY}
+
 logging:
   pattern:
     file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%level] [%thread] [%logger{36}] - %msg%n"

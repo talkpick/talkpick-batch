@@ -24,8 +24,8 @@ import org.springframework.http.HttpStatus;
  * 002: 두 번째 오류
  * 003: 세 번째 오류, 등등
  *
- * @modified 2025-04-18
- * @since 2025-04-16
+ * @modified 2025-05-09
+ * @since 2025-05-09
  */
 public interface ErrorCode {
 
@@ -34,8 +34,8 @@ public interface ErrorCode {
      *
      * @return HTTP 상태
      * @author 정안식
-     * @modified 2025-04-18 박찬병
-     * @since 2025-04-16
+     * @modified 2025-05-09 박찬병
+     * @since 2025-05-09
      */
     HttpStatus httpStatus();
 
@@ -44,8 +44,8 @@ public interface ErrorCode {
      *
      * @return 에러 코드 번호
      * @author 정안식
-     * @modified 2025-04-18 박찬병
-     * @since 2025-04-16
+     * @modified 2025-05-09 박찬병
+     * @since 2025-05-09
      */
     int codeNumber();
 
@@ -54,8 +54,8 @@ public interface ErrorCode {
      *
      * @return 에러 메시지
      * @author 정안식
-     * @modified 2025-04-18 박찬병
-     * @since 2025-04-16
+     * @modified 2025-05-09 박찬병
+     * @since 2025-05-09
      */
     String message();
 }

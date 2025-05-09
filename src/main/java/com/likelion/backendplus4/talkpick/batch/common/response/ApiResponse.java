@@ -12,7 +12,8 @@ import org.springframework.http.ResponseEntity;
 /**
  * API 응답 포맷 클래스 정상 및 에러 응답을 통합된 형식으로 제공한다.
  *
- * @since 2025-04-16
+ * @since 2025-05-09
+ * @modified 2025-05-09
  */
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)

@@ -21,3 +21,9 @@ logging:
   pattern:
     file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%level] [%thread] [%logger{36}] - %msg%n"
     console: "%cyan(%d{yyyy-MM-dd HH:mm:ss.SSS}) %highlight(%-5level) %yellow([%thread]) %green(%logger{36}) - %msg%n"
+
+#p6spy
+decorator:
+  datasource:
+    p6spy:
+      enable-logging: true

@@ -157,29 +157,6 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * NoResourceFoundException 처리 메서드
-     *
-     * 클라이언트가 정적 리소스(예: CSS, JS, 이미지)를 요청했으나
-     * 해당 리소스가 존재하지 않을 때 발생하는
-     * NoResourceFoundException을 잡아 404 Not Found 응답을 반환합니다.
-     *
-     * @param ex 요청한 정적 리소스를 찾지 못했음을 나타내는 예외
-     * @return HTTP 404 상태와 표준화된 에러 페이로드를 담은 ResponseEntity
-     * @author 박찬병
-     * @modified 2025-05-09 박찬병
-     * @since 2025-05-09
-     */
-    @ExceptionHandler(NoResourceFoundException.class)
-    public ResponseEntity<ApiResponse<Void>> handleNoResource(NoResourceFoundException ex) {
-        return buildErrorResponse(
-                HttpStatus.NOT_FOUND,
-                NOT_FOUND_CODE,
-                "요청하신 리소스를 찾을 수 없습니다.",
-                ex
-        );
-    }
-
-    /**
      * 공통 에러 응답 생성 메서드
      * 예외 로깅 후 ApiResponse.error를 통해 표준화된 에러 응답을 생성한다.
      *

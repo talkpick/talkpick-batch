@@ -115,26 +115,6 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 기타 모든 예외 처리
-     * 정의되지 않은 예외는 내부 서버 오류로 응답
-     *
-     * @param ex 예외 객체
-     * @return 에러 응답
-     * @author 정안식
-     * @modified 2025-05-09 박찬병
-     * @since 2025-05-09
-     */
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponse<Void>> handleAllExceptions(Exception ex) {
-        return buildErrorResponse(
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                INTERNAL_SERVER_ERROR_CODE,
-                "알 수 없는 오류가 발생했습니다.",
-                ex
-        );
-    }
-
-    /**
      * NoHandlerFoundException 처리 메서드
      *
      * 클라이언트가 존재하지 않는 URL 경로로 요청했을 때 발생하는
@@ -152,6 +132,27 @@ public class GlobalExceptionHandler {
                 HttpStatus.NOT_FOUND,
                 NOT_FOUND_CODE,
                 "요청하신 경로를 찾을 수 없습니다.",
+                ex
+        );
+    }
+
+
+    /**
+     * 기타 모든 예외 처리
+     * 정의되지 않은 예외는 내부 서버 오류로 응답
+     *
+     * @param ex 예외 객체
+     * @return 에러 응답
+     * @author 정안식
+     * @modified 2025-05-09 박찬병
+     * @since 2025-05-09
+     */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponse<Void>> handleAllExceptions(Exception ex) {
+        return buildErrorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                INTERNAL_SERVER_ERROR_CODE,
+                "알 수 없는 오류가 발생했습니다.",
                 ex
         );
     }

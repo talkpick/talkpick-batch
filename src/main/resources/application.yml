@@ -1,5 +1,8 @@
 server:
   port: ${WEB_PORT:8082}
+  error:
+    whitelabel:
+          enabled: false
 
 spring:
   application:
@@ -17,9 +20,6 @@ spring:
       hibernate:
         format_sql: true
     open-in-view: false
-  ai:
-    openai:
-      api-key: ${OPEN_API_KEY}
 
 logging:
   pattern:

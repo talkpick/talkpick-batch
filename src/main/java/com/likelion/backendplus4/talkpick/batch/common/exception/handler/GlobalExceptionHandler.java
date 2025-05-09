@@ -11,6 +11,8 @@ import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.reactive.resource.NoResourceFoundException;
+import org.springframework.web.servlet.NoHandlerFoundException;
 
 /**
  * 전역 예외 처리 클래스
@@ -23,7 +25,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    private static final int ILLEGAL_ARGUMENT_CODE = 300000;
+    private static final int ILLEGAL_ARGUMENT_CODE = 14001;
+    private static final int NOT_FOUND_CODE = 140002;
     private static final int METHOD_ARGUMENT_NOT_VALID_CODE = 300001;
     private static final int BIND_EXCEPTION_CODE = 300002;
     private static final int INTERNAL_SERVER_ERROR_CODE = 500000;
@@ -126,7 +129,52 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 INTERNAL_SERVER_ERROR_CODE,
-                "내부 서버 오류",
+                "알 수 없는 오류가 발생했습니다.",
+                ex
+        );
+    }
+
+    /**
+     * NoHandlerFoundException 처리 메서드
+     *
+     * 클라이언트가 존재하지 않는 URL 경로로 요청했을 때 발생하는
+     * NoHandlerFoundException을 잡아 404 Not Found 응답을 반환합니다.
+     *
+     * @param ex 요청한 경로에 매핑된 핸들러가 없음을 나타내는 예외
+     * @return HTTP 404 상태와 표준화된 에러 페이로드를 담은 ResponseEntity
+     * @author 박찬병
+     * @modified 2025-05-09 박찬병
+     * @since 2025-05-09
+     */
+    @ExceptionHandler(NoHandlerFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleNoHandler(NoHandlerFoundException ex) {
+        return buildErrorResponse(
+                HttpStatus.NOT_FOUND,
+                NOT_FOUND_CODE,
+                "요청하신 경로를 찾을 수 없습니다.",
+                ex
+        );
+    }
+
+    /**
+     * NoResourceFoundException 처리 메서드
+     *
+     * 클라이언트가 정적 리소스(예: CSS, JS, 이미지)를 요청했으나
+     * 해당 리소스가 존재하지 않을 때 발생하는
+     * NoResourceFoundException을 잡아 404 Not Found 응답을 반환합니다.
+     *
+     * @param ex 요청한 정적 리소스를 찾지 못했음을 나타내는 예외
+     * @return HTTP 404 상태와 표준화된 에러 페이로드를 담은 ResponseEntity
+     * @author 박찬병
+     * @modified 2025-05-09 박찬병
+     * @since 2025-05-09
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleNoResource(NoResourceFoundException ex) {
+        return buildErrorResponse(
+                HttpStatus.NOT_FOUND,
+                NOT_FOUND_CODE,
+                "요청하신 리소스를 찾을 수 없습니다.",
                 ex
         );
     }

@@ -1,18 +1,18 @@
-package com.likelion.backendplus4.talkpick.batch.temp.exception;
+package com.likelion.backendplus4.talkpick.batch.sample.common.exception.exception;
 
 import com.likelion.backendplus4.talkpick.batch.common.exception.CustomException;
 import com.likelion.backendplus4.talkpick.batch.common.exception.error.ErrorCode;
 
-public class TempException extends CustomException {
+public class SampleException extends CustomException {
 
     private final ErrorCode errorCode;
 
-    public TempException(ErrorCode errorCode) {
+    public SampleException(ErrorCode errorCode) {
         super(errorCode);
         this.errorCode = errorCode;
     }
 
-    public TempException(ErrorCode errorCode, Throwable cause) {
+    public SampleException(ErrorCode errorCode, Throwable cause) {
         super(errorCode, cause);
         this.errorCode = errorCode;
     }

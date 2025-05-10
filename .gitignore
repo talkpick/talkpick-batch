@@ -1,37 +1,113 @@
-HELP.md
+# ==============================
+# Build and Gradle
+# ==============================
 .gradle
 build/
+**/build/
+!src/**/build/
+
+# Gradle wrapper
 !gradle/wrapper/gradle-wrapper.jar
-!**/src/main/**/build/
-!**/src/test/**/build/
-*.env
-### STS ###
-.apt_generated
+!gradle-wrapper.properties
+
+# ==============================
+# IDE 관련 설정
+# ==============================
+
+# IntelliJ IDEA
+.idea
+*.iml
+*.iws
+*.ipr
+/out/
+.idea/**/
+.idea_modules/
+.idea/httpRequests
+.idea/codestream.xml
+
+# Eclipse / STS
+.apt_generated/
+.apt_generated_test/
 .classpath
-.factorypath
 .project
-.settings
+.settings/
+.factorypath
 .springBeans
 .sts4-cache
-bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
+.externalToolBuilders/
+*.launch
+*.pydevproject
+.cproject
+.autotools
+.buildpath
+.loadpath
+.recommenders/
+.cache-main
+.scala_dependencies
+.worksheet
 
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-out/
-!**/src/main/**/out/
-!**/src/test/**/out/
-
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-
-### VS Code ###
+# VS Code
 .vscode/
+.history/
+.ionide/
+
+# ==============================
+# Development files
+# ==============================
+*.env
+*.http
+
+# ==============================
+# OS/시스템 파일
+# ==============================
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+*.icloud
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Thumbs.db:encryptable
+ehthumbs_vista.db
+*.stackdump
+*.lnk
+Desktop.ini
+$RECYCLE.BIN/
+
+# ==============================
+# Java 관련
+# ==============================
+*.class
+*.log
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+*.hprof
+hs_err_pid*
+replay_pid*
+
+# ==============================
+# 기타 백업/임시파일
+# ==============================
+*.tmp
+*.bak
+*.swp
+*~.nib
+*~
+~$*

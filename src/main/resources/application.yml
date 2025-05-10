@@ -20,6 +20,9 @@ spring:
       hibernate:
         format_sql: true
     open-in-view: false
+  web:
+    resources:
+      add-mappings: false
 log:
   rolling:
     directory: logs
@@ -27,13 +30,6 @@ log:
     pattern: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - [TraceId: %X{traceId:-no-trace}] - %msg%n"
     max-history: 30
     total-size-cap: 10MB
-  web:
-    resources:
-      add-mappings: false
-logging:
-  pattern:
-    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%level] [%thread] [%logger{36}] - %msg%n"
-    console: "%cyan(%d{yyyy-MM-dd HH:mm:ss.SSS}) %highlight(%-5level) %yellow([%thread]) %green(%logger{36}) - %msg%n"
 decorator:
   datasource:
     p6spy:

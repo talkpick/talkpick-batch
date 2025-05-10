@@ -5,6 +5,9 @@ server:
           enabled: false
 
 spring:
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
   application:
     name: talkpick-batch
   datasource:

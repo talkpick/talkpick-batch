@@ -1,0 +1,35 @@
+name: "✏️ 간단 수정, 배포 수정 등 Chore 유형"
+description: Chore 브런치 유형의 이슈들입니다.
+title: "[Chore]"
+labels: ["chore"]
+body:
+  - type: checkboxes
+    id: category
+    attributes:
+      label: 🧩 수정 유형
+      description: 해당하는 모든 항목을 선택해주세요.
+      options:
+        - label: 오타 수정
+        - label: 패키지 재분류
+        - label: GitHub Action 수정
+        - label: PR 템플릿 수정
+        - label: 이슈 템플릿 수정
+        - label: 브랜치 전략 수정
+        - label: 레포지토리 설정 변경
+        - label: 배포 스크립트 수정
+        - label: 설정 파일 정리 (.gitignore 등)
+        - label: 기타
+  - type: textarea
+    id: details
+    attributes:
+      label: 📌 수정 내용
+      description: 어떤 수정이 필요한지 구체적으로 작성해주세요.
+      placeholder: "예: `.gitignore`에 IDE 설정 파일 누락되어 추가 필요"
+    validations:
+      required: true
+
+  - type: textarea
+    id: etc
+    attributes:
+      label: ℹ️ 기타 설명 (선택사항)
+      description: 설명이 더 필요하다면 자유롭게 작성해주세요.

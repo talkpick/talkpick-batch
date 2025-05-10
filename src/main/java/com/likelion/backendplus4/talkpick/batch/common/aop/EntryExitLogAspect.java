@@ -3,6 +3,7 @@ package com.likelion.backendplus4.talkpick.batch.common.aop;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import com.likelion.backendplus4.talkpick.batch.common.annotation.logging.EntryExitLog;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 @Aspect
 @Component
 @Slf4j
+@Order(1)
 public class EntryExitLogAspect {
 
 	@Around("@annotation(entryExitLog)")

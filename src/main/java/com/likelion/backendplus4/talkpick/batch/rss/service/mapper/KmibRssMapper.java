@@ -55,7 +55,7 @@ public class KmibRssMapper implements RssMapper {
     }
 
     private LocalDateTime convertToLocalDateTime(Date date) {
-        return date != null
+        return null != date
                 ? date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime()
                 : LocalDateTime.now();
     }

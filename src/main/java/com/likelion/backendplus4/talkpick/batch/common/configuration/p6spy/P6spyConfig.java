@@ -1,4 +1,4 @@
-package com.likelion.backendplus4.talkpick.batch.common.configuraition.p6spy;
+package com.likelion.backendplus4.talkpick.batch.common.configuration.p6spy;
 
 import com.p6spy.engine.logging.Category;
 import com.p6spy.engine.spy.P6SpyOptions;

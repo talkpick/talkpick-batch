@@ -19,6 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static java.util.function.Predicate.not;
+
 /**
  * RSS 피드를 수집하고 처리하는 서비스 클래스
  *
@@ -34,20 +36,18 @@ public class RssService {
     private final RssNewsRepository rssNewsRepository;
     private final RssMappingFactory rssMappingFactory;
 
-    /**
-     * 모든 활성화된 RSS 뉴스 피드를 가져와 처리 (서비스 계층 메인기능)
-     *
-     * 1. 설정에서 활성화된 모든 RSS 소스 조회
-     * 2. 각 소스에서 RSS 피드 가져오기
-     * 3. 수집된 모든 뉴스 항목 병합
-     * 4. 데이터베이스에 저장 (중복 제외)
-     *
-     * @return 새로 저장된 뉴스 항목 수
-     * @throws Exception RSS 처리 중 발생할 수 있는 예외
-     * @since 2024-05-10 최초 작성
-     * @author 양병학
-     * @modify 2024-05-10 양병학
-     */
+    /** 모든 활성화된 RSS 뉴스 피드를 가져와 처리 (서비스 계층 메인기능)
+    * 1. 설정에서 활성화된 모든 RSS 소스 조회
+    * 2. 각 소스에서 RSS 피드 가져오기
+    * 3. 수집된 모든 뉴스 항목 병합
+    * 4. 데이터베이스에 저장 (중복 제외)
+    *
+    * @return 새로 저장된 뉴스 항목 수
+    * @throws Exception RSS 처리 중 발생할 수 있는 예외
+    * @since 2025-05-10 최초 작성
+    * @author 양병학
+    * @modify 2025-05-10 양병학
+     **/
     @Transactional
     public int fetchAndProcessAllFeeds() {
         List<RssNews> allNewsItems = new ArrayList<>();
@@ -92,7 +92,7 @@ public class RssService {
             newsItems.add(newsItem);
         }
 
-        log.info("페치완료 {} 갯수 뉴스피드 {} 에서", newsItems.size(), source.getName());
+        log.info("fetch 완료 {} 갯수 뉴스피드 {} 에서", newsItems.size(), source.getName());
         return newsItems;
     }
 
@@ -115,7 +115,7 @@ public class RssService {
         int savedCount = 0;
 
         List<RssNews> newItems = newsItems.stream()
-                .filter(item -> !rssNewsRepository.existsByLink(item.getLink()))
+                .filter(not(item -> rssNewsRepository.existsByLink(item.getLink())))
                 .collect(Collectors.toList());
 
         for (RssNews item : newItems) {

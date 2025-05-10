@@ -19,6 +19,11 @@ import com.likelion.backendplus4.talkpick.batch.embedding.exception.error.Embedd
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * OpenAI API를 사용하여 텍스트 임베딩을 생성하는 어댑터 구현체
+ *
+ * @since 2025-05-11
+ */
 @Component
 @RequiredArgsConstructor
 public class OpenAIEmbeddingAdapter implements EmbeddingPort {
@@ -26,6 +31,13 @@ public class OpenAIEmbeddingAdapter implements EmbeddingPort {
 	@Value("${spring.ai.openai.embedding-model}")
 	private String embeddingModelName;
 
+	/**
+	 * 주어진 텍스트에 대한 임베딩 벡터를 반환한다.
+	 *
+	 * @param text 입력 텍스트
+	 * @return 텍스트 임베딩 벡터 배열
+	 * @since 2025-05-11
+	 */
 	@EntryExitLog
 	@LogMethodValues
 	@TimeTracker
@@ -35,6 +47,14 @@ public class OpenAIEmbeddingAdapter implements EmbeddingPort {
 		return executeEmbedding(model, text);
 	}
 
+	/**
+	 * OpenAI 임베딩 모델 인스턴스를 생성한다.
+	 *
+	 * @return 생성된 OpenAiEmbeddingModel 객체
+	 * @throws EmbeddingException 모델 생성 중 오류 발생 시
+	 * @author 정안식
+	 * @since 2025-05-11
+	 */
 	private OpenAiEmbeddingModel createModel() {
 		try {
 			return new OpenAiEmbeddingModel(
@@ -50,6 +70,16 @@ public class OpenAIEmbeddingAdapter implements EmbeddingPort {
 		}
 	}
 
+	/**
+	 * 주어진 모델을 사용하여 텍스트 임베딩을 계산한다.
+	 *
+	 * @param model OpenAiEmbeddingModel 인스턴스
+	 * @param text  입력 텍스트
+	 * @return 계산된 임베딩 벡터 배열
+	 * @throws EmbeddingException API 호출 중 오류 발생 시
+	 * @author 정안식
+	 * @since 2025-05-11
+	 */
 	private float[] executeEmbedding(OpenAiEmbeddingModel model, String text) {
 		try {
 			EmbeddingResponse response = model.embedForResponse(List.of(text));

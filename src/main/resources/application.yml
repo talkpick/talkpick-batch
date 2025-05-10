@@ -1,5 +1,8 @@
 server:
   port: ${WEB_PORT:8082}
+  error:
+    whitelabel:
+          enabled: false
 
 spring:
   application:
@@ -24,3 +27,6 @@ log:
     pattern: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - [TraceId: %X{traceId:-no-trace}] - %msg%n"
     max-history: 30
     total-size-cap: 10MB
+  web:
+    resources:
+      add-mappings: false

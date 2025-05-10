@@ -7,6 +7,12 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+/**
+ * RSS 피드 수집 작업을 스케줄링하는 클래스
+ *
+ * @author 양병학
+ * @since 2025-05-10 최초 작성
+ */
 @Component
 @EnableScheduling
 @RequiredArgsConstructor
@@ -23,7 +29,7 @@ public class RssScheduler {
             int processedItems = rssService.fetchAndProcessAllFeeds();
             log.info("Rss 피드 입력 Processed {} items", processedItems);
         } catch (Exception e) {
-            log.error("Error during scheduled RSS feed fetch: {}", e.getMessage(), e);
+            log.error("RSS 피드 패치 도중 오류발생: {}", e.getMessage(), e);
         }
     }
 }

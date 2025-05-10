@@ -10,8 +10,8 @@ import java.time.LocalDateTime;
  * RSS 피드를 수집 객체
  *
  * @author 양병학
- * @since 2024-05-10 최초 작성
- * @modify 2024-05-10 17:47 PR 수정
+ * @since 2025-05-10 최초 작성
+ * @modify 2025-05-10 17:47 PR 수정
  * @ToString exclude로 대량의 텍스트필드 로그에서 제외
  * @Data -> @Getter후 Setter는 개별 지정해서 식별자 보호
  * @EqualsAndHashCode 지정으로 갹채 비교 최적화

@@ -1,5 +1,6 @@
 package com.likelion.backendplus4.talkpick.batch.rss.service.mapper;
 
+import com.likelion.backendplus4.talkpick.batch.rss.model.RssSource;
 import com.rometools.rome.feed.synd.SyndCategory;
 import com.rometools.rome.feed.synd.SyndEntry;
 import com.likelion.backendplus4.talkpick.batch.rss.entity.RssNews;
@@ -16,20 +17,11 @@ import java.util.stream.Collectors;
 public class KmibRssMapper implements RssMapper {
 
     private static final Pattern ARCID_PATTERN = Pattern.compile("arcid=([0-9]+)");
-    private static final String NEWS_CODE = "KM";
 
     @Override
-    public RssNews mapToRssNews(SyndEntry entry) {
+    public RssNews mapToRssNews(SyndEntry entry, RssSource source) {
         String arcId = extractArcIdFromLink(entry.getLink());
-        String guid = NEWS_CODE + arcId;
-
-        String category = entry.getCategories().stream()
-                .map(SyndCategory::getName)
-                .collect(Collectors.joining(", "));
-
-        if (category.isEmpty()) {
-            category = extractCategoryFromUrl(entry.getLink());
-        }
+        String guid = source.getCodePrefix() + arcId;
 
         String description = "";
         if (entry.getDescription() != null) {
@@ -40,7 +32,7 @@ public class KmibRssMapper implements RssMapper {
                 .title(entry.getTitle())
                 .link(entry.getLink())
                 .pubDate(convertToLocalDateTime(entry.getPublishedDate()))
-                .category(category)
+                .category(source.getCategoryName())  // Enum에서 직접 카테고리 이름 가져옴
                 .guid(guid)
                 .description(description)
                 .isSummary(false)
@@ -55,19 +47,6 @@ public class KmibRssMapper implements RssMapper {
             return matcher.group(1);
         }
         return link;
-    }
-
-    private String extractCategoryFromUrl(String url) {
-        if (url == null) return "";
-
-        if (url.contains("kmibPolRss")) return "정치";
-        if (url.contains("kmibEcoRss")) return "경제";
-        if (url.contains("kmibSocRss")) return "사회";
-        if (url.contains("kmibIntRss")) return "국제";
-        if (url.contains("kmibEntRss")) return "연예";
-        if (url.contains("kmibSpoRss")) return "스포츠";
-
-        return "기타";
     }
 
     private LocalDateTime convertToLocalDateTime(Date date) {

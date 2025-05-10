@@ -1,8 +1,22 @@
 package com.likelion.backendplus4.talkpick.batch.rss.service.mapper;
 
-import com.rometools.rome.feed.synd.SyndEntry;
 import com.likelion.backendplus4.talkpick.batch.rss.entity.RssNews;
+import com.likelion.backendplus4.talkpick.batch.rss.model.RssSource;
+import com.rometools.rome.feed.synd.SyndEntry;
 
+/**
+ * RSS 항목을 RssNews 엔티티로 변환하는 매퍼 인터페이스
+ *
+ * @author 양병학
+ * @since 2025-05-10 최초 작성
+ */
 public interface RssMapper {
-    RssNews mapToRssNews(SyndEntry entry);
+    /**
+     * RSS 피드 항목을 RssNews 엔티티로 변환합니다.
+     *
+     * @param entry 변환할 SyndEntry 객체(rss2.0 구조 지원)
+     * @param source RSS 소스 정보
+     * @return 변환된 RssNews 엔티티
+     */
+    RssNews mapToRssNews(SyndEntry entry, RssSource source);
 }

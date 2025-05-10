@@ -54,6 +54,10 @@ dependencies {
     //Swagger
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
 
+    //P6spy
+    implementation "com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.9.0"
+
+
 }
 
 tasks.named('test') {

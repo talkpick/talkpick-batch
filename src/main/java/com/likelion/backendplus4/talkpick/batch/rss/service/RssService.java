@@ -73,21 +73,30 @@ public class RssService {
      * @return 변환된 RssNews 엔티티 목록
      * @throws Exception RSS 피드 로드 및 처리 중 발생할 수 있는 예외
      */
-    private List<RssNews> fetchFeedFromSource(RssSource source) throws Exception {
-        URL feedUrl = new URL(source.getUrl());
-        SyndFeedInput input = new SyndFeedInput();
-        SyndFeed feed = input.build(new XmlReader(feedUrl));
-
+    private List<RssNews> fetchFeedFromSource(RssSource source) {
         List<RssNews> newsItems = new ArrayList<>();
-        RssMapper mapper = rssMappingFactory.getMapper(source.getMapperType());
+        try {
+            URL feedUrl = new URL(source.getUrl());
+            SyndFeedInput input = new SyndFeedInput();
+            SyndFeed feed = input.build(new XmlReader(feedUrl));
 
-        for (SyndEntry entry : feed.getEntries()) {
-            RssNews newsItem = mapper.mapToRssNews(entry, source);
-            newsItems.add(newsItem);
+            RssMapper mapper = rssMappingFactory.getMapper(source.getMapperType());
+
+            for (SyndEntry entry : feed.getEntries()) {
+                try {
+                    RssNews newsItem = mapper.mapToRssNews(entry, source);
+                    newsItems.add(newsItem);
+                } catch (Exception e) {
+                    log.warn("항목 변환 실패: {} - {}", source.getDisplayName(), e.getMessage());
+                    // 한 항목 실패해도 계속 진행
+                }
+            }
+
+            log.info("페치완료 {} 갯수 뉴스피드 {}-{} 에서",
+                    newsItems.size(), source.getPublisherName(), source.getCategoryName());
+        } catch (Exception e) {
+            log.error("피드 로드 실패: {} - {}", source.getDisplayName(), e.getMessage(), e);
         }
-
-        log.info("페치완료 {} 갯수 뉴스피드 {}-{} 에서",
-                newsItems.size(), source.getPublisherName(), source.getCategoryName());
         return newsItems;
     }
 

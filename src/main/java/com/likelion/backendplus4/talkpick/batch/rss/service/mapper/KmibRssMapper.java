@@ -39,6 +39,11 @@ public class KmibRssMapper implements RssMapper {
                 .build();
     }
 
+    @Override
+    public String getMapperType() {
+        return "km";
+    }
+
     private String extractArcIdFromLink(String link) {
         if (link == null) return "";
 

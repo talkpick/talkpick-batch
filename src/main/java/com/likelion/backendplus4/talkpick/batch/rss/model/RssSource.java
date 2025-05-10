@@ -15,28 +15,31 @@ import java.util.stream.Collectors;
  */
 @Getter
 public enum RssSource {
-    KMIB_POLITICS("국민일보", "정치", "https://www.kmib.co.kr/rss/data/kmibPolRss.xml", "KM", true),
-    KMIB_ECONOMY("국민일보", "경제", "https://www.kmib.co.kr/rss/data/kmibEcoRss.xml", "KM", true),
-    KMIB_SOCIETY("국민일보", "사회", "https://www.kmib.co.kr/rss/data/kmibSocRss.xml", "KM", true),
-    KMIB_INTERNATIONAL("국민일보", "국제", "https://www.kmib.co.kr/rss/data/kmibIntRss.xml", "KM", true),
-    KMIB_ENTERTAINMENT("국민일보", "연예", "https://www.kmib.co.kr/rss/data/kmibEntRss.xml", "KM", true),
-    KMIB_SPORTS("국민일보", "스포츠", "https://www.kmib.co.kr/rss/data/kmibSpoRss.xml", "KM", true),
+    // 국민일보 RSS 피드
+    KMIB_POLITICS("국민일보", "정치", "https://www.kmib.co.kr/rss/data/kmibPolRss.xml", "km", true),
+    KMIB_ECONOMY("국민일보", "경제", "https://www.kmib.co.kr/rss/data/kmibEcoRss.xml", "km", true),
+    KMIB_SOCIETY("국민일보", "사회", "https://www.kmib.co.kr/rss/data/kmibSocRss.xml", "km", true),
+    KMIB_INTERNATIONAL("국민일보", "국제", "https://www.kmib.co.kr/rss/data/kmibIntRss.xml", "km", true),
+    KMIB_ENTERTAINMENT("국민일보", "연예", "https://www.kmib.co.kr/rss/data/kmibEntRss.xml", "km", true),
+    KMIB_SPORTS("국민일보", "스포츠", "https://www.kmib.co.kr/rss/data/kmibSpoRss.xml", "km", true),
 
-    DONGA_TOTAL("동아일보", "전체", "https://rss.donga.com/total.xml", "DA", false),
+    // 동아일보 RSS 피드 - 현재 비활성화
+    DONGA_TOTAL("동아일보", "전체", "https://rss.donga.com/total.xml", "da", false),
 
-    KHAN_TOTAL("경향신문", "전체", "https://www.khan.co.kr/rss/rssdata/total_news.xml", "KH", false);
+    // 경향신문 RSS 피드 - 현재 비활성화
+    KHAN_TOTAL("경향신문", "전체", "https://www.khan.co.kr/rss/rssdata/total_news.xml", "kh", false);
 
     private final String publisherName;
     private final String categoryName;
     private final String url;
-    private final String codePrefix;
+    private final String mapperType;
     private final boolean enabled;
 
-    RssSource(String publisherName, String categoryName, String url, String codePrefix, boolean enabled) {
+    RssSource(String publisherName, String categoryName, String url, String mapperType, boolean enabled) {
         this.publisherName = publisherName;
         this.categoryName = categoryName;
         this.url = url;
-        this.codePrefix = codePrefix;
+        this.mapperType = mapperType;
         this.enabled = enabled;
     }
 
@@ -48,10 +51,17 @@ public enum RssSource {
     }
 
     /**
-     * 매퍼 타입 키 반환 (소문자 언론사 코드)
+     * 매퍼 타입 키 반환
      */
     public String getMapperType() {
-        return codePrefix.toLowerCase();
+        return mapperType;
+    }
+
+    /**
+     * 언론사 코드 접두사 반환 (대문자)
+     */
+    public String getCodePrefix() {
+        return mapperType.toUpperCase();
     }
 
     /**

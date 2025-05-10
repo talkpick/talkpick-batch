@@ -19,4 +19,11 @@ public interface RssMapper {
      * @return 변환된 RssNews 엔티티
      */
     RssNews mapToRssNews(SyndEntry entry, RssSource source);
+
+    /**
+     * 매퍼 타입을 반환
+     *
+     * @return 매퍼 타입 (소문자 코드)
+     */
+    String getMapperType();
 }

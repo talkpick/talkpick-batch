@@ -11,6 +11,12 @@ import org.springframework.ai.retry.RetryUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.likelion.backendplus4.talkpick.batch.common.annotation.logging.EntryExitLog;
+import com.likelion.backendplus4.talkpick.batch.common.annotation.logging.LogMethodValues;
+import com.likelion.backendplus4.talkpick.batch.common.annotation.logging.TimeTracker;
+import com.likelion.backendplus4.talkpick.batch.embedding.exception.EmbeddingException;
+import com.likelion.backendplus4.talkpick.batch.embedding.exception.error.EmbeddingErrorCode;
+
 import lombok.RequiredArgsConstructor;
 
 @Component
@@ -18,27 +24,38 @@ import lombok.RequiredArgsConstructor;
 public class OpenAIEmbeddingAdapter implements EmbeddingPort {
 	private final OpenAiApi openAiApi;
 	@Value("${spring.ai.openai.embedding-model}")
-	private String embeddingModel;
+	private String embeddingModelName;
 
+	@EntryExitLog
+	@LogMethodValues
+	@TimeTracker
 	@Override
 	public float[] getEmbedding(String text) {
+		OpenAiEmbeddingModel model = createModel();
+		return executeEmbedding(model, text);
+	}
+
+	private OpenAiEmbeddingModel createModel() {
 		try {
-			OpenAiEmbeddingModel embeddingModel = createEmbeddingModel();
-			EmbeddingResponse response = embeddingModel.embedForResponse(List.of(text));
-			return response.getResults().getFirst().getOutput();
+			return new OpenAiEmbeddingModel(
+				openAiApi,
+				MetadataMode.EMBED,
+				OpenAiEmbeddingOptions.builder()
+					.model(embeddingModelName)
+					.build(),
+				RetryUtils.DEFAULT_RETRY_TEMPLATE
+			);
 		} catch (Exception e) {
-			throw new RuntimeException(e);
+			throw new EmbeddingException(EmbeddingErrorCode.MODEL_CREATION_ERROR, e);
 		}
 	}
 
-	private OpenAiEmbeddingModel createEmbeddingModel() {
-		return new OpenAiEmbeddingModel(
-			openAiApi,
-			MetadataMode.EMBED,
-			OpenAiEmbeddingOptions.builder()
-				.model(embeddingModel)
-				.build(),
-			RetryUtils.DEFAULT_RETRY_TEMPLATE
-		);
+	private float[] executeEmbedding(OpenAiEmbeddingModel model, String text) {
+		try {
+			EmbeddingResponse response = model.embedForResponse(List.of(text));
+			return response.getResults().getFirst().getOutput();
+		} catch (Exception e) {
+			throw new EmbeddingException(EmbeddingErrorCode.API_CALL_ERROR, e);
+		}
 	}
 }

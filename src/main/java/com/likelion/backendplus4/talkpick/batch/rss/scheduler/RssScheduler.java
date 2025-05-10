@@ -1,5 +1,7 @@
 package com.likelion.backendplus4.talkpick.batch.rss.scheduler;
 
+import com.likelion.backendplus4.talkpick.batch.rss.exception.RssErrorCode;
+import com.likelion.backendplus4.talkpick.batch.rss.exception.RssException;
 import com.likelion.backendplus4.talkpick.batch.rss.service.RssService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,8 +43,13 @@ public class RssScheduler {
         try {
             int processedItems = rssService.fetchAndProcessAllFeeds();
             log.info("Rss 피드 입력 Processed {} items", processedItems);
+        } catch (RssException e) {
+            // 커스텀 예외 처리
+            log.error("[{}] 스케줄러 실행 오류: {}", e.getErrorCode().getCode(), e.getMessage(), e);
         } catch (Exception e) {
-            log.error("RSS 피드 패치 도중 오류발생: {}", e.getMessage(), e);
+            // 기타 예외 처리
+            log.error("[{}] 스케줄러 실행 중 예상치 못한 오류: {}",
+                    RssErrorCode.SCHEDULER_EXECUTION_ERROR.getCode(), e.getMessage(), e);
         }
     }
 }

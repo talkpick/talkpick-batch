@@ -1,6 +1,8 @@
 package com.likelion.backendplus4.talkpick.batch.rss.service;
 
 import com.likelion.backendplus4.talkpick.batch.rss.entity.RssNews;
+import com.likelion.backendplus4.talkpick.batch.rss.exception.RssErrorCode;
+import com.likelion.backendplus4.talkpick.batch.rss.exception.RssException;
 import com.likelion.backendplus4.talkpick.batch.rss.model.RssSource;
 import com.likelion.backendplus4.talkpick.batch.rss.repository.RssNewsRepository;
 import com.likelion.backendplus4.talkpick.batch.rss.service.mapper.RssMapper;
@@ -78,24 +80,46 @@ public class RssService {
         try {
             URL feedUrl = new URL(source.getUrl());
             SyndFeedInput input = new SyndFeedInput();
-            SyndFeed feed = input.build(new XmlReader(feedUrl));
+            SyndFeed feed;
 
-            RssMapper mapper = rssMappingFactory.getMapper(source.getMapperType());
+            try {
+                feed = input.build(new XmlReader(feedUrl));
+            } catch (Exception e) {
+                throw new RssException(RssErrorCode.FEED_PARSING_ERROR,
+                        "피드 파싱 실패: " + source.getDisplayName(), e);
+            }
+
+            RssMapper mapper;
+            try {
+                mapper = rssMappingFactory.getMapper(source.getMapperType());
+            } catch (IllegalArgumentException e) {
+                throw new RssException(RssErrorCode.MAPPER_NOT_FOUND,
+                        "매퍼 없음: " + source.getMapperType(), e);
+            }
 
             for (SyndEntry entry : feed.getEntries()) {
                 try {
                     RssNews newsItem = mapper.mapToRssNews(entry, source);
                     newsItems.add(newsItem);
                 } catch (Exception e) {
-                    log.warn("항목 변환 실패: {} - {}", source.getDisplayName(), e.getMessage());
+                    log.warn("[{}] 항목 변환 실패: {} - {}",
+                            RssErrorCode.ITEM_MAPPING_ERROR.getCode(),
+                            source.getDisplayName(), e.getMessage());
                     // 한 항목 실패해도 계속 진행
                 }
             }
 
             log.info("페치완료 {} 갯수 뉴스피드 {}-{} 에서",
                     newsItems.size(), source.getPublisherName(), source.getCategoryName());
+        } catch (RssException e) {
+            // 이미 래핑된 RssException은 그대로 로그
+            log.error("[{}] 피드 로드 실패: {} - {}",
+                    e.getErrorCode().getCode(), source.getDisplayName(), e.getMessage());
         } catch (Exception e) {
-            log.error("피드 로드 실패: {} - {}", source.getDisplayName(), e.getMessage(), e);
+            // 다른 예외는 RssException으로 래핑
+            log.error("[{}] 피드 로드 실패: {} - {}",
+                    RssErrorCode.FEED_CONNECTION_ERROR.getCode(),
+                    source.getDisplayName(), e.getMessage(), e);
         }
         return newsItems;
     }

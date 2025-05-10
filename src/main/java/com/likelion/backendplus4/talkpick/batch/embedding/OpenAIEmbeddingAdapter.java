@@ -17,19 +17,21 @@ import com.likelion.backendplus4.talkpick.batch.common.annotation.logging.TimeTr
 import com.likelion.backendplus4.talkpick.batch.embedding.exception.EmbeddingException;
 import com.likelion.backendplus4.talkpick.batch.embedding.exception.error.EmbeddingErrorCode;
 
-import lombok.RequiredArgsConstructor;
-
 /**
  * OpenAI API를 사용하여 텍스트 임베딩을 생성하는 어댑터 구현체
  *
  * @since 2025-05-11
  */
 @Component
-@RequiredArgsConstructor
 public class OpenAIEmbeddingAdapter implements EmbeddingPort {
 	private final OpenAiApi openAiApi;
-	@Value("${spring.ai.openai.embedding-model}")
-	private String embeddingModelName;
+	private final String embeddingModelName;
+
+	public OpenAIEmbeddingAdapter(OpenAiApi openAiApi,
+		@Value("${spring.ai.openai.embedding-model}") String embeddingModelName) {
+		this.openAiApi = openAiApi;
+		this.embeddingModelName = embeddingModelName;
+	}
 
 	/**
 	 * 주어진 텍스트에 대한 임베딩 벡터를 반환한다.

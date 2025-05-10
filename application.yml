@@ -35,3 +35,7 @@ logging:
             sql:
               BasicBinder: TRACE
 
+rss:
+  scheduler:
+    cron: "0 */1 * * * ?"
+

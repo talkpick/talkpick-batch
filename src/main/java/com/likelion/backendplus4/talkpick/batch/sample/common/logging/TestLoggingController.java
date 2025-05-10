@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class TestLoggingController {
 	private final TestLoggingService testLoggingService;
+
 	@LogJson
 	@PostMapping
 	public String test(@RequestBody TestLoggingRequest testLoggingRequest) {

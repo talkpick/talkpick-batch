@@ -189,7 +189,7 @@ public class GlobalExceptionHandler {
      * @modified 2025-05-09 박찬병
      * @since 2025-05-09
      */
-    private static String getErrorMessage(BindException ex) {
+    private String getErrorMessage(BindException ex) {
         return ex.getBindingResult().getFieldErrors().stream()
                 .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
                 .collect(Collectors.joining(", "));

@@ -29,6 +29,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml'
 
+    implementation 'me.paulschwarz:spring-dotenv:3.0.0'
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
@@ -54,6 +56,12 @@ dependencies {
     //Swagger
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
 
+    //P6spy
+    implementation "com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.9.0"
+
+    //RSS
+    implementation 'org.springframework.boot:spring-boot-starter-quartz'
+    implementation 'com.rometools:rome:1.18.0'
 }
 
 tasks.named('test') {

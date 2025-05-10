@@ -1,4 +1,4 @@
-package com.likelion.backendplus4.talkpick.batch.common.interceptor;
+package com.likelion.backendplus4.talkpick.batch.common.interceptor.logging;
 
 import java.util.UUID;
 

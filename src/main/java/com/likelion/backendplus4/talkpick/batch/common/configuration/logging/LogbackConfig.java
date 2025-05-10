@@ -1,4 +1,4 @@
-package com.likelion.backendplus4.talkpick.batch.common.configuration;
+package com.likelion.backendplus4.talkpick.batch.common.configuration.logging;
 
 import java.nio.file.Files;
 import java.nio.file.Path;

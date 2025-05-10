@@ -1,4 +1,4 @@
-package com.likelion.backendplus4.talkpick.batch.common.aop;
+package com.likelion.backendplus4.talkpick.batch.common.aop.logging;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;

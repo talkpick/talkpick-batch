@@ -4,7 +4,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import com.likelion.backendplus4.talkpick.batch.common.interceptor.LogInterceptor;
+import com.likelion.backendplus4.talkpick.batch.common.interceptor.logging.LogInterceptor;
 
 import lombok.RequiredArgsConstructor;
 

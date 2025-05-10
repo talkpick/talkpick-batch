@@ -1,4 +1,4 @@
-package com.likelion.backendplus4.talkpick.batch.common.logging.trace.decorator;
+package com.likelion.backendplus4.talkpick.batch.common.decorator.logging;
 
 import java.util.Map;
 

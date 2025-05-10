@@ -1,5 +1,8 @@
 server:
   port: ${WEB_PORT:8082}
+  error:
+    whitelabel:
+          enabled: false
 
 spring:
   application:
@@ -17,6 +20,10 @@ spring:
       hibernate:
         format_sql: true
     open-in-view: false
+  web:
+    resources:
+      add-mappings: false
+
 logging:
   pattern:
     file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%level] [%thread] [%logger{36}] - %msg%n"

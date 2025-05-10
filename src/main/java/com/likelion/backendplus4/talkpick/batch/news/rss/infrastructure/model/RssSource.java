@@ -1,4 +1,4 @@
-package com.likelion.backendplus4.talkpick.batch.news.infrastructure.rss.model;
+package com.likelion.backendplus4.talkpick.batch.news.rss.infrastructure.model;
 
 import lombok.Getter;
 

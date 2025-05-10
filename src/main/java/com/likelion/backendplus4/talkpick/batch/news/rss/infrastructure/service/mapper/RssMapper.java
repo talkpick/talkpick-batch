@@ -1,7 +1,7 @@
-package com.likelion.backendplus4.talkpick.batch.news.infrastructure.rss.service.mapper;
+package com.likelion.backendplus4.talkpick.batch.news.rss.infrastructure.service.mapper;
 
-import com.likelion.backendplus4.talkpick.batch.news.infrastructure.rss.entity.RssNews;
-import com.likelion.backendplus4.talkpick.batch.news.infrastructure.rss.model.RssSource;
+import com.likelion.backendplus4.talkpick.batch.news.rss.infrastructure.entity.RssNews;
+import com.likelion.backendplus4.talkpick.batch.news.rss.infrastructure.model.RssSource;
 import com.rometools.rome.feed.synd.SyndEntry;
 
 /**

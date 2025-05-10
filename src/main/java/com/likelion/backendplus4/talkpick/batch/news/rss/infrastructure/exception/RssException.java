@@ -1,4 +1,4 @@
-package com.likelion.backendplus4.talkpick.batch.news.infrastructure.rss.exception;
+package com.likelion.backendplus4.talkpick.batch.news.rss.infrastructure.exception;
 
 import lombok.Getter;
 

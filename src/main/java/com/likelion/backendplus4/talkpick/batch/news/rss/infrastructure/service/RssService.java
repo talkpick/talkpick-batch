@@ -1,11 +1,11 @@
-package com.likelion.backendplus4.talkpick.batch.news.infrastructure.rss.service;
+package com.likelion.backendplus4.talkpick.batch.news.rss.infrastructure.service;
 
-import com.likelion.backendplus4.talkpick.batch.news.infrastructure.rss.entity.RssNews;
-import com.likelion.backendplus4.talkpick.batch.news.infrastructure.rss.exception.RssErrorCode;
-import com.likelion.backendplus4.talkpick.batch.news.infrastructure.rss.exception.RssException;
-import com.likelion.backendplus4.talkpick.batch.news.infrastructure.rss.model.RssSource;
-import com.likelion.backendplus4.talkpick.batch.news.infrastructure.rss.repository.RssNewsRepository;
-import com.likelion.backendplus4.talkpick.batch.news.infrastructure.rss.service.mapper.RssMapper;
+import com.likelion.backendplus4.talkpick.batch.news.rss.infrastructure.entity.RssNews;
+import com.likelion.backendplus4.talkpick.batch.news.rss.infrastructure.exception.RssErrorCode;
+import com.likelion.backendplus4.talkpick.batch.news.rss.infrastructure.exception.RssException;
+import com.likelion.backendplus4.talkpick.batch.news.rss.infrastructure.model.RssSource;
+import com.likelion.backendplus4.talkpick.batch.news.rss.infrastructure.repository.RssNewsRepository;
+import com.likelion.backendplus4.talkpick.batch.news.rss.infrastructure.service.mapper.RssMapper;
 import com.rometools.rome.feed.synd.SyndEntry;
 import com.rometools.rome.feed.synd.SyndFeed;
 import com.rometools.rome.io.SyndFeedInput;

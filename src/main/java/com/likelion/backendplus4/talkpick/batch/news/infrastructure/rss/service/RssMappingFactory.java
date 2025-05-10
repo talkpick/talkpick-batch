@@ -1,6 +1,6 @@
-package com.likelion.backendplus4.talkpick.batch.rss.service;
+package com.likelion.backendplus4.talkpick.batch.news.infrastructure.rss.service;
 
-import com.likelion.backendplus4.talkpick.batch.rss.service.mapper.RssMapper;
+import com.likelion.backendplus4.talkpick.batch.news.infrastructure.rss.service.mapper.RssMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

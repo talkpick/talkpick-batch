@@ -1,4 +1,4 @@
-package com.likelion.backendplus4.talkpick.batch.rss.entity;
+package com.likelion.backendplus4.talkpick.batch.news.infrastructure.rss.entity;
 
 import jakarta.persistence.*;
 import lombok.*;

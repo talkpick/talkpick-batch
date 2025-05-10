@@ -1,9 +1,8 @@
-package com.likelion.backendplus4.talkpick.batch.rss.service.mapper;
+package com.likelion.backendplus4.talkpick.batch.news.infrastructure.rss.service.mapper;
 
-import com.likelion.backendplus4.talkpick.batch.rss.model.RssSource;
-import com.rometools.rome.feed.synd.SyndCategory;
+import com.likelion.backendplus4.talkpick.batch.news.infrastructure.rss.model.RssSource;
 import com.rometools.rome.feed.synd.SyndEntry;
-import com.likelion.backendplus4.talkpick.batch.rss.entity.RssNews;
+import com.likelion.backendplus4.talkpick.batch.news.infrastructure.rss.entity.RssNews;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -11,7 +10,6 @@ import java.time.ZoneId;
 import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @Component
 public class KmibRssMapper implements RssMapper {

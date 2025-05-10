@@ -1,8 +1,8 @@
-package com.likelion.backendplus4.talkpick.batch.rss.scheduler;
+package com.likelion.backendplus4.talkpick.batch.news.infrastructure.rss.scheduler;
 
-import com.likelion.backendplus4.talkpick.batch.rss.exception.RssErrorCode;
-import com.likelion.backendplus4.talkpick.batch.rss.exception.RssException;
-import com.likelion.backendplus4.talkpick.batch.rss.service.RssService;
+import com.likelion.backendplus4.talkpick.batch.news.infrastructure.rss.exception.RssErrorCode;
+import com.likelion.backendplus4.talkpick.batch.news.infrastructure.rss.exception.RssException;
+import com.likelion.backendplus4.talkpick.batch.news.infrastructure.rss.service.RssService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.EnableScheduling;

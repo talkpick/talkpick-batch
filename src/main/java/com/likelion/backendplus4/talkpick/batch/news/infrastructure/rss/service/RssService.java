@@ -1,11 +1,11 @@
-package com.likelion.backendplus4.talkpick.batch.rss.service;
+package com.likelion.backendplus4.talkpick.batch.news.infrastructure.rss.service;
 
-import com.likelion.backendplus4.talkpick.batch.rss.entity.RssNews;
-import com.likelion.backendplus4.talkpick.batch.rss.exception.RssErrorCode;
-import com.likelion.backendplus4.talkpick.batch.rss.exception.RssException;
-import com.likelion.backendplus4.talkpick.batch.rss.model.RssSource;
-import com.likelion.backendplus4.talkpick.batch.rss.repository.RssNewsRepository;
-import com.likelion.backendplus4.talkpick.batch.rss.service.mapper.RssMapper;
+import com.likelion.backendplus4.talkpick.batch.news.infrastructure.rss.entity.RssNews;
+import com.likelion.backendplus4.talkpick.batch.news.infrastructure.rss.exception.RssErrorCode;
+import com.likelion.backendplus4.talkpick.batch.news.infrastructure.rss.exception.RssException;
+import com.likelion.backendplus4.talkpick.batch.news.infrastructure.rss.model.RssSource;
+import com.likelion.backendplus4.talkpick.batch.news.infrastructure.rss.repository.RssNewsRepository;
+import com.likelion.backendplus4.talkpick.batch.news.infrastructure.rss.service.mapper.RssMapper;
 import com.rometools.rome.feed.synd.SyndEntry;
 import com.rometools.rome.feed.synd.SyndFeed;
 import com.rometools.rome.io.SyndFeedInput;
@@ -19,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static java.util.function.Predicate.not;

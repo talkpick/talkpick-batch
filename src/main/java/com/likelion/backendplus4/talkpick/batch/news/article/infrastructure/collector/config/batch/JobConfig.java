@@ -1,4 +1,4 @@
-package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.config;
+package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.config.batch;
 
 import java.util.List;
 
@@ -18,11 +18,12 @@ import org.springframework.core.task.TaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import com.likelion.backendplus4.talkpick.batch.news.article.application.exception.ArticleCollectorException;
-import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.config.rss.RssSource;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.entity.ArticleEntity;
 
 @Configuration
 public class StepConfig {
+	private final String jobName = "articleCollectorBatchJob";
+	private final String executorName = "normalExecutor";
 	private final JobRepository jobRepository;
 	private final Partitioner rssSourcePartitioner;
 	private final PlatformTransactionManager transactionManager;
@@ -30,7 +31,7 @@ public class StepConfig {
 	private final ItemProcessor<RssSource, List<ArticleEntity>> processor;
 	private final ItemWriter<List<ArticleEntity>> writer;
 	private final int gridSize = 1;
-	private static final String executorName = "normalExecutor";
+
 
 	public StepConfig(JobRepository jobRepository,
 		Partitioner rssSourcePartitioner,
@@ -48,7 +49,7 @@ public class StepConfig {
 	}
 
 	@Bean
-	public Job rssJob(JobRepository jobRepository, Step rssPartitionedStep) {
+	public Job articleCollectJob(JobRepository jobRepository, Step rssPartitionedStep) {
 		return new JobBuilder("rssJob", jobRepository)
 			.start(rssPartitionedStep)
 			.build();

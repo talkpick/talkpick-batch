@@ -6,8 +6,8 @@ import java.util.List;
 
 import org.springframework.stereotype.Component;
 
-import com.likelion.backendplus4.talkpick.batch.news.article.application.exception.ArticleCollectorErrorCode;
-import com.likelion.backendplus4.talkpick.batch.news.article.application.exception.ArticleCollectorException;
+import com.likelion.backendplus4.talkpick.batch.news.article.exception.ArticleCollectorErrorCode;
+import com.likelion.backendplus4.talkpick.batch.news.article.exception.ArticleCollectorException;
 import com.rometools.rome.feed.synd.SyndEntry;
 import com.rometools.rome.feed.synd.SyndFeed;
 import com.rometools.rome.io.SyndFeedInput;

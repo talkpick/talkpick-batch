@@ -1,4 +1,4 @@
-package com.likelion.backendplus4.talkpick.batch.news.article.application.exception;
+package com.likelion.backendplus4.talkpick.batch.news.article.exception;
 
 import org.springframework.http.HttpStatus;
 
@@ -19,7 +19,16 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum ArticleCollectorErrorCode implements ErrorCode {
-    
+
+    // 실행 오류
+    JOB_ALREADY_RUNNING(HttpStatus.BAD_REQUEST, 150001, "[Quartz] Batch 실행 실패 - 현재 Job이 이미 실행 중입니다."),
+    JOB_ALREADY_COMPLETE(HttpStatus.BAD_REQUEST, 150002, "[Quartz] Batch 실행 실패 - 동일한 JobParameters로 실행된 Job이 이미 완료되었습니다."),
+    UNKNOWN_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, 550001, "[Quartz] Batch 실행 중 알 수 없는 예외 발생"),
+    JOB_RESTART_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, 550002, "[Quartz] Batch 실행 실패 - Job을 재시작할 수 없습니다. 이전 실행 상태가 불안정하거나 종료되지 않았을 수 있습니다."),
+    INVALID_JOB_PARAMETER(HttpStatus.INTERNAL_SERVER_ERROR, 550003, "[Quartz] Batch 실행 실패 - JobParameters가 유효하지 않습니다. 필수 파라미터 누락 또는 형식 오류일 수 있습니다."),
+
+
+
     // RSS 정보 로드 관련 오류
     FEED_CONNECTION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, 450001,"RSS 피드 연결 중 오류가 발생했습니다."),
     FEED_PARSING_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, 450002,"RSS 피드 파싱 중 오류가 발생했습니다."),

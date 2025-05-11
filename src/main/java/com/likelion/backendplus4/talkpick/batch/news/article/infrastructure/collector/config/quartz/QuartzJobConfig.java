@@ -5,6 +5,8 @@ import org.quartz.JobDetail;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.config.executor.BatchJobExecutor;
+
 /**
  * RSS 피드를 정기적으로 수집하는 스케줄 작업
  * application.yml의 rss.scheduler.cron 속성으로 실행 주기 설정

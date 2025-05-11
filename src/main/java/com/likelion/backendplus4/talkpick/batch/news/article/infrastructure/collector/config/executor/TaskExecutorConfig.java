@@ -1,8 +1,7 @@
-package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.config;
+package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.config.executor;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 

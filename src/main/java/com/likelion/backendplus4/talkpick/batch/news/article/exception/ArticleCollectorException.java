@@ -1,4 +1,4 @@
-package com.likelion.backendplus4.talkpick.batch.news.article.application.exception;
+package com.likelion.backendplus4.talkpick.batch.news.article.exception;
 
 import com.likelion.backendplus4.talkpick.batch.common.exception.CustomException;
 import com.likelion.backendplus4.talkpick.batch.common.exception.error.ErrorCode;

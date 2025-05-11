@@ -35,7 +35,14 @@ public class RssWriter implements ItemWriter<List<ArticleEntity>> {
 					log.debug("중복 항목 감지: {}", item.getLink());
 				}
 			});
+		logIfNewArticlesFound(savedCount);
 
-		log.info("새로 저장된 뉴스 개수: {}", savedCount.get());
+	}
+
+	private static void logIfNewArticlesFound(AtomicInteger savedCount) {
+		int newArticleCount = savedCount.get();
+		if(newArticleCount > 0){
+			log.info("새로 저장된 뉴스 개수: {}", savedCount.get());
+		}
 	}
 }

@@ -1,0 +1,35 @@
+name: talkpick-batch-dev-deploy
+
+on:
+  push:
+    branches:
+      - dev
+    paths-ignore:
+      - '.github/**'
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+        
+    - name: Set up Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+        
+    - name: Make gradlew executable
+      run: chmod +x ./gradlew
+
+    - name: Build Spring Boot (JAR)
+      run: ./gradlew bootJar -Penv=test --build-dir /deploy/batch/build
+      
+    - name: Restart Docker
+      run: |
+        cd /deploy
+        docker-compose stop batch
+        docker-compose rm -f batch
+        docker-compose up -d --build batch

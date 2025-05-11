@@ -30,10 +30,11 @@ jobs:
 
     - name: Build Spring Boot (JAR)
       run: ./gradlew bootJar
-      
     - name: Copy JAR to shared volume
-      run: cp /deploy/${{ github.event.repository.name }}/build/gradle/libs/*.jar /deploy/{{ github.event.repository.name }}/build/app.jar
-      
+      run: |
+        cp /deploy/${{ github.event.repository.name }}/build/gradle/libs/*.jar \
+          /deploy/${{ github.event.repository.name }}/build/app.jar   
+    
     - name: Restart Docker
       run: |
         cd /deploy

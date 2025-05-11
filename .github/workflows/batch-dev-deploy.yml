@@ -20,11 +20,10 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: '21'
-      
     - name: Set custom build directory dynamically
       run: |
         echo "buildDir=/deploy/${{ github.event.repository.name }}/build" >> gradle.properties
-
+        
     - name: Make gradlew executable
       run: chmod +x ./gradlew
 

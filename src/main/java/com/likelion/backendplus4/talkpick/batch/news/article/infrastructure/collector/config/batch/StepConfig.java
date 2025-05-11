@@ -18,8 +18,6 @@ import org.springframework.transaction.PlatformTransactionManager;
 import com.likelion.backendplus4.talkpick.batch.news.article.application.exception.ArticleCollectorException;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.entity.ArticleEntity;
 
-import lombok.Getter;
-
 @Configuration
 public class StepConfig {
 	private final String executorName = "normalExecutor";

@@ -11,8 +11,8 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class QuartzTriggerConfig {
 	private final String cronExpression;
-	private final JobDetail articleCollectorBatchJobDetail;
-	private final String articleCollectorBatchJobDetailName = "rssBatchJob";
+	private final JobDetail articleCollectorJobDetail;
+	private final String articleCollectorJobDetailName = "articleCollectorJobDetail";
 
 	/**
 	 * 생성자 주입을 통해 Cron 표현식을 설정한다.
@@ -23,9 +23,9 @@ public class QuartzTriggerConfig {
 	 * @since 2025-05-10
 	 */
 	public QuartzTriggerConfig(@Value("${article-collector.quartz.cron}") String cronExpression,
-								JobDetail articleCollectorBatchJobDetail) {
+								JobDetail articleCollectorJobDetail) {
 		this.cronExpression = cronExpression;
-		this.articleCollectorBatchJobDetail = articleCollectorBatchJobDetail;
+		this.articleCollectorJobDetail = articleCollectorJobDetail;
 	}
 
 	/**
@@ -41,8 +41,8 @@ public class QuartzTriggerConfig {
 	@Bean
 	public Trigger rssBatchTrigger() {
 		return TriggerBuilder.newTrigger()
-			.forJob(articleCollectorBatchJobDetail)
-			.withIdentity(articleCollectorBatchJobDetailName)
+			.forJob(articleCollectorJobDetail)
+			.withIdentity(articleCollectorJobDetailName)
 			.withSchedule(CronScheduleBuilder.cronSchedule(cronExpression))
 			.build();
 	}

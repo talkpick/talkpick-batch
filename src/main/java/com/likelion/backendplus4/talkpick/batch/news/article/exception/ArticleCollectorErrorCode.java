@@ -26,8 +26,9 @@ public enum ArticleCollectorErrorCode implements ErrorCode {
     UNKNOWN_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, 550001, "[Quartz] Batch 실행 중 알 수 없는 예외 발생"),
     JOB_RESTART_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, 550002, "[Quartz] Batch 실행 실패 - Job을 재시작할 수 없습니다. 이전 실행 상태가 불안정하거나 종료되지 않았을 수 있습니다."),
     INVALID_JOB_PARAMETER(HttpStatus.INTERNAL_SERVER_ERROR, 550003, "[Quartz] Batch 실행 실패 - JobParameters가 유효하지 않습니다. 필수 파라미터 누락 또는 형식 오류일 수 있습니다."),
-
-
+    SCHEDULER_START_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, 550004, "[Quartz] 스케줄러 시작 실패"),
+    SCHEDULER_STOP_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, 550005, "[Quartz] 스케줄러 중지 실패"),
+    STATUS_CHECK_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, 550006, "상태 확인 실패"),
 
     // RSS 정보 로드 관련 오류
     FEED_CONNECTION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, 450001,"RSS 피드 연결 중 오류가 발생했습니다."),

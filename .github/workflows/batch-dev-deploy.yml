@@ -22,13 +22,16 @@ jobs:
         java-version: '21'
     - name: Set custom build directory dynamically
       run: |
-        echo "buildDir=/deploy/${{ github.event.repository.name }}/build" >> gradle.properties
+        echo "buildDir=/deploy/${{ github.event.repository.name }}/build/gradle" >> gradle.properties
         
     - name: Make gradlew executable
       run: chmod +x ./gradlew
 
     - name: Build Spring Boot (JAR)
       run: ./gradlew bootJar
+      
+    - name: Copy JAR to shared volume
+      run: cp /deploy/${{ github.event.repository.name }}/build/gradle/libs/*.jar /deploy/{{ github.event.repository.name }}/build/app.jar
       
     - name: Restart Docker
       run: |

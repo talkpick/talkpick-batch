@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.likelion.backendplus4.talkpick.batch.common.response.ApiResponse;
 import com.likelion.backendplus4.talkpick.batch.news.article.application.port.in.ArticleCollectorUseCase;
-import com.likelion.backendplus4.talkpick.batch.news.article.application.service.dto.CollectorStatusResponse;
+import com.likelion.backendplus4.talkpick.batch.news.article.application.service.dto.ArticleCollectorStatusResponse;
 
 import lombok.RequiredArgsConstructor;
 
@@ -22,12 +22,12 @@ public class ArticleCollectorController {
 
 
 	@PostMapping("/start")
-	public ResponseEntity<ApiResponse<CollectorStatusResponse>> start() {
+	public ResponseEntity<ApiResponse<ArticleCollectorStatusResponse>> start() {
 		return success(articleCollectorUsecase.start());
 	}
 
 	@DeleteMapping("/stop")
-	public ResponseEntity<ApiResponse<CollectorStatusResponse>> stop() {
+	public ResponseEntity<ApiResponse<ArticleCollectorStatusResponse>> stop() {
 		return success(articleCollectorUsecase.stop());
 	}
 }

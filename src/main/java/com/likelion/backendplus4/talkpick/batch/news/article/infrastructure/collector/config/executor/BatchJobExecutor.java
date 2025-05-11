@@ -12,7 +12,7 @@ import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteExcep
 import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.stereotype.Component;
 
-import com.likelion.backendplus4.talkpick.batch.news.article.exception.ArticleCollectorErrorCode;
+import com.likelion.backendplus4.talkpick.batch.news.article.exception.error.ArticleCollectorErrorCode;
 import com.likelion.backendplus4.talkpick.batch.news.article.exception.ArticleCollectorException;
 
 import lombok.RequiredArgsConstructor;
@@ -34,11 +34,28 @@ import lombok.RequiredArgsConstructor;
 public class BatchJobExecutor implements org.quartz.Job {
 	private final JobLauncher jobLauncher;
 	private final Job articleCollectorBatchJob;
+
+	/**
+	 * Quartz 트리거에 의해 호출되는 메서드.
+	 * 내부적으로 Spring Batch Job을 실행하는 로직을 위임한다.
+	 *
+	 * @param jobExecutionContext Quartz 실행 컨텍스트
+	 * @author 함예정
+	 * @since 2025-05-10
+	 */
 	@Override
 	public void execute(JobExecutionContext jobExecutionContext) {
 		startSpringBatchJob();
 	}
 
+	/**
+	 * Spring Batch Job을 JobLauncher를 통해 실행한다.
+	 * 각 실행마다 timestamp 파라미터를 부여하여 중복 실행 방지.
+	 * 예외 발생 시 {@link ArticleCollectorException}으로 변환하여 처리한다.
+	 *
+	 * @author 함예정
+	 * @since 2025-05-10
+	 */
 	private void startSpringBatchJob() {
 		JobParameters params = new JobParametersBuilder()
 			.addLong("timestamp", System.currentTimeMillis())

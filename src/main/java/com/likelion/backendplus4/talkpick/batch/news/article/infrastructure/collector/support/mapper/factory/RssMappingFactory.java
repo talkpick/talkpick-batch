@@ -1,12 +1,13 @@
-package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector;
+package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.mapper.factory;
 
-import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.mapper.RssMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.mapper.RssMapper;
 
 @Component
 public class RssMappingFactory {

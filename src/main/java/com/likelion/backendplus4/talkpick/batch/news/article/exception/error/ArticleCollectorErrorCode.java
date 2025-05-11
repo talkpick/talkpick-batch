@@ -1,4 +1,4 @@
-package com.likelion.backendplus4.talkpick.batch.news.article.exception;
+package com.likelion.backendplus4.talkpick.batch.news.article.exception.error;
 
 import org.springframework.http.HttpStatus;
 

@@ -5,7 +5,7 @@ import org.quartz.SchedulerException;
 import org.springframework.stereotype.Component;
 
 import com.likelion.backendplus4.talkpick.batch.news.article.application.port.out.CollectorPort;
-import com.likelion.backendplus4.talkpick.batch.news.article.exception.ArticleCollectorErrorCode;
+import com.likelion.backendplus4.talkpick.batch.news.article.exception.error.ArticleCollectorErrorCode;
 import com.likelion.backendplus4.talkpick.batch.news.article.exception.ArticleCollectorException;
 
 import lombok.RequiredArgsConstructor;

@@ -1,7 +1,7 @@
 package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.mapper;
 
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.entity.ArticleEntity;
-import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.config.rss.RssSource;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.config.batch.RssSource;
 import com.rometools.rome.feed.synd.SyndEntry;
 
 /**

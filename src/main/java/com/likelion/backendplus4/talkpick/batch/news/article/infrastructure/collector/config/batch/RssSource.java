@@ -1,4 +1,4 @@
-package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.config.rss;
+package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.config.batch;
 
 import lombok.Getter;
 

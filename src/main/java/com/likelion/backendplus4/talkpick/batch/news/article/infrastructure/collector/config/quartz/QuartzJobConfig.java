@@ -1,16 +1,9 @@
-package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.config;
+package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.config.quartz;
 
-import org.quartz.CronScheduleBuilder;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
-import org.quartz.Trigger;
-import org.quartz.TriggerBuilder;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.config.quartz.RssQuartzJob;
 
 /**
  * RSS 피드를 정기적으로 수집하는 스케줄 작업
@@ -27,25 +20,13 @@ import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.coll
  *
  */
 @Configuration
-public class SchedulerConfig {
-	private final String cronExpression;
-	private final String articleCollectorBatchJobDetailName = "rssBatchJob";
-	/**
-	 * 생성자 주입을 통해 Cron 표현식을 설정한다.
-	 *
-	 * @param cronExpression RSS 배치 실행 주기를 정의하는 Cron 표현식
-	 *                       application.yml에서 article-collector.quartz.cron 값을 로드 합니다.
-	 * @author 함예정
-	 * @since 2025-05-10
-	 */
-	public SchedulerConfig(@Value("${article-collector.quartz.cron}")
-							String cronExpression) {
-		this.cronExpression = cronExpression;
-	}
+public class QuartzJobConfig {
+	private final String articleCollectorJobDetailName = "articleCollectorJobDetail";
+
 
 	/**
 	 * RSS 수집 Quartz JobDetail 빈 등록.
-	 * Job 클래스는 {@link RssQuartzJob}이며 다음과 같은 설정을 포함한다:
+	 * Job 클래스는 {@link BatchJobExecutor}이며 다음과 같은 설정을 포함한다:
 	 * - withIdentity("rssBatchJob"): Scheduler 내에서 이 Job을 고유하게 식별하기 위한 이름 지정
 	 * - storeDurably(): Trigger가 없더라도 Scheduler에 등록된 상태로 유지되도록 설정
 	 *
@@ -54,30 +35,11 @@ public class SchedulerConfig {
 	 * @since 2025-05-10
 	 */
 	@Bean
-	public JobDetail articleCollectorBatchJobDetail() {
-		return JobBuilder.newJob(RssQuartzJob.class)
-			.withIdentity("articleCollectorBatchJobDetail")
+	public JobDetail articleCollectorJobDetail() {
+		return JobBuilder.newJob(BatchJobExecutor.class)
+			.withIdentity(articleCollectorJobDetailName)
 			.storeDurably()
 			.build();
 	}
 
-	/**
-	 * RSS 수집 Quartz Trigger 빈 등록.
-	 * 다음과 같은 설정을 포함하며 {@link #articleCollectorBatchJobDetail()}에 연결된다:
-	 *  - forJob: 이 Trigger 가 어떤 Quartz Job 과 연관되어 실행될지를 지정
-	 * - withIdentity: Scheduler 내에서 이 Trigger 를 고유하게 식별하기 위한 이름 지정
-	 * - withSchedule: Cron 표현식을 사용하여 실행 주기 설정
-	 *
-	 * @return RSS 배치 작업용 Trigger 객체
-	 * @author 함예정
-	 * @since 2025-05-10
-	 */
-	@Bean
-	public Trigger rssBatchTrigger() {
-		return TriggerBuilder.newTrigger()
-			.forJob(articleCollectorBatchJobDetail())
-			.withIdentity(articleCollectorBatchJobDetailName)
-			.withSchedule(CronScheduleBuilder.cronSchedule(cronExpression))
-			.build();
-	}
 }

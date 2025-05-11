@@ -8,7 +8,7 @@ import com.likelion.backendplus4.talkpick.batch.news.article.application.service
  *
  * @since 2025-05-10
  */
-public interface NewsCollectorUseCase {
+public interface ArticleCollectorUseCase {
 
 	/**
 	 * 수집 스케줄을 시작한다.

@@ -2,7 +2,7 @@ package com.likelion.backendplus4.talkpick.batch.news.article.application.servic
 
 import org.springframework.stereotype.Service;
 
-import com.likelion.backendplus4.talkpick.batch.news.article.application.port.in.NewsCollectorUseCase;
+import com.likelion.backendplus4.talkpick.batch.news.article.application.port.in.ArticleCollectorUseCase;
 import com.likelion.backendplus4.talkpick.batch.news.article.application.port.out.CollectorPort;
 import com.likelion.backendplus4.talkpick.batch.news.article.application.service.builder.CollectorStatusRespBuilder;
 import com.likelion.backendplus4.talkpick.batch.news.article.application.service.dto.CollectorStatusResponse;
@@ -11,7 +11,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class NewsCollectorService implements NewsCollectorUseCase {
+public class ArticleCollectorService implements ArticleCollectorUseCase {
 	private final String failMessage = "처리에 실패했습니다";
 	private final CollectorPort collectorPort;
 	

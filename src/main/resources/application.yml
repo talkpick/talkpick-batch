@@ -15,7 +15,7 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.MySQL8Dialect
     hibernate:
-      ddl-auto: none
+      ddl-auto: create
     properties:
       hibernate:
         format_sql: true
@@ -23,6 +23,12 @@ spring:
   web:
     resources:
       add-mappings: false
+  batch:
+    job:
+      enabled: false
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
 log:
   rolling:
     directory: logs
@@ -33,4 +39,8 @@ log:
 decorator:
   datasource:
     p6spy:
-      enable-logging: true
+      enable-logging: false
+
+article-collector:
+  quartz:
+    cron: "0 */1 * * * ?"

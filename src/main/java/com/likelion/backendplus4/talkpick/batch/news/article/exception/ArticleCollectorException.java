@@ -4,7 +4,7 @@ import com.likelion.backendplus4.talkpick.batch.common.exception.CustomException
 import com.likelion.backendplus4.talkpick.batch.common.exception.error.ErrorCode;
 
 /**
- * RSS 예외처리 클래스
+ * 뉴스 기사 수집 관련 예외처리 클래스
  *
  * @since 2025-05-10
  * @modified 2025-05-11

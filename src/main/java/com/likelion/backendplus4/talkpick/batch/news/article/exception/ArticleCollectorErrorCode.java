@@ -8,7 +8,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 /**
- * RSS 관련 오류 코드를 정의하는 열거형
+ * 뉴스 기사 수집 관련 오류 코드를 정의하는 열거형
  *
  * @since 2025-05-10
  * @modified 2025-05-11

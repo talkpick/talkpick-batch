@@ -8,8 +8,8 @@ import java.util.List;
 
 import org.springframework.stereotype.Component;
 
-import com.likelion.backendplus4.talkpick.batch.news.article.exception.error.ArticleCollectorErrorCode;
 import com.likelion.backendplus4.talkpick.batch.news.article.exception.ArticleCollectorException;
+import com.likelion.backendplus4.talkpick.batch.news.article.exception.error.ArticleCollectorErrorCode;
 import com.rometools.rome.feed.synd.SyndEntry;
 import com.rometools.rome.feed.synd.SyndFeed;
 import com.rometools.rome.io.SyndFeedInput;
@@ -29,19 +29,13 @@ public class RssFeedReader {
 	 *
 	 * @param feedUrl RSS 피드의 URL 문자열
 	 * @return 파싱된 SyndEntry 목록
-	 * @throws ArticleCollectorException 피드 파싱에 실패한 경우
 	 * @since 2025-05-10
 	 * @author 함예정
 	 */
 	public List<SyndEntry> getFeed(String feedUrl) {
 		URL url = getURL(feedUrl);
-		try (XmlReader reader = new XmlReader(url)) {
-			SyndFeedInput input = new SyndFeedInput();
-			SyndFeed syndFeed = input.build(reader);
-			return syndFeed.getEntries();
-		} catch (Exception e) {
-			throw new ArticleCollectorException(ArticleCollectorErrorCode.FEED_PARSING_ERROR, e);
-		}
+		URLConnection connection = openConnectionWithTimeout(url);
+		return parseRssEntries(connection);
 	}
 
 	/**
@@ -61,6 +55,15 @@ public class RssFeedReader {
 		}
 	}
 
+	/**
+	 * 지정된 URL에 대해 연결 타임아웃과 읽기 타임아웃을 설정한 후 URLConnection을 반환합니다.
+	 *
+	 * @param url 연결할 URL 객체
+	 * @return 설정된 타임아웃을 가진 URLConnection 객체
+	 * @throws RuntimeException 연결 중 IOException이 발생할 경우 런타임 예외로 래핑하여 던짐
+	 * @author 함예정
+	 * @since 2025-05-12
+	 */
 	private URLConnection openConnectionWithTimeout(URL url) {
 		try {
 			URLConnection connection = url.openConnection();
@@ -68,9 +71,26 @@ public class RssFeedReader {
 			connection.setReadTimeout(5000);
 			return connection;
 		} catch (IOException e) {
-			throw new RuntimeException(e);
+			throw new ArticleCollectorException(ArticleCollectorErrorCode.FEED_CONNECTION_ERROR, e);
 		}
+	}
 
-
+	/**
+	 * 주어진 URLConnection으로부터 RSS 피드를 읽어 SyndEntry 목록으로 파싱합니다.
+	 *
+	 * @param connection RSS 피드를 제공하는 URLConnection 객체
+	 * @return 파싱된 SyndEntry 객체 리스트
+	 * @throws ArticleCollectorException RSS 피드 파싱 중 오류가 발생한 경우 사용자 정의 예외로 래핑하여 던짐
+	 * @author 함예정
+	 * @since 2025-05-12
+	 */
+	private List<SyndEntry> parseRssEntries(URLConnection connection) {
+		try (XmlReader reader = new XmlReader(connection)) {
+			SyndFeedInput input = new SyndFeedInput();
+			SyndFeed syndFeed = input.build(reader);
+			return syndFeed.getEntries();
+		} catch (Exception e) {
+			throw new ArticleCollectorException(ArticleCollectorErrorCode.FEED_PARSING_ERROR, e);
+		}
 	}
 }

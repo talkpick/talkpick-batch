@@ -66,11 +66,11 @@ public class RssSourcePartitioner implements Partitioner {
 	 */
 	private Map<String, ExecutionContext> buildPartitions(List<RssSource> sources, int chunkSize) {
 		Map<String, ExecutionContext> partitions = new HashMap<>();
-		int totalPartitions = (int)Math.ceil((double)sources.size() / chunkSize);
+		int totalPartitions = calculateTotalPartitions(sources, chunkSize);
 
 		for (int i = 0; i < totalPartitions; i++) {
 			int from = i * chunkSize;
-			int to = Math.min(from + chunkSize, sources.size());
+			int to = calculateChunkEndIndex(sources, chunkSize, from);
 
 			if (from >= to) {
 				break;
@@ -81,6 +81,34 @@ public class RssSourcePartitioner implements Partitioner {
 		}
 
 		return partitions;
+	}
+
+	/**
+	 * 주어진 RSS 소스 리스트를 청크 크기(chunkSize)로 분할할 때 필요한 총 파티션 수를 계산합니다.
+	 *
+	 * @param sources RSS 소스 목록
+	 * @param chunkSize 하나의 파티션에 포함될 RSS 소스 수
+	 * @return 전체 파티션 수
+	 * @author 함예정
+	 * @since 2025-05-12
+	 */
+	private int calculateTotalPartitions(List<RssSource> sources, int chunkSize) {
+		return (sources.size() + chunkSize - 1) / chunkSize;
+	}
+
+	/**
+	 * 주어진 시작 인덱스(from)와 청크 크기(chunkSize)를 기반으로,
+	 * 리스트의 범위를 초과하지 않도록 제한된 끝 인덱스를 계산합니다.
+	 *
+	 * @param sources RSS 소스 리스트
+	 * @param chunkSize 하나의 파티션에 포함될 RSS 소스 수
+	 * @param from 시작 인덱스
+	 * @return 리스트 범위를 초과하지 않는 끝 인덱스
+	 * @author 함예정
+	 * @since 2025-05-12
+	 */
+	private int calculateChunkEndIndex(List<RssSource> sources, int chunkSize, int from) {
+		return Math.min(from + chunkSize, sources.size());
 	}
 
 	/**

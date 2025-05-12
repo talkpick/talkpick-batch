@@ -45,28 +45,24 @@ public class ArticleWriter implements ItemWriter<List<ArticleEntity>> {
 		chunk.getItems().stream()
 			.flatMap(List::stream)
 			.filter(item -> !rssNewsRepository.existsByLink(item.getLink()))
-			.forEach(item -> {
-				try {
-					rssNewsRepository.save(item);
-					savedCount.incrementAndGet();
-				} catch (DataIntegrityViolationException e) {
-					log.debug("중복 항목 감지: {}", item.getLink());
-				}
-			});
-		logIfNewArticlesFound(savedCount);
+			.forEach(item -> {saveItem(item, savedCount);});
+		log.info("새로 저장된 뉴스 개수: {}", savedCount.get());
 	}
 
-	/**
-	 * 새로 저장된 기사가 존재하면 개수를 info 로그로 출력한다.
+	/***
+	 * DB에 뉴스를 저장하고, 저장된 개수를 증가시킵니다.
 	 *
-	 * @param savedCount 저장된 기사 수 (AtomicInteger)
-	 * @since 2025-05-10
+	 * @param item 저장할 뉴스
+	 * @param savedCount 저장된 갯수
 	 * @author 함예정
+	 * @since 2025-05-12
 	 */
-	private void logIfNewArticlesFound(AtomicInteger savedCount) {
-		int newArticleCount = savedCount.get();
-		if(newArticleCount > 0){
-			log.info("새로 저장된 뉴스 개수: {}", savedCount.get());
+	private void saveItem(ArticleEntity item, AtomicInteger savedCount) {
+		try {
+			rssNewsRepository.save(item);
+			savedCount.incrementAndGet();
+		} catch (DataIntegrityViolationException e) {
+			log.debug("중복 항목 감지: {}", item.getLink());
 		}
 	}
 }

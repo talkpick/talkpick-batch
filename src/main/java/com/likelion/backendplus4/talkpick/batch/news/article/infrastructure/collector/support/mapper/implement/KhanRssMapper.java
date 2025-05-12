@@ -1,5 +1,7 @@
 package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.mapper.implement;
 
+import com.likelion.backendplus4.talkpick.batch.news.article.exception.ArticleCollectorException;
+import com.likelion.backendplus4.talkpick.batch.news.article.exception.error.ArticleCollectorErrorCode;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.config.batch.RssSource;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.mapper.AbstractRssMapper;
 import com.rometools.rome.feed.synd.SyndCategory;
@@ -31,15 +33,41 @@ public class KhanRssMapper extends AbstractRssMapper {
     }
 
     /**
-     * GUID 추출, URI를 GUID로 사용
+     * GUID 추출, 링크에서 기사 ID를 추출하여 사용
      *
      * @param entry RSS 항목
      * @param source RSS 소스 정보
-     * @return URI 또는 생성된 고유 ID
+     * @return 신문사 코드 + 기사 ID 형태의 GUID
      */
     @Override
     protected String extractGuid(SyndEntry entry, RssSource source) {
-        return entry.getUri() != null ? entry.getUri() : source.getCodePrefix() + System.currentTimeMillis();
+        String uniqueId = extractUniqueIdFromLink(entry.getLink());
+        return source.getCodePrefix() + uniqueId;
+    }
+
+    /**
+     * 경향신문 링크에서 고유 ID 추출
+     *
+     * @param link 기사 링크
+     * @return 추출된 고유 ID
+     */
+    private String extractUniqueIdFromLink(String link) {
+        if (link == null) {
+            return String.valueOf(System.currentTimeMillis());
+        }
+
+        try {
+            String[] parts = link.split("/");
+            for (int i = 0; i < parts.length; i++) {
+                if ("article".equals(parts[i]) && i + 1 < parts.length) {
+                    return parts[i + 1];
+                }
+            }
+        } catch (Exception e) {
+        throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR);
+    }
+
+        return String.valueOf(System.currentTimeMillis());
     }
 
     /**
@@ -87,7 +115,7 @@ public class KhanRssMapper extends AbstractRssMapper {
     }
 
     /**
-     * 카테고리 정보 추출, 여러 카테고리를 쉼표로 구분하여 결합
+     * 카테고리 enum 정보 추출
      *
      * @param entry RSS 항목
      * @param source RSS 소스 정보
@@ -95,11 +123,6 @@ public class KhanRssMapper extends AbstractRssMapper {
      */
     @Override
     protected String extractCategory(SyndEntry entry, RssSource source) {
-        if (!entry.getCategories().isEmpty()) {
-            return entry.getCategories().stream()
-                    .map(SyndCategory::getName)
-                    .collect(Collectors.joining(", "));
-        }
         return source.getCategoryName();
     }
 }

@@ -94,7 +94,7 @@ public class RssSourcePartitioner implements Partitioner {
 	 * @since 2025-05-10
 	 * @author 함예정
 	 */
-	private static ExecutionContext buildExecutionContext(List<RssSource> sources, int from, int to) {
+	private ExecutionContext buildExecutionContext(List<RssSource> sources, int from, int to) {
 		List<RssSource> subList = new ArrayList<>(sources.subList(from, to));
 		ExecutionContext context = new ExecutionContext();
 		context.put("sourceList", subList);

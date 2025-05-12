@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.mapper.factory.RssMappingFactory;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.config.batch.RssSource;
-import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.mapper.RssMapper;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.mapper.AbstractRssMapper;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.entity.ArticleEntity;
 import com.rometools.rome.feed.synd.SyndEntry;
 
@@ -24,6 +24,7 @@ import com.rometools.rome.feed.synd.SyndEntry;
  * 이 클래스는 Step 실행 시에만 생성되며, StepScope에 따라 각 파티션마다 독립적으로 주입된다.
  *
  * @since 2025-05-10
+ * @modified 2025-05-13 RssMapper to AbstractRssMapper로 변경
  */
 @Component
 @StepScope
@@ -51,12 +52,8 @@ public class RssEntryProcessor implements ItemProcessor<RssSource, List<ArticleE
 	@Override
 	public List<ArticleEntity> process(RssSource source) {
 		List<SyndEntry> rssParseResult = parseRss(source);
-		RssMapper mapper = getMapper(source);
+		AbstractRssMapper mapper = getMapper(source);
 		return buildArticleEntityList(source, rssParseResult, mapper);
-		/** TODO: 가독성 향상을 위해 inline-Variable 안했음.
-		 *  추후 팀 컨벤션을 정해 할지 말지 결정하면 좋겠음
-		 *  만약 inline-variable 하면 private 메소드 위치 수정해야함.
-		 */
 	}
 
 	/**
@@ -78,8 +75,9 @@ public class RssEntryProcessor implements ItemProcessor<RssSource, List<ArticleE
 	 * @return 매퍼 인스턴스
 	 * @since 2025-05-10
 	 * @author 함예정
+	 * @modified 2025-05-13 AbstractRssMapper 타입으로 변경
 	 */
-	private RssMapper getMapper(RssSource source) {
+	private AbstractRssMapper getMapper(RssSource source) {
 		return mappingFactory.getMapper(source.getMapperType());
 	}
 
@@ -92,9 +90,10 @@ public class RssEntryProcessor implements ItemProcessor<RssSource, List<ArticleE
 	 * @return 변환된 ArticleEntity 리스트
 	 * @since 2025-05-10
 	 * @author 함예정
+	 * @modified 2025-05-13 AbstractRssMapper 타입으로 변경
 	 */
 	private List<ArticleEntity> buildArticleEntityList(RssSource source, List<SyndEntry> rssParseResult,
-		RssMapper mapper) {
+													   AbstractRssMapper mapper) {
 		List<ArticleEntity> result = new ArrayList<>();
 		for (SyndEntry entry : rssParseResult) {
 			result.add(mapper.mapToRssNews(entry, source));

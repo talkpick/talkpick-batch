@@ -54,7 +54,6 @@ public class ArticleWriter implements ItemWriter<List<ArticleEntity>> {
 				}
 			});
 		logIfNewArticlesFound(savedCount);
-
 	}
 
 	/**

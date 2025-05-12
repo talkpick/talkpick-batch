@@ -1,54 +1,60 @@
-//package com.likelion.backendplus4.talkpick.batch.rss.service.mapper;
-//
-//import com.rometools.rome.feed.synd.SyndCategory;
-//import com.rometools.rome.feed.synd.SyndEntry;
-//import com.likelion.backendplus4.talkpick.batch.rss.entity.ArticleEntity;
-//import org.springframework.stereotype.Component;
-//
-//import java.time.LocalDateTime;
-//import java.time.ZoneId;
-//import java.util.Date;
-//import java.util.stream.Collectors;
-//
-//@Component
-//public class DongaRssMapper implements RssMapper {
-//
-//    /*
-//        SyndEntry는 Rome 라이브러리에서 RSS 항목 나타내는 객체
-//
-//        getTitle(): 제목 반환
-//        getLink(): 링크 반환
-//        getPublishedDate(): 발행일 반환
-//        getDescription(): 설명(요약) 반환
-//        getCategories(): 카테고리 목록 반환
-//        getUri(): 항목의 고유 식별자(제공사 고유번호 2자리 + guid) 반환
-//                  (예시: KM0028082827 [KM: 국민일보])
-//                  몇몇 피드들은 url에서 추출해서 사용
-//
-//        getForeignMarkup(): RSS 2.0 기본 태그 외의 확장 태그(Dublin Core 등) 접근
-//
-//        필요하면 객체 수정해서 사용, CustomEntry
-//     */
-//
-//    @Override
-//    public ArticleEntity mapToRssNews(SyndEntry entry) {
-//        // category
-//        String category = entry.getCategories().stream()
-//                .map(SyndCategory::getName)
-//                .collect(Collectors.joining(", "));
-//
-//        return ArticleEntity.builder()
-//                .title(entry.getTitle())
-//                .link(entry.getLink())
-//                .pubDate(convertToLocalDateTime(entry.getPublishedDate()))
-//                .category(category)
-//                .guid(entry.getUri()) // URI를 GUID로 사용
-//                .build();
-//    }
-//
-//    private LocalDateTime convertToLocalDateTime(Date date) {
-//        return date != null
-//                ? date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime()
-//                : LocalDateTime.now();
-//    }
-//}
+package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.mapper.implement;
+
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.config.batch.RssSource;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.mapper.AbstractRssMapper;
+import com.rometools.rome.feed.synd.SyndCategory;
+import com.rometools.rome.feed.synd.SyndEntry;
+
+import org.springframework.stereotype.Component;
+
+import java.util.stream.Collectors;
+
+/**
+ * 동아일보 RSS 매퍼 구현체
+ *
+ * @author 양병학
+ * @since 2025-05-10 최초 작성
+ * @modified 2025-05-13 AbstractRssMapper 상속 구조로 변경 및 활성화
+ */
+@Component
+public class DongaRssMapper extends AbstractRssMapper {
+
+    /**
+     * 매퍼 타입 반환
+     *
+     * @return 매퍼 타입 (da)
+     */
+    @Override
+    public String getMapperType() {
+        return "da";
+    }
+
+    /**
+     * GUID 추출, URI를 GUID로 사용
+     *
+     * @param entry RSS 항목
+     * @param source RSS 소스 정보
+     * @return URI 또는 생성된 고유 ID
+     */
+    @Override
+    protected String extractGuid(SyndEntry entry, RssSource source) {
+        return entry.getUri() != null ? entry.getUri() : source.getCodePrefix() + System.currentTimeMillis();
+    }
+
+    /**
+     * 카테고리 정보 추출, 여러 카테고리를 쉼표로 구분하여 결합
+     *
+     * @param entry RSS 항목
+     * @param source RSS 소스 정보
+     * @return 결합된 카테고리 문자열
+     */
+    @Override
+    protected String extractCategory(SyndEntry entry, RssSource source) {
+        if (!entry.getCategories().isEmpty()) {
+            return entry.getCategories().stream()
+                    .map(SyndCategory::getName)
+                    .collect(Collectors.joining(", "));
+        }
+        return source.getCategoryName();
+    }
+}

@@ -61,4 +61,9 @@ public class ArticleEntity {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
     }
+
+    public String getDescription(){
+        return description != null ? description : "";
+    }
+
 }

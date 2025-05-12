@@ -1,12 +1,16 @@
 package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.mapper;
 
+import com.likelion.backendplus4.talkpick.batch.news.article.exception.ArticleCollectorException;
+import com.likelion.backendplus4.talkpick.batch.news.article.exception.error.ArticleCollectorErrorCode;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.config.batch.RssSource;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.entity.ArticleEntity;
+import com.rometools.rome.feed.synd.SyndContent;
 import com.rometools.rome.feed.synd.SyndEntry;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.Optional;
 
 /**
  * RSS를 ArticleEntity로 변환하는 추상 클래스
@@ -84,13 +88,10 @@ public abstract class AbstractRssMapper {
      * 설명 추출 메서드
      *
      * @param entry RSS 항목
-     * @return 설명
+     * @return 추출된 설명
      */
     protected String extractDescription(SyndEntry entry) {
-        if (entry.getDescription() == null) {
-            return "";
-        }
-        return entry.getDescription().getValue();
+        return entry.getDescription() != null ? entry.getDescription().getValue() : null;
     }
 
     /**

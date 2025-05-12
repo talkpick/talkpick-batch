@@ -34,9 +34,7 @@ spring:
     job-store-type: jdbc
     jdbc:
       initialize-schema: always
-  ai:
-    openai:
-      api-key: ${OPENAI_API_KEY}
+
 log:
   rolling:
     directory: logs

@@ -1,0 +1,43 @@
+name: talkpick-batch-dev-deploy
+
+on:
+  push:
+    branches:
+      - dev
+    paths-ignore:
+      - '.github/**'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+        
+    - name: Set up Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+    - name: Set custom build directory dynamically
+      run: |
+        echo "buildDir=/deploy/${{ github.event.repository.name }}/build/gradle" >> gradle.properties
+        
+    - name: Make gradlew executable
+      run: chmod +x ./gradlew
+
+    - name: Build Spring Boot (JAR)
+      run: ./gradlew bootJar
+    - name: Copy JAR to shared volume
+      run: |
+        cp /deploy/${{ github.event.repository.name }}/build/gradle/libs/*.jar \
+          /deploy/${{ github.event.repository.name }}/build/app.jar   
+    
+    - name: Restart Docker
+      run: |
+        cd /deploy
+        docker-compose stop batch
+        docker-compose rm -f batch
+        docker-compose up -d --build batch

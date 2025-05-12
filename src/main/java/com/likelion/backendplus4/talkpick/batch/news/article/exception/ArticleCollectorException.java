@@ -19,6 +19,11 @@ public class ArticleCollectorException extends CustomException {
         this.errorCode = errorCode;
     }
 
+    public ArticleCollectorException(ErrorCode errorCode, Throwable cause) {
+        super(errorCode);
+        this.errorCode = errorCode;
+    }
+
     /**
      *
      * @return

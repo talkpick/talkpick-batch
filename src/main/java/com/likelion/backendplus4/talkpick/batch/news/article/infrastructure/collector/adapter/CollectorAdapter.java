@@ -5,8 +5,8 @@ import org.quartz.SchedulerException;
 import org.springframework.stereotype.Component;
 
 import com.likelion.backendplus4.talkpick.batch.news.article.application.port.out.CollectorPort;
-import com.likelion.backendplus4.talkpick.batch.news.article.exception.error.ArticleCollectorErrorCode;
 import com.likelion.backendplus4.talkpick.batch.news.article.exception.ArticleCollectorException;
+import com.likelion.backendplus4.talkpick.batch.news.article.exception.error.ArticleCollectorErrorCode;
 
 import lombok.RequiredArgsConstructor;
 
@@ -26,18 +26,12 @@ public class CollectorAdapter implements CollectorPort {
 	 * Quartz 스케줄러를 시작하고, 정상적으로 시작되었는지 상태를 확인한다.
 	 *
 	 * @return 스케줄러가 실행 중이면 true, 그렇지 않으면 false
-	 * @throws ArticleCollectorException SchedulerException 발생으로 실행 실패 시
 	 * @author 함예정
 	 * @since 2025-05-10
 	 */
 	@Override
 	public boolean start() {
-		try {
-			scheduler.start();
-			return isRunning();
-		} catch (SchedulerException e) {
-			throw new ArticleCollectorException(ArticleCollectorErrorCode.SCHEDULER_START_FAIL);
-		}
+		return startScheduler();
 	}
 
 	/**
@@ -45,7 +39,6 @@ public class CollectorAdapter implements CollectorPort {
 	 * 이미 standby 상태인 경우에는 아무 작업도 하지 않는다.
 	 *
 	 * @return 정지 요청이 성공했으면 true
-	 * @throws ArticleCollectorException 스케줄러가 비정상 상태이거나 standby 전환 실패 시
 	 * @author 함예정
 	 * @since 2025-05-10
 	 */
@@ -57,47 +50,54 @@ public class CollectorAdapter implements CollectorPort {
 			}
 			return true;
 		} catch (SchedulerException e) {
-			throw new ArticleCollectorException(ArticleCollectorErrorCode.SCHEDULER_STOP_FAIL);
+			throw new ArticleCollectorException(ArticleCollectorErrorCode.SCHEDULER_STOP_FAIL, e);
 		}
 	}
 
 	/**
-	 * 스케줄러가 실행 중인지 최대 10회 (3초) 반복 확인한다. <p>
-	 * 각 확인 사이에 300ms 지연을 두고, 실행 중이면 즉시 true 반환.
+	 * 스케줄러가 실행 상태 플래그 확인 메소드
 	 *
 	 * @return 스케줄러가 실행 중이면 true, 그렇지 않으면 false
-	 * @throws ArticleCollectorException 스케줄러 상태 확인 실패 시
 	 * @author 함예정
 	 * @since 2025-05-10
 	 */
 	@Override
 	public boolean isRunning() {
-		for (int i = 0; i < 10; i++) {
-			try {
-				if (scheduler.isStarted() && !scheduler.isInStandbyMode()) {
-					return true;
-				}
-				sleep(300L);
-			} catch (SchedulerException e) {
-				throw new ArticleCollectorException(ArticleCollectorErrorCode.STATUS_CHECK_FAIL);
-			}
-		}
-		return false;
+		return checkSchedulerStatus();
 	}
 
 	/**
-	 * 현재 스레드를 지정된 시간(밀리초) 동안 일시 중단한다.  <p>
-	 * 중단(interrupt)될 경우, 인터럽트 상태를 복원하여 호출자에게 중단 신호를 전달한다.
+	 * Quartz 스케줄러를 세부 시작 메소드
+	 * 1. 실행 요청
+	 * 2. 실행 상태 플래그 반환
 	 *
-	 * @param time 일시 중단할 시간 (단위: 밀리초)
+	 * @return 스케줄러가 실행 중이면 true, 그렇지 않으면 false
+	 * @throws ArticleCollectorException SchedulerException 발생으로 실행 실패 시
 	 * @author 함예정
-	 * @since 2025-05-10
+	 * @since 2025-05-11
 	 */
-	private void sleep(long time) {
+	private boolean startScheduler() {
 		try {
-			Thread.sleep(time);
-		} catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
+			scheduler.start();
+			return isRunning();
+		} catch (SchedulerException e) {
+			throw new ArticleCollectorException(ArticleCollectorErrorCode.SCHEDULER_START_FAIL, e);
+		}
+	}
+
+	/**
+	 * 스케줄러의 현재 상태를 확인합니다.
+	 *
+	 * @return 스케줄러가 시작되었고 대기 모드가 아닌 경우 true, 그렇지 않으면 false
+	 * @throws ArticleCollectorException 스케줄러 상태 확인 중 예외 발생 시 커스텀 예외로 래핑하여 던짐
+	 * @author 함예정
+	 * @since 2025-05-11
+	 */
+	private boolean checkSchedulerStatus() {
+		try {
+			return scheduler.isStarted() && !scheduler.isInStandbyMode();
+		} catch (SchedulerException e) {
+			throw new ArticleCollectorException(ArticleCollectorErrorCode.STATUS_CHECK_FAIL, e);
 		}
 	}
 }

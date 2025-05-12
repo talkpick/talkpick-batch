@@ -12,6 +12,7 @@ import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteExcep
 import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.stereotype.Component;
 
+import com.likelion.backendplus4.talkpick.batch.news.article.exception.BatchJobExceptionTranslator;
 import com.likelion.backendplus4.talkpick.batch.news.article.exception.error.ArticleCollectorErrorCode;
 import com.likelion.backendplus4.talkpick.batch.news.article.exception.ArticleCollectorException;
 
@@ -34,6 +35,7 @@ import lombok.RequiredArgsConstructor;
 public class BatchJobExecutor implements org.quartz.Job {
 	private final JobLauncher jobLauncher;
 	private final Job articleCollectorBatchJob;
+	private final BatchJobExceptionTranslator batchJobExceptionTranslator;
 
 	/**
 	 * Quartz 트리거에 의해 호출되는 메서드.
@@ -63,16 +65,9 @@ public class BatchJobExecutor implements org.quartz.Job {
 
 		try {
 			jobLauncher.run(articleCollectorBatchJob, params);
-		} catch (JobExecutionAlreadyRunningException e) {
-			throw new ArticleCollectorException(ArticleCollectorErrorCode.JOB_ALREADY_RUNNING);
-		} catch (JobRestartException e) {
-			throw new ArticleCollectorException(ArticleCollectorErrorCode.JOB_RESTART_FAIL);
-		} catch (JobInstanceAlreadyCompleteException e) {
-			throw new ArticleCollectorException(ArticleCollectorErrorCode.JOB_ALREADY_COMPLETE);
-		} catch (JobParametersInvalidException e) {
-			throw new ArticleCollectorException(ArticleCollectorErrorCode.INVALID_JOB_PARAMETER);
 		} catch (Exception e) {
-			throw new ArticleCollectorException(ArticleCollectorErrorCode.UNKNOWN_ERROR);
+			ArticleCollectorErrorCode exceptionCode = batchJobExceptionTranslator.translate(e);
+			throw new ArticleCollectorException(exceptionCode);
 		}
 	}
 }

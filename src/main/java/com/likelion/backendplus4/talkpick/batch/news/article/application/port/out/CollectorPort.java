@@ -24,7 +24,6 @@ public interface CollectorPort {
 	 */
 	boolean stop();
 
-
 	/**
 	 * 현재 실행 중인지 확인한다.
 	 *

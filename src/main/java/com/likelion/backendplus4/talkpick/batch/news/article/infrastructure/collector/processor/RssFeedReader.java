@@ -38,7 +38,7 @@ public class RssFeedReader {
 			SyndFeed syndFeed = input.build(reader);
 			return syndFeed.getEntries();
 		} catch (Exception e) {
-			throw new ArticleCollectorException(ArticleCollectorErrorCode.FEED_PARSING_ERROR);
+			throw new ArticleCollectorException(ArticleCollectorErrorCode.FEED_PARSING_ERROR, e);
 		}
 	}
 

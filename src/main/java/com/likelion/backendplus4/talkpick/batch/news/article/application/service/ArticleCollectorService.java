@@ -4,7 +4,6 @@ import org.springframework.stereotype.Service;
 
 import com.likelion.backendplus4.talkpick.batch.news.article.application.port.in.ArticleCollectorUseCase;
 import com.likelion.backendplus4.talkpick.batch.news.article.application.port.out.CollectorPort;
-import com.likelion.backendplus4.talkpick.batch.news.article.application.service.builder.CollectorStatusRespBuilder;
 import com.likelion.backendplus4.talkpick.batch.news.article.application.service.dto.ArticleCollectorStatusResponse;
 
 import lombok.RequiredArgsConstructor;
@@ -22,7 +21,6 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class ArticleCollectorService implements ArticleCollectorUseCase {
-	private final String failMessage = "처리에 실패했습니다";
 	private final CollectorPort collectorPort;
 
 	/**
@@ -34,9 +32,9 @@ public class ArticleCollectorService implements ArticleCollectorUseCase {
 	 * @since 2025-05-11
 	 */
 	@Override
-	public ArticleCollectorStatusResponse start(){
+	public ArticleCollectorStatusResponse start() {
 		boolean result = collectorPort.start();
-		return getCollectorStatusResponse(result, "스케줄 작업이 시작되었습니다.");
+		return getCollectorStatusResponse(result);
 	}
 
 	/**
@@ -48,24 +46,20 @@ public class ArticleCollectorService implements ArticleCollectorUseCase {
 	 * @since 2025-05-11
 	 */
 	@Override
-	public ArticleCollectorStatusResponse stop(){
+	public ArticleCollectorStatusResponse stop() {
 		boolean result = collectorPort.stop();
-		return getCollectorStatusResponse(result, "스케줄 작업이 중단되었습니다.");
+		return getCollectorStatusResponse(result);
 	}
 
 	/**
 	 * 실행 결과에 따라 응답 메시지를 구성한다.
 	 *
 	 * @param result CollectorPort 실행 결과
-	 * @param successMessage 성공 시 응답에 포함할 메시지
 	 * @return 상태 응답 객체
 	 * @author 함예정
 	 * @since 2025-05-11
 	 */
-	private ArticleCollectorStatusResponse getCollectorStatusResponse(boolean result, String successMessage) {
-		if(result) {
-			return CollectorStatusRespBuilder.toResponse(true, successMessage);
-		}
-		return CollectorStatusRespBuilder.toResponse(false, failMessage);
+	private ArticleCollectorStatusResponse getCollectorStatusResponse(boolean result) {
+		return new ArticleCollectorStatusResponse(result);
 	}
 }

@@ -92,7 +92,7 @@ public class RssEntryProcessor implements ItemProcessor<RssSource, List<ArticleE
 	 * @author 함예정
 	 * @modified 2025-05-13 AbstractRssMapper 타입으로 변경
 	 */
-	private List<ArticleEntity> f(RssSource source, List<SyndEntry> rssParseResult,
+	private List<ArticleEntity> buildArticleEntityList(RssSource source, List<SyndEntry> rssParseResult,
 													   AbstractRssMapper mapper) {
 		return rssParseResult.stream()
 			.map(entry -> mapper.mapToRssNews(entry, source))

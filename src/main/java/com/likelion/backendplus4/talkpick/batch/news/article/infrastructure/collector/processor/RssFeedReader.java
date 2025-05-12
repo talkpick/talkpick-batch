@@ -1,7 +1,9 @@
 package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.processor;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.List;
 
 import org.springframework.stereotype.Component;
@@ -57,5 +59,18 @@ public class RssFeedReader {
 		} catch (MalformedURLException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	private URLConnection openConnectionWithTimeout(URL url) {
+		try {
+			URLConnection connection = url.openConnection();
+			connection.setConnectTimeout(3000);
+			connection.setReadTimeout(5000);
+			return connection;
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+
+
 	}
 }

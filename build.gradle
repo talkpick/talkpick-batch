@@ -27,7 +27,6 @@ dependencies {
     // Spring-boot
 
     implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml'
 
     implementation 'me.paulschwarz:spring-dotenv:3.0.0'
 

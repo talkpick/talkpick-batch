@@ -2,7 +2,7 @@ server:
   port: ${WEB_PORT:8082}
   error:
     whitelabel:
-          enabled: false
+      enabled: false
 
 spring:
   ai:
@@ -24,6 +24,19 @@ spring:
       hibernate:
         format_sql: true
     open-in-view: false
+  web:
+    resources:
+      add-mappings: false
+  batch:
+    job:
+      enabled: false
+    jdbc:
+      initialize-schema: never
+  quartz:
+    job-store-type: jdbc
+    jdbc:
+      initialize-schema: never
+
 log:
   rolling:
     directory: logs
@@ -31,10 +44,11 @@ log:
     pattern: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - [TraceId: %X{traceId:-no-trace}] - %msg%n"
     max-history: 30
     total-size-cap: 10MB
-  web:
-    resources:
-      add-mappings: false
 decorator:
   datasource:
     p6spy:
-      enable-logging: true
+      enable-logging: false
+
+article-collector:
+  quartz:
+    cron: "0 */1 * * * ?"

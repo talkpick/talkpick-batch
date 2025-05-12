@@ -30,10 +30,12 @@ spring:
   batch:
     job:
       enabled: false
+    jdbc:
+      initialize-schema: never
   quartz:
     job-store-type: jdbc
     jdbc:
-      initialize-schema: always
+      initialize-schema: never
 
 log:
   rolling:
@@ -45,7 +47,7 @@ log:
 decorator:
   datasource:
     p6spy:
-      enable-logging: true
+      enable-logging: false
 
 article-collector:
   quartz:

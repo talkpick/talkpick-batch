@@ -35,6 +35,7 @@ public class StepConfig {
 	private final String parseRssStepName = "parseRssStep";
 	private final int gridSize = 3;
 	private final int chunkSize = 10;
+	private final int retryLimit = 3;
 	private final int skipLimit = 100;
 	private final JobRepository jobRepository;
 	private final Partitioner rssSourcePartitioner;
@@ -94,6 +95,8 @@ public class StepConfig {
 			.processor(processor)
 			.writer(writer)
 			.faultTolerant()
+			.retry(ArticleCollectorException.class)
+			.retryLimit(retryLimit)
 			.skip(ArticleCollectorException.class)
 			.skipLimit(skipLimit)
 			.build();

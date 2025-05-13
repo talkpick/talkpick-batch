@@ -65,10 +65,11 @@ public class DongaRssMapper extends AbstractRssMapper {
      *
      * @param link 기사 링크
      * @return 추출된 고유 ID
+     * @throws ArticleCollectorException 링크가 null이거나 ID를 추출할 수 없는 경우
      */
     private String extractUniqueIdFromLink(String link) {
-        if (link == null) {
-            return String.valueOf(System.currentTimeMillis());
+        if (link == null || link.trim().isEmpty()) {
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR);
         }
 
         try {
@@ -77,10 +78,10 @@ public class DongaRssMapper extends AbstractRssMapper {
                 return parts[parts.length - 2];
             }
         } catch (Exception e) {
-            throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR);
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR, e);
         }
 
-        return String.valueOf(System.currentTimeMillis());
+        throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR);
     }
 
     /**

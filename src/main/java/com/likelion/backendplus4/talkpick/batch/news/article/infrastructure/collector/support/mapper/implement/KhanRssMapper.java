@@ -67,24 +67,28 @@ public class KhanRssMapper extends AbstractRssMapper {
      *
      * @param link 기사 링크
      * @return 추출된 고유 ID
+     * @throws ArticleCollectorException 링크가 null이거나 ID를 추출할 수 없는 경우
      */
     private String extractUniqueIdFromLink(String link) {
-        if (link == null) {
-            return String.valueOf(System.currentTimeMillis());
+        if (link == null || link.trim().isEmpty()) {
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR);
         }
 
         try {
             String[] parts = link.split("/");
             for (int i = 0; i < parts.length; i++) {
                 if ("article".equals(parts[i]) && i + 1 < parts.length) {
-                    return parts[i + 1];
+                    String id = parts[i + 1];
+                    if (id != null && !id.trim().isEmpty()) {
+                        return id;
+                    }
                 }
             }
         } catch (Exception e) {
-            throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR);
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR, e);
         }
 
-        return String.valueOf(System.currentTimeMillis());
+        throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR);
     }
 
     /**

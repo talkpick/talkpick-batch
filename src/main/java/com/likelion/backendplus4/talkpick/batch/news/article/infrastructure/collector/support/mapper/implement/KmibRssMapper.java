@@ -81,17 +81,20 @@ public class KmibRssMapper extends AbstractRssMapper {
      * @return 추출된 arcid, 없으면 타임스탬프 반환
      */
     private String extractArcIdFromLink(String link) {
-        if (link == null) {
-            return String.valueOf(System.currentTimeMillis());
+        if (link == null || link.trim().isEmpty()) {
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR);
         }
 
         Matcher matcher = ARCID_PATTERN.matcher(link);
         if (matcher.find()) {
-            return matcher.group(1);
+            String arcId = matcher.group(1);
+            if (arcId != null && !arcId.trim().isEmpty()) {
+                return arcId;
+            }
         }
 
-        // 패턴이 일치하지 않는 경우도 타임스탬프 반환
-        return String.valueOf(System.currentTimeMillis());
+        // 패턴이 일치하지 않는 경우 예외 발생
+        throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR);
     }
 
     /**

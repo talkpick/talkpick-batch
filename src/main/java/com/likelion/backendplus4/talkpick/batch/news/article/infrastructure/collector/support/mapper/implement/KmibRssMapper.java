@@ -47,17 +47,6 @@ public class KmibRssMapper extends AbstractRssMapper {
     }
 
     /**
-     * Rss 피드가 요약본인지 여부를 반환
-     * 국민일보는 RSS에 전체 내용이 포함, false 반환
-     *
-     * @return 요약본 여부 (false: 전체 본문 제공)
-     */
-    @Override
-    protected boolean getIsSummary() {
-        return false;
-    }
-
-    /**
      * 링크에서 arcid 값 추출
      *
      * @param link 기사 링크
@@ -73,5 +62,22 @@ public class KmibRssMapper extends AbstractRssMapper {
             return matcher.group(1);
         }
         return link;
+    }
+
+    /**
+     * 이미지 URL 추출 메서드
+     * 국민일보 RSS feed에서 media:content 태그에서 이미지 URL 추출
+     *
+     * @param entry RSS 항목
+     * @return 이미지 URL
+     */
+    @Override
+    protected String extractImageUrl(SyndEntry entry) {
+        return entry.getForeignMarkup().stream()
+                .filter(element -> "content".equals(element.getName()) &&
+                        "media".equals(element.getNamespacePrefix()))
+                .findFirst()
+                .map(element -> element.getAttributeValue("url"))
+                .orElse("");
     }
 }

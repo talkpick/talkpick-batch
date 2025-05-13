@@ -41,10 +41,17 @@ public abstract class AbstractRssMapper {
         String guid = extractGuid(entry, source);
         String description = extractDescription(entry);
         String category = extractCategory(entry, source);
+        String imageUrl = extractImageUrl(entry);
 
-        String content = getContentWithScraping(description, link, source.getMapperType());
+        // 본문 내용 결정
+        String content = description;
 
-        return buildArticleEntity(title, link, pubDate, guid, description, category);
+        // RSS가 전체 내용을 포함하지 않는 경우에만 스크래핑 시도
+        if (!source.hasFullContent()) {
+            content = getContentWithScraping(description, link, source.getMapperType());
+        }
+
+        return buildArticleEntity(title, link, pubDate, guid, content, category, imageUrl);
     }
 
     /**
@@ -103,6 +110,17 @@ public abstract class AbstractRssMapper {
     }
 
     /**
+     * 이미지 URL 추출 메서드
+     * 기본 구현은 빈 문자열 반환, 이미지 URL을 제공하는 매퍼에서 오버라이드해야 함
+     *
+     * @param entry RSS 항목
+     * @return 이미지 URL
+     */
+    protected String extractImageUrl(SyndEntry entry) {
+        return "";
+    }
+
+    /**
      * 본문 내용을 가져오는 메서드
      * 스크래퍼가 있으면 스크래핑을 시도하고, 실패하면 원본 description 사용
      *
@@ -150,18 +168,8 @@ public abstract class AbstractRssMapper {
      */
     protected abstract String extractGuid(SyndEntry entry, RssSource source);
 
-    /**
-     * 뉴스 요약 여부 반환
-     * Default true를 반환, false 사용시 각 뉴스 Mapper에서 오버라이드해야 함
-     *
-     * @return 요약본 여부
-     */
-    protected boolean getIsSummary() {
-        return true;
-    }
-
     private ArticleEntity buildArticleEntity(String title, String link, LocalDateTime pubDate,
-                                             String guid, String description, String category) {
+                                             String guid, String description, String category, String imageUrl) {
         return ArticleEntity.builder()
                 .title(title)
                 .link(link)
@@ -169,7 +177,7 @@ public abstract class AbstractRssMapper {
                 .category(category)
                 .guid(guid)
                 .description(description)
-                .isSummary(getIsSummary())
+                .imageUrl(imageUrl)
                 .build();
     }
 

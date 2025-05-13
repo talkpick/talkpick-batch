@@ -2,10 +2,12 @@ package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.col
 
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.config.batch.RssSource;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.mapper.AbstractRssMapper;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.entity.ArticleEntity;
 import com.rometools.rome.feed.synd.SyndEntry;
 
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -42,6 +44,17 @@ public class KmibRssMapper extends AbstractRssMapper {
     protected String extractGuid(SyndEntry entry, RssSource source) {
         String arcId = extractArcIdFromLink(entry.getLink());
         return source.getCodePrefix() + arcId;
+    }
+
+    /**
+     * Rss 피드가 요약본인지 여부를 반환
+     * 국민일보는 RSS에 전체 내용이 포함, false 반환
+     *
+     * @return 요약본 여부 (false: 전체 본문 제공)
+     */
+    @Override
+    protected boolean getIsSummary() {
+        return false;
     }
 
     /**

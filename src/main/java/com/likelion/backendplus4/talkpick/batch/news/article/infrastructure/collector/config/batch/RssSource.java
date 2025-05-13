@@ -38,7 +38,39 @@ public enum RssSource {
     KHAN_SOCIETY("경향신문", NewsCategory.SOCIETY, "https://www.khan.co.kr/rss/rssdata/society_news.xml", "kh", true),
     KHAN_INTERNATIONAL("경향신문", NewsCategory.INTERNATIONAL, "https://www.khan.co.kr/rss/rssdata/world_news.xml", "kh", true),
     KHAN_ENTERTAINMENT("경향신문", NewsCategory.ENTERTAINMENT, "https://www.khan.co.kr/rss/rssdata/art_news.xml", "kh", true),
-    KHAN_SPORTS("경향신문", NewsCategory.SPORTS, "https://www.khan.co.kr/rss/rssdata/sports_news.xml", "kh", true);
+    KHAN_SPORTS("경향신문", NewsCategory.SPORTS, "https://www.khan.co.kr/rss/rssdata/sports_news.xml", "kh", true),
+
+    // MBN RSS 피드
+    MBN_POLITICS("MBN", NewsCategory.POLITICS, "https://www.mbn.co.kr/rss/politics/", "mb", true),
+    MBN_ECONOMY("MBN", NewsCategory.ECONOMY, "https://www.mbn.co.kr/rss/economy/", "mb", true),
+    MBN_SOCIETY("MBN", NewsCategory.SOCIETY, "https://www.mbn.co.kr/rss/society/", "mb", true),
+    MBN_INTERNATIONAL("MBN", NewsCategory.INTERNATIONAL, "https://www.mbn.co.kr/rss/international/", "mb", true),
+    MBN_ENTERTAINMENT("MBN", NewsCategory.ENTERTAINMENT, "https://www.mbn.co.kr/rss/enter/", "mb", true),
+    MBN_SPORTS("MBN", NewsCategory.SPORTS, "https://www.mbn.co.kr/rss/sports/", "mb", true),
+
+    // 조선일보 RSS 피드
+    CHOSUN_POLITICS("조선일보", NewsCategory.POLITICS, "https://www.chosun.com/arc/outboundfeeds/rss/category/politics/?outputType=xml", "cs", true),
+    CHOSUN_ECONOMY("조선일보", NewsCategory.ECONOMY, "https://www.chosun.com/arc/outboundfeeds/rss/category/economy/?outputType=xml", "cs", true),
+    CHOSUN_SOCIETY("조선일보", NewsCategory.SOCIETY, "https://www.chosun.com/arc/outboundfeeds/rss/category/national/?outputType=xml", "cs", true),
+    CHOSUN_INTERNATIONAL("조선일보", NewsCategory.INTERNATIONAL, "https://www.chosun.com/arc/outboundfeeds/rss/category/international/?outputType=xml", "cs", true),
+    CHOSUN_ENTERTAINMENT("조선일보", NewsCategory.ENTERTAINMENT, "https://www.chosun.com/arc/outboundfeeds/rss/category/entertainments/?outputType=xml", "cs", true),
+    CHOSUN_SPORTS("조선일보", NewsCategory.SPORTS, "https://www.chosun.com/arc/outboundfeeds/rss/category/sports/?outputType=xml", "cs", true),
+
+    // 한겨레 RSS 피드
+    HANI_POLITICS("한겨레", NewsCategory.POLITICS, "https://www.hani.co.kr/rss/politics/", "hn", true),
+    HANI_ECONOMY("한겨레", NewsCategory.ECONOMY, "https://www.hani.co.kr/rss/economy/", "hn", true),
+    HANI_SOCIETY("한겨레", NewsCategory.SOCIETY, "https://www.hani.co.kr/rss/society/", "hn", true),
+    HANI_INTERNATIONAL("한겨레", NewsCategory.INTERNATIONAL, "https://www.hani.co.kr/rss/international/", "hn", true),
+    HANI_ENTERTAINMENT("한겨레", NewsCategory.ENTERTAINMENT, "https://www.hani.co.kr/rss/culture/", "hn", true),
+    HANI_SPORTS("한겨레", NewsCategory.SPORTS, "https://www.hani.co.kr/rss/sports/", "hn", true),
+
+    // 한국경제 RSS 피드
+    HANKYUNG_POLITICS("한국경제", NewsCategory.POLITICS, "https://www.hankyung.com/feed/politics", "hk", true),
+    HANKYUNG_ECONOMY("한국경제", NewsCategory.ECONOMY, "https://www.hankyung.com/feed/economy", "hk", true),
+    HANKYUNG_SOCIETY("한국경제", NewsCategory.SOCIETY, "https://www.hankyung.com/feed/society", "hk", true),
+    HANKYUNG_INTERNATIONAL("한국경제", NewsCategory.INTERNATIONAL, "https://www.hankyung.com/feed/international", "hk", true),
+    HANKYUNG_ENTERTAINMENT("한국경제", NewsCategory.ENTERTAINMENT, "https://www.hankyung.com/feed/entertainment", "hk", true),
+    HANKYUNG_SPORTS("한국경제", NewsCategory.SPORTS, "https://www.hankyung.com/feed/sports", "hk", true);
 
     private final String publisherName;
     private final NewsCategory category;

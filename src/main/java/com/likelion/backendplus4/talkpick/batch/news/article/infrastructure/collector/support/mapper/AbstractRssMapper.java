@@ -3,9 +3,12 @@ package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.col
 import com.likelion.backendplus4.talkpick.batch.news.article.exception.ArticleCollectorException;
 import com.likelion.backendplus4.talkpick.batch.news.article.exception.error.ArticleCollectorErrorCode;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.config.batch.RssSource;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.scraper.ContentScraper;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.scraper.factory.ScraperFactory;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.entity.ArticleEntity;
 import com.rometools.rome.feed.synd.SyndContent;
 import com.rometools.rome.feed.synd.SyndEntry;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -21,6 +24,9 @@ import java.util.Optional;
  */
 public abstract class AbstractRssMapper {
 
+    @Autowired
+    private ScraperFactory scraperFactory;
+
     /**
      * RSS 피드를 ArticleEntity 엔티티로 변환
      *
@@ -35,6 +41,8 @@ public abstract class AbstractRssMapper {
         String guid = extractGuid(entry, source);
         String description = extractDescription(entry);
         String category = extractCategory(entry, source);
+
+        String content = getContentWithScraping(description, link, source.getMapperType());
 
         return buildArticleEntity(title, link, pubDate, guid, description, category);
     }
@@ -95,6 +103,33 @@ public abstract class AbstractRssMapper {
     }
 
     /**
+     * 본문 내용을 가져오는 메서드
+     * 스크래퍼가 있으면 스크래핑을 시도하고, 실패하면 원본 description 사용
+     *
+     * @param originalDescription RSS에서 추출한 기본 설명
+     * @param link 기사 URL
+     * @param mapperType 매퍼 타입
+     * @return 최종 본문 내용
+     */
+    private String getContentWithScraping(String originalDescription, String link, String mapperType) {
+        // 스크래퍼가 있으면 스크래핑 시도
+        Optional<ContentScraper> scraper = scraperFactory.getScraper(mapperType);
+        if (scraper.isPresent()) {
+            try {
+                String scrapedContent = scraper.get().scrapeContent(link);
+                if (scrapedContent != null && !scrapedContent.isEmpty()) {
+                    return scrapedContent;
+                }
+            } catch (Exception e) {
+                throw new ArticleCollectorException(ArticleCollectorErrorCode.FEED_PARSING_ERROR, e);
+            }
+        }
+
+        // 스크래퍼가 없거나 스크래핑 실패 시 기존 description 반환
+        return originalDescription;
+    }
+
+    /**
      * 카테고리 추출 메서드
      *
      * @param entry RSS 항목
@@ -104,6 +139,7 @@ public abstract class AbstractRssMapper {
     protected String extractCategory(SyndEntry entry, RssSource source) {
         return source.getCategoryName();
     }
+
 
     /**
      * GUID 추출 메서드 - 하위 클래스에서 구현해야 함
@@ -115,16 +151,15 @@ public abstract class AbstractRssMapper {
     protected abstract String extractGuid(SyndEntry entry, RssSource source);
 
     /**
-     * ArticleEntity 객체 생성
+     * 뉴스 요약 여부 반환
+     * Default true를 반환, false 사용시 각 뉴스 Mapper에서 오버라이드해야 함
      *
-     * @param title 제목
-     * @param link 링크
-     * @param pubDate 발행일
-     * @param guid GUID
-     * @param description 설명
-     * @param category 카테고리
-     * @return 생성된 ArticleEntity
+     * @return 요약본 여부
      */
+    protected boolean getIsSummary() {
+        return true;
+    }
+
     private ArticleEntity buildArticleEntity(String title, String link, LocalDateTime pubDate,
                                              String guid, String description, String category) {
         return ArticleEntity.builder()
@@ -134,7 +169,9 @@ public abstract class AbstractRssMapper {
                 .category(category)
                 .guid(guid)
                 .description(description)
-                .isSummary(false)
+                .isSummary(getIsSummary())
                 .build();
     }
+
+
 }

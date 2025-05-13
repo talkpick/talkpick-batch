@@ -1,5 +1,7 @@
 package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.mapper.implement;
 
+import com.likelion.backendplus4.talkpick.batch.news.article.exception.ArticleCollectorException;
+import com.likelion.backendplus4.talkpick.batch.news.article.exception.error.ArticleCollectorErrorCode;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.config.batch.RssSource;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.mapper.AbstractRssMapper;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.entity.ArticleEntity;
@@ -22,6 +24,7 @@ import java.util.regex.Pattern;
 public class KmibRssMapper extends AbstractRssMapper {
 
     private static final Pattern ARCID_PATTERN = Pattern.compile("arcid=([0-9]+)");
+    private static final Pattern IMG_SRC_PATTERN = Pattern.compile("<img\\s+src=[\"']([^\"']+)[\"']");
 
     /**
      * 매퍼 타입 반환
@@ -42,7 +45,15 @@ public class KmibRssMapper extends AbstractRssMapper {
      */
     @Override
     protected String extractGuid(SyndEntry entry, RssSource source) {
+        if (entry.getLink() == null || entry.getLink().trim().isEmpty()) {
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR);
+        }
+
         String arcId = extractArcIdFromLink(entry.getLink());
+        if (arcId.trim().isEmpty()) {
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR);
+        }
+
         return source.getCodePrefix() + arcId;
     }
 
@@ -50,34 +61,58 @@ public class KmibRssMapper extends AbstractRssMapper {
      * 링크에서 arcid 값 추출
      *
      * @param link 기사 링크
-     * @return 추출된 arcid, 없으면 링크 그대로 반환
+     * @return 추출된 arcid, 없으면 타임스탬프 반환
      */
     private String extractArcIdFromLink(String link) {
         if (link == null) {
-            return "";
+            return String.valueOf(System.currentTimeMillis());
         }
 
         Matcher matcher = ARCID_PATTERN.matcher(link);
         if (matcher.find()) {
             return matcher.group(1);
         }
-        return link;
+
+        // 패턴이 일치하지 않는 경우도 타임스탬프 반환
+        return String.valueOf(System.currentTimeMillis());
     }
 
     /**
      * 이미지 URL 추출 메서드
-     * 국민일보 RSS feed에서 media:content 태그에서 이미지 URL 추출
+     * 국민일보 RSS feed는 media:content 태그 대신 description의 HTML 내 img 태그에서 이미지 URL 추출
      *
      * @param entry RSS 항목
      * @return 이미지 URL
      */
     @Override
     protected String extractImageUrl(SyndEntry entry) {
-        return entry.getForeignMarkup().stream()
-                .filter(element -> "content".equals(element.getName()) &&
-                        "media".equals(element.getNamespacePrefix()))
-                .findFirst()
-                .map(element -> element.getAttributeValue("url"))
-                .orElse("");
+        // 먼저 부모 클래스의 메서드로 시도 (media:content 태그가 있을 경우)
+        String mediaContent = super.extractImageUrl(entry);
+        if (!mediaContent.isEmpty()) {
+            return mediaContent;
+        }
+
+        // description에서 이미지 URL 추출 시도
+        return extractImageFromDescription(entry);
+    }
+
+    /**
+     * Description 내용에서 이미지 URL을 추출
+     *
+     * @param entry RSS 항목
+     * @return 추출된 이미지 URL 또는 빈 문자열
+     */
+    private String extractImageFromDescription(SyndEntry entry) {
+        if (entry.getDescription() == null) {
+            return "";
+        }
+
+        String description = entry.getDescription().getValue();
+        if (description == null || description.isEmpty()) {
+            return "";
+        }
+
+        Matcher matcher = IMG_SRC_PATTERN.matcher(description);
+        return matcher.find() ? matcher.group(1) : "";
     }
 }

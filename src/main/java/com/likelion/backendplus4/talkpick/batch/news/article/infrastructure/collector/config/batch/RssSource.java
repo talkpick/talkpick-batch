@@ -17,12 +17,12 @@ import java.util.stream.Collectors;
 @Getter
 public enum RssSource {
     // 국민일보 RSS 피드
-    KMIB_POLITICS("국민일보", NewsCategory.POLITICS, "https://www.kmib.co.kr/rss/data/kmibPolRss.xml", "km", true,false),
-    KMIB_ECONOMY("국민일보", NewsCategory.ECONOMY, "https://www.kmib.co.kr/rss/data/kmibEcoRss.xml", "km", true,false),
-    KMIB_SOCIETY("국민일보", NewsCategory.SOCIETY, "https://www.kmib.co.kr/rss/data/kmibSocRss.xml", "km", true,false),
-    KMIB_INTERNATIONAL("국민일보", NewsCategory.INTERNATIONAL, "https://www.kmib.co.kr/rss/data/kmibIntRss.xml", "km", true,false),
-    KMIB_ENTERTAINMENT("국민일보", NewsCategory.ENTERTAINMENT, "https://www.kmib.co.kr/rss/data/kmibEntRss.xml", "km", true,false),
-    KMIB_SPORTS("국민일보", NewsCategory.SPORTS, "https://www.kmib.co.kr/rss/data/kmibSpoRss.xml", "km", true,false),
+    KMIB_POLITICS("국민일보", NewsCategory.POLITICS, "https://www.kmib.co.kr/rss/data/kmibPolRss.xml", "km", true,true),
+    KMIB_ECONOMY("국민일보", NewsCategory.ECONOMY, "https://www.kmib.co.kr/rss/data/kmibEcoRss.xml", "km", true,true),
+    KMIB_SOCIETY("국민일보", NewsCategory.SOCIETY, "https://www.kmib.co.kr/rss/data/kmibSocRss.xml", "km", true,true),
+    KMIB_INTERNATIONAL("국민일보", NewsCategory.INTERNATIONAL, "https://www.kmib.co.kr/rss/data/kmibIntRss.xml", "km", true,true),
+    KMIB_ENTERTAINMENT("국민일보", NewsCategory.ENTERTAINMENT, "https://www.kmib.co.kr/rss/data/kmibEntRss.xml", "km", true,true),
+    KMIB_SPORTS("국민일보", NewsCategory.SPORTS, "https://www.kmib.co.kr/rss/data/kmibSpoRss.xml", "km", true,true),
 
     // 동아일보 RSS 피드
     DONGA_POLITICS("동아일보", NewsCategory.POLITICS, "https://rss.donga.com/politics.xml", "da", true,false),

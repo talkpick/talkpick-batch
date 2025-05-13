@@ -78,21 +78,4 @@ public class DongaRssMapper extends AbstractRssMapper {
     protected String extractCategory(SyndEntry entry, RssSource source) {
         return source.getCategoryName();
     }
-
-    /**
-     * 이미지 URL 추출 메서드
-     * 동아일보 RSS feed에서 media:content 태그에서 이미지 URL 추출
-     *
-     * @param entry RSS 항목
-     * @return 이미지 URL
-     */
-    @Override
-    protected String extractImageUrl(SyndEntry entry) {
-        return entry.getForeignMarkup().stream()
-                .filter(element -> "content".equals(element.getName()) &&
-                        "media".equals(element.getNamespacePrefix()))
-                .findFirst()
-                .map(element -> element.getAttributeValue("url"))
-                .orElse("");
-    }
 }

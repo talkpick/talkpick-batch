@@ -95,7 +95,7 @@ public class DongaContentScraper implements ContentScraper {
     @Override
     public String scrapeContent(String url) {
         List<String> paragraphs = scrapeParagraphs(url);
-        return paragraphs.stream().collect(Collectors.joining("\n\n"));
+        return String.join("\n\n", paragraphs);
     }
 
     /**

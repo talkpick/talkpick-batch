@@ -24,7 +24,9 @@ import java.util.regex.Pattern;
 public class KmibRssMapper extends AbstractRssMapper {
 
     private static final Pattern ARCID_PATTERN = Pattern.compile("arcid=([0-9]+)");
-    private static final Pattern IMG_SRC_PATTERN = Pattern.compile("<img\\s+src=[\"']([^\"']+)[\"']");
+    private static final Pattern IMG_SRC_PATTERN = Pattern.compile("""
+    <img\\s+src=["']([^"']+)["']
+    """.trim());
 
     private final ScraperFactory scraperFactory;
 

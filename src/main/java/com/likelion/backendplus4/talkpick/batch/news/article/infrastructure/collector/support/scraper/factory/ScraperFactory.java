@@ -1,4 +1,3 @@
-// ScraperFactory.java - 팩토리 클래스
 package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.scraper.factory;
 
 import org.springframework.beans.factory.annotation.Autowired;

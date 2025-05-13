@@ -59,16 +59,14 @@ public class KhanContentScraper implements ContentScraper {
      * @return 문단 리스트
      */
     private List<String> extractKhanContentFromElement(Element artBody) {
-        // h3, div.art_photo 태그 제거
         Element processedBody = HtmlScraperUtils.removeTags(artBody, "h3", "div.art_photo");
 
-        // 경향신문은 p 태그로 문단 구분
         Elements paragraphs = processedBody.select("p");
 
         return paragraphs.stream()
                 .map(Element::text)
                 .filter(text -> !text.trim().isEmpty())
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**

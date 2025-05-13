@@ -79,26 +79,15 @@ public abstract class AbstractRssMapper {
     /**
      * 기사 기본 정보를 담는 내부 클래스
      */
-    private static class ArticleInfo {
-        final String title;
-        final String link;
-        final LocalDateTime pubDate;
-        final String guid;
-        final String description;
-        final String category;
-        final String imageUrl;
-
-        ArticleInfo(String title, String link, LocalDateTime pubDate, String guid,
-                    String description, String category, String imageUrl) {
-            this.title = title;
-            this.link = link;
-            this.pubDate = pubDate;
-            this.guid = guid;
-            this.description = description;
-            this.category = category;
-            this.imageUrl = imageUrl;
-        }
-    }
+    private record ArticleInfo(
+            String title,
+            String link,
+            LocalDateTime pubDate,
+            String guid,
+            String description,
+            String category,
+            String imageUrl
+    ) {}
 
     /**
      * 매퍼의 유형을 식별하는 코드 반환
@@ -173,8 +162,6 @@ public abstract class AbstractRssMapper {
 
     /**
      * 본문 내용을 가져오는 메서드
-     * 스크래퍼가 있으면 스크래핑을 시도하고, 실패하면 원본 description 사용
-     * 오류가 많이 날 수도 있다고 생각해서 여러 exception을 설정함
      *
      * @param originalDescription RSS에서 추출한 기본 설명
      * @param link 기사 URL
@@ -182,25 +169,43 @@ public abstract class AbstractRssMapper {
      * @return 최종 본문 내용
      */
     private String getContentWithScraping(String originalDescription, String link, String mapperType) {
-        Optional<ContentScraper> scraper = getScraperFactory().getScraper(mapperType);
-        if (scraper.isPresent()) {
-            try {
-                String scrapedContent = scraper.get().scrapeContent(link);
-                if (scrapedContent != null && !scrapedContent.isEmpty()) {
-                    return scrapedContent;
-                }
-            } catch (ArticleCollectorException e) {
-                throw e;
-            } catch (IllegalArgumentException e) {
-                throw new ArticleCollectorException(ArticleCollectorErrorCode.INVALID_JOB_PARAMETER, e);
-            } catch (Exception e) {
-                throw new ArticleCollectorException(ArticleCollectorErrorCode.FEED_PARSING_ERROR, e);
-            }
-        } else {
-            throw new ArticleCollectorException(ArticleCollectorErrorCode.MAPPER_NOT_FOUND);
-        }
+        ContentScraper scraper = findScraper(mapperType);
+        return scrapeContent(scraper, link, originalDescription);
+    }
 
-        return originalDescription;
+    /**
+     * 매퍼 타입에 맞는 스크래퍼를 찾음
+     *
+     * @param mapperType 매퍼 타입
+     * @return 스크래퍼 객체
+     * @throws ArticleCollectorException 스크래퍼를 찾을 수 없는 경우
+     */
+    private ContentScraper findScraper(String mapperType) {
+        return getScraperFactory().getScraper(mapperType)
+                .orElseThrow(() -> new ArticleCollectorException(ArticleCollectorErrorCode.MAPPER_NOT_FOUND));
+    }
+
+    /**
+     * 스크래퍼를 사용하여 콘텐츠 스크래핑 수행
+     *
+     * @param scraper 스크래퍼 객체
+     * @param link 기사 URL
+     * @param fallbackContent 스크래핑 실패 시 사용할 대체 콘텐츠
+     * @return 스크래핑된 콘텐츠 또는 대체 콘텐츠
+     */
+    private String scrapeContent(ContentScraper scraper, String link, String fallbackContent) {
+        try {
+            String scrapedContent = scraper.scrapeContent(link);
+            return scrapedContent != null && !scrapedContent.isEmpty()
+                    ? scrapedContent
+                    : fallbackContent;
+        } catch (ArticleCollectorException e) {
+            throw e;
+        } catch (IllegalArgumentException e) {
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.INVALID_JOB_PARAMETER, e);
+        } catch (Exception e) {
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.FEED_PARSING_ERROR, e);
+        }
     }
 
     /**

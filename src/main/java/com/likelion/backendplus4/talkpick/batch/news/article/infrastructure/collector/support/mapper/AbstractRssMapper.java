@@ -10,6 +10,7 @@ import com.rometools.rome.feed.synd.SyndContent;
 import com.rometools.rome.feed.synd.SyndEntry;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -21,11 +22,11 @@ import java.util.Optional;
  *
  * @author 양병학
  * @since 2025-05-13 최초 작성
+ * @modified 2025-05-15 의존성 주입 방식 개선 (템플릿 메서드 패턴 적용)
  */
 public abstract class AbstractRssMapper {
 
-    @Autowired
-    private ScraperFactory scraperFactory;
+    protected abstract ScraperFactory getScraperFactory();
 
     /**
      * RSS 피드를 ArticleEntity 엔티티로 변환
@@ -35,23 +36,68 @@ public abstract class AbstractRssMapper {
      * @return 변환된 ArticleEntity 엔티티
      */
     public ArticleEntity mapToRssNews(SyndEntry entry, RssSource source) {
-        String title = extractTitle(entry);
-        String link = extractLink(entry);
-        LocalDateTime pubDate = extractPubDate(entry);
-        String guid = extractGuid(entry, source);
-        String description = extractDescription(entry);
-        String category = extractCategory(entry, source);
-        String imageUrl = extractImageUrl(entry);
+        ArticleInfo info = extractBasicInfo(entry, source);
 
-        // 본문 내용 결정
-        String content = description;
+        String content = determineContent(info.description, info.link, source);
 
-        // RSS가 전체 내용을 포함하지 않는 경우에만 스크래핑 시도
-        if (!source.hasFullContent()) {
-            content = getContentWithScraping(description, link, source.getMapperType());
+        return buildArticleEntity(
+                info.title,
+                info.link,
+                info.pubDate,
+                info.guid,
+                content,
+                info.category,
+                info.imageUrl);
+    }
+
+    /**
+     * RSS 항목에서 기본 정보 추출
+     */
+    private ArticleInfo extractBasicInfo(SyndEntry entry, RssSource source) {
+        return new ArticleInfo(
+                extractTitle(entry),
+                extractLink(entry),
+                extractPubDate(entry),
+                extractGuid(entry, source),
+                extractDescription(entry),
+                extractCategory(entry, source),
+                extractImageUrl(entry)
+        );
+    }
+
+    /**
+     * 본문 내용 결정 (RSS 또는 스크래핑)
+     */
+    private String determineContent(String description, String link, RssSource source) {
+        if (source.hasFullContent()) {
+            return description;
         }
 
-        return buildArticleEntity(title, link, pubDate, guid, content, category, imageUrl);
+        return getContentWithScraping(description, link, source.getMapperType());
+    }
+
+    /**
+     * 기사 기본 정보를 담는 내부 클래스
+     */
+    private static class ArticleInfo {
+        final String title;
+        final String link;
+        final LocalDateTime pubDate;
+        final String guid;
+        final String description;
+        final String category;
+        final String imageUrl;
+
+        ArticleInfo(String title, String link, LocalDateTime pubDate, String guid,
+                    String description, String category, String imageUrl) {
+            this.title = title;
+            this.link = link;
+            this.pubDate = pubDate;
+            this.guid = guid;
+            this.description = description;
+            this.category = category;
+            this.imageUrl = imageUrl;
+        }
     }
 
     /**
@@ -111,18 +157,24 @@ public abstract class AbstractRssMapper {
 
     /**
      * 이미지 URL 추출 메서드
-     * 기본 구현은 빈 문자열 반환, 이미지 URL을 제공하는 매퍼에서 오버라이드해야 함
+     * media:content 태그에서 이미지 URL 추출
      *
      * @param entry RSS 항목
      * @return 이미지 URL
      */
     protected String extractImageUrl(SyndEntry entry) {
-        return "";
+        return entry.getForeignMarkup().stream()
+                .filter(element -> "content".equals(element.getName()) &&
+                        "media".equals(element.getNamespacePrefix()))
+                .findFirst()
+                .map(element -> element.getAttributeValue("url"))
+                .orElse("");
     }
 
     /**
      * 본문 내용을 가져오는 메서드
      * 스크래퍼가 있으면 스크래핑을 시도하고, 실패하면 원본 description 사용
+     * 오류가 많이 날 수도 있다고 생각해서 여러 exception을 설정함
      *
      * @param originalDescription RSS에서 추출한 기본 설명
      * @param link 기사 URL
@@ -130,20 +182,24 @@ public abstract class AbstractRssMapper {
      * @return 최종 본문 내용
      */
     private String getContentWithScraping(String originalDescription, String link, String mapperType) {
-        // 스크래퍼가 있으면 스크래핑 시도
-        Optional<ContentScraper> scraper = scraperFactory.getScraper(mapperType);
+        Optional<ContentScraper> scraper = getScraperFactory().getScraper(mapperType);
         if (scraper.isPresent()) {
             try {
                 String scrapedContent = scraper.get().scrapeContent(link);
                 if (scrapedContent != null && !scrapedContent.isEmpty()) {
                     return scrapedContent;
                 }
+            } catch (ArticleCollectorException e) {
+                throw e;
+            } catch (IllegalArgumentException e) {
+                throw new ArticleCollectorException(ArticleCollectorErrorCode.INVALID_JOB_PARAMETER, e);
             } catch (Exception e) {
                 throw new ArticleCollectorException(ArticleCollectorErrorCode.FEED_PARSING_ERROR, e);
             }
+        } else {
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.MAPPER_NOT_FOUND);
         }
 
-        // 스크래퍼가 없거나 스크래핑 실패 시 기존 description 반환
         return originalDescription;
     }
 
@@ -157,7 +213,6 @@ public abstract class AbstractRssMapper {
     protected String extractCategory(SyndEntry entry, RssSource source) {
         return source.getCategoryName();
     }
-
 
     /**
      * GUID 추출 메서드 - 하위 클래스에서 구현해야 함
@@ -180,6 +235,4 @@ public abstract class AbstractRssMapper {
                 .imageUrl(imageUrl)
                 .build();
     }
-
-
 }

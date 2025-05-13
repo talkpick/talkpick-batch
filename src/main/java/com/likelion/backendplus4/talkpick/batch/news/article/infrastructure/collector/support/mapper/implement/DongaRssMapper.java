@@ -4,22 +4,38 @@ import com.likelion.backendplus4.talkpick.batch.news.article.exception.ArticleCo
 import com.likelion.backendplus4.talkpick.batch.news.article.exception.error.ArticleCollectorErrorCode;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.config.batch.RssSource;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.mapper.AbstractRssMapper;
-import com.rometools.rome.feed.synd.SyndCategory;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.scraper.factory.ScraperFactory;
 import com.rometools.rome.feed.synd.SyndEntry;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.util.stream.Collectors;
 
 /**
  * 동아일보 RSS 매퍼 구현체
  *
  * @author 양병학
  * @since 2025-05-10 최초 작성
- * @modified 2025-05-13 AbstractRssMapper 상속 구조로 변경 및 활성화
+ * @modified 2025-05-15 템플릿 메서드 패턴 적용, 의존성 주입 방식 개선
  */
 @Component
 public class DongaRssMapper extends AbstractRssMapper {
+
+    private final ScraperFactory scraperFactory;
+
+    @Autowired
+    public DongaRssMapper(ScraperFactory scraperFactory) {
+        this.scraperFactory = scraperFactory;
+    }
+
+    /**
+     * 템플릿 메서드 패턴
+     *
+     * @return 주입받은 ScraperFactory 인스턴스
+     */
+    @Override
+    protected ScraperFactory getScraperFactory() {
+        return this.scraperFactory;
+    }
 
     /**
      * 매퍼 타입 반환

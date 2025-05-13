@@ -38,8 +38,9 @@ public enum RssSource {
     KHAN_SOCIETY("경향신문", NewsCategory.SOCIETY, "https://www.khan.co.kr/rss/rssdata/society_news.xml", "kh", true,false),
     KHAN_INTERNATIONAL("경향신문", NewsCategory.INTERNATIONAL, "https://www.khan.co.kr/rss/rssdata/world_news.xml", "kh", true,false),
     KHAN_ENTERTAINMENT("경향신문", NewsCategory.ENTERTAINMENT, "https://www.khan.co.kr/rss/rssdata/art_news.xml", "kh", true,false),
-    KHAN_SPORTS("경향신문", NewsCategory.SPORTS, "https://www.khan.co.kr/rss/rssdata/sports_news.xml", "kh", true,false),
+    KHAN_SPORTS("경향신문", NewsCategory.SPORTS, "https://www.khan.co.kr/rss/rssdata/sports_news.xml", "kh", true,false);
 
+    /*
     // MBN RSS 피드
     MBN_POLITICS("MBN", NewsCategory.POLITICS, "https://www.mbn.co.kr/rss/politics/", "mb", true,false),
     MBN_ECONOMY("MBN", NewsCategory.ECONOMY, "https://www.mbn.co.kr/rss/economy/", "mb", true,false),
@@ -71,6 +72,7 @@ public enum RssSource {
     HANKYUNG_INTERNATIONAL("한국경제", NewsCategory.INTERNATIONAL, "https://www.hankyung.com/feed/international", "hk", true,false),
     HANKYUNG_ENTERTAINMENT("한국경제", NewsCategory.ENTERTAINMENT, "https://www.hankyung.com/feed/entertainment", "hk", true,false),
     HANKYUNG_SPORTS("한국경제", NewsCategory.SPORTS, "https://www.hankyung.com/feed/sports", "hk", true,false);
+    */
 
     private final String publisherName;
     private final NewsCategory category;

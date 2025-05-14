@@ -4,7 +4,7 @@ import com.likelion.backendplus4.talkpick.batch.index.domain.model.NewsInfo;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.entity.ArticleEntity;
 
 public class ArticleEntityMapper {
-	public NewsInfo toDomainFromEntity(ArticleEntity articleEntity) {
+	public static NewsInfo toDomainFromEntity(ArticleEntity articleEntity) {
 		return NewsInfo.builder()
 			.newsId(articleEntity.getGuid())
 			.title(articleEntity.getTitle())

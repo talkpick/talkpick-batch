@@ -26,9 +26,6 @@ import lombok.RequiredArgsConstructor;
 public class NewsInfoProviderAdapter implements NewsInfoProviderPort {
 	private final NewsInfoJpaRepository newsInfoJpaRepository;
 
-	@Override
-
-
 	/**
 	 * 뉴스 정보를 최신순으로 최대 100건까지 조회하여 도메인 객체 리스트로 반환합니다.
 	 *
@@ -36,6 +33,7 @@ public class NewsInfoProviderAdapter implements NewsInfoProviderPort {
 	 * @author 함예정
 	 * @since 2025-05-14
 	 */
+	@Override
 	public List<NewsInfo> fetchAll() {
 		Pageable pageable = PageRequest.of(0, 100)
 			.withSort(Sort.by("pubDate").descending());

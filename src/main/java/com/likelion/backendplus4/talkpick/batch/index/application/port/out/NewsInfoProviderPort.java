@@ -5,5 +5,5 @@ import java.util.List;
 import com.likelion.backendplus4.talkpick.batch.index.domain.model.NewsInfo;
 
 public interface NewsInfoProviderPort {
-	void fetchAll(List<NewsInfo> news);
+	List<NewsInfo> fetchAll();
 }

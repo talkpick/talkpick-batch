@@ -2,10 +2,15 @@ package com.likelion.backendplus4.talkpick.batch.index.domain.model;
 
 import java.time.LocalDateTime;
 
-public record NewsInfo(
-	String newsId,
-	String title,
-	String content,
-	LocalDateTime publishedAt,
-	String imageUrl
-) {}
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+@RequiredArgsConstructor
+@Getter
+public class NewsInfo{
+	private final String newsId;
+	private final String title;
+	private final String content;
+	private final LocalDateTime publishedAt;
+	private final String imageUrl;
+	}

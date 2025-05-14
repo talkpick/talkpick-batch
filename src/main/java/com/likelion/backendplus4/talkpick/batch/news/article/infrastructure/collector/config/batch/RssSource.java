@@ -2,8 +2,7 @@ package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.col
 
 import lombok.Getter;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -136,6 +135,22 @@ public enum RssSource {
      */
     public boolean hasFullContent() {
         return hasFullContent;
+    }
+
+    /**
+     * 활성화된 RSS 소스 목록에서 매퍼 타입(언론사)별로 하나만 선택하여 반환
+     *
+     * @return 중복 제거된 RSS 소스 목록(언론사당 하나)
+     */
+    public static List<RssSource> getUniqueMapperSources() {
+        Map<String, RssSource> uniqueSources = new HashMap<>();
+
+        for (RssSource source : getEnabledSources()) {
+            String mapperType = source.getMapperType();
+            uniqueSources.putIfAbsent(mapperType, source);
+        }
+
+        return new ArrayList<>(uniqueSources.values());
     }
 
     /**

@@ -11,8 +11,6 @@ import org.springframework.stereotype.Component;
 
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.config.batch.RssSource;
 
-import lombok.extern.slf4j.Slf4j;
-
 /**
  * 활성화된 RSS 소스를 파티션 단위로 분할하여 StepExecutionContext에 전달하는 Partitioner 구현체.
  * Spring Batch에서 멀티 스레드/병렬 실행을 위해 사용된다.
@@ -21,23 +19,25 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @since 2025-05-10
  */
-@Slf4j
 @Component
 public class RssSourcePartitioner implements Partitioner {
 
 	/**
 	 * 전체 RSS 소스를 파티셔닝하여 각 파티션별 ExecutionContext를 생성한다.
+	 * 모든 활성화된 RSS 소스(카테고리 포함)를 처리한다.
 	 *
 	 * @param gridSize 실행할 파티션 수
 	 * @return 파티션 이름과 ExecutionContext의 매핑 정보
 	 * @since 2025-05-10
+	 * @modified 2025-05-14 모든 카테고리 처리하도록 수정
 	 * @author 함예정
 	 */
 	@Override
 	public Map<String, ExecutionContext> partition(int gridSize) {
-		List<RssSource> sources = RssSource.getEnabledSources();
-		int chunkSize = calculateChunkSize(sources.size(), gridSize);
-		return buildPartitions(sources, chunkSize);
+		List<RssSource> allSources = RssSource.getEnabledSources();
+
+		int chunkSize = calculateChunkSize(allSources.size(), gridSize);
+		return buildPartitions(allSources, chunkSize);
 	}
 
 	/**
@@ -47,11 +47,9 @@ public class RssSourcePartitioner implements Partitioner {
 	 * @param gridSize 파티션 수
 	 * @return 파티션당 소스 개수
 	 * @since 2025-05-10
-	 * @author 함예정
 	 */
 	private int calculateChunkSize(int totalSources, int gridSize) {
 		int chunkSize = (int)Math.ceil((double)totalSources / gridSize);
-		log.info("Calculated chunkSize: {}", chunkSize);
 		return chunkSize;
 	}
 
@@ -62,7 +60,6 @@ public class RssSourcePartitioner implements Partitioner {
 	 * @param chunkSize 파티션당 소스 개수
 	 * @return 파티션 맵
 	 * @since 2025-05-10
-	 * @author 함예정
 	 */
 	private Map<String, ExecutionContext> buildPartitions(List<RssSource> sources, int chunkSize) {
 		Map<String, ExecutionContext> partitions = new HashMap<>();
@@ -89,7 +86,6 @@ public class RssSourcePartitioner implements Partitioner {
 	 * @param sources RSS 소스 목록
 	 * @param chunkSize 하나의 파티션에 포함될 RSS 소스 수
 	 * @return 전체 파티션 수
-	 * @author 함예정
 	 * @since 2025-05-12
 	 */
 	private int calculateTotalPartitions(List<RssSource> sources, int chunkSize) {
@@ -104,7 +100,6 @@ public class RssSourcePartitioner implements Partitioner {
 	 * @param chunkSize 하나의 파티션에 포함될 RSS 소스 수
 	 * @param from 시작 인덱스
 	 * @return 리스트 범위를 초과하지 않는 끝 인덱스
-	 * @author 함예정
 	 * @since 2025-05-12
 	 */
 	private int calculateChunkEndIndex(List<RssSource> sources, int chunkSize, int from) {
@@ -120,7 +115,6 @@ public class RssSourcePartitioner implements Partitioner {
 	 * @param to 종료 인덱스 (미포함)
 	 * @return 파티션별 RSS 소스가 포함된 ExecutionContext
 	 * @since 2025-05-10
-	 * @author 함예정
 	 */
 	private ExecutionContext buildExecutionContext(List<RssSource> sources, int from, int to) {
 		List<RssSource> subList = new ArrayList<>(sources.subList(from, to));

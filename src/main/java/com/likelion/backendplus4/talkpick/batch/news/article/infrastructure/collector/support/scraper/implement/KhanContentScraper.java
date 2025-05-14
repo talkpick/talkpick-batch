@@ -8,8 +8,6 @@ import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.coll
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -20,12 +18,9 @@ import java.util.List;
  *
  * @author 양병학
  * @since 2025-05-13 최초 작성
- * @modified 2025-05-17 디버깅 및 로깅 추가
  */
 @Component
 public class KhanContentScraper implements ContentScraper {
-
-    private static final Logger logger = LoggerFactory.getLogger(KhanContentScraper.class);
 
     /**
      * 경향신문 기사 URL에서 본문 내용을 문단 단위로 스크래핑
@@ -36,23 +31,11 @@ public class KhanContentScraper implements ContentScraper {
     @Override
     public List<String> scrapeParagraphs(String url) {
         try {
-            logger.info("경향신문 기사 스크래핑 시작: {}", url);
             Document document = connectToUrl(url);
-            logger.info("경향신문 URL 연결 성공: {}", url);
-
-            logger.debug("연결된 문서 제목: {}", document.title());
-
             List<String> paragraphs = extractKhanContent(document);
-            logger.info("경향신문 본문 스크래핑 결과: 문단 수 = {}", paragraphs.size());
-
-            if (paragraphs.isEmpty()) {
-                logger.warn("경향신문 본문 스크래핑 실패: 문단을 찾을 수 없음");
-            }
-
             return paragraphs;
         } catch (Exception e) {
-            logger.error("경향신문 기사 스크래핑 오류: {}", e.getMessage(), e);
-            throw e;
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR, e);
         }
     }
 
@@ -66,29 +49,21 @@ public class KhanContentScraper implements ContentScraper {
         Element artBody = HtmlScraperUtils.findElement(document, "article.art_body");
 
         if (artBody == null) {
-            logger.debug("article.art_body 선택자로 본문을 찾을 수 없음, 다른 선택자 시도");
             artBody = HtmlScraperUtils.findElement(document, "div.art_body");
         }
 
         if (artBody == null) {
-            logger.debug("div.art_body 선택자로 본문을 찾을 수 없음, 다른 선택자 시도");
             artBody = HtmlScraperUtils.findElement(document, "div.article_view");
         }
 
         if (artBody == null) {
-            logger.debug("div.article_view 선택자로 본문을 찾을 수 없음, 다른 선택자 시도");
             artBody = HtmlScraperUtils.findElement(document, "div.article-body");
         }
 
         if (artBody == null) {
-            logger.warn("모든 선택자로 본문을 찾을 수 없음");
-
-            logger.debug("HTML 구조: {}", document.toString().substring(0, Math.min(1000, document.toString().length())));
-
             return new ArrayList<>();
         }
 
-        logger.info("본문 컨테이너 발견: {}", artBody.tagName() + (artBody.hasAttr("class") ? "." + artBody.attr("class") : ""));
         return extractKhanContentFromElement(artBody);
     }
 
@@ -113,17 +88,14 @@ public class KhanContentScraper implements ContentScraper {
         Elements paragraphs = processedBody.select("p");
 
         if (paragraphs.isEmpty()) {
-            logger.debug("p 태그가 없음, div 태그로 시도");
             paragraphs = processedBody.select("div.article_paragraph");
         }
 
         if (paragraphs.isEmpty()) {
-            logger.debug("div.article_paragraph 태그가 없음, span 태그로 시도");
             paragraphs = processedBody.select("span.article_text");
         }
 
         if (paragraphs.isEmpty()) {
-            logger.warn("모든 문단 선택자가 실패함, 본문 전체 텍스트를 하나의 문단으로 반환");
             List<String> fallback = new ArrayList<>();
             String fullText = processedBody.text().trim();
             if (!fullText.isEmpty()) {
@@ -137,7 +109,6 @@ public class KhanContentScraper implements ContentScraper {
                 .filter(text -> !text.trim().isEmpty())
                 .toList();
 
-        logger.debug("추출된 문단 수: {}", result.size());
         return result;
     }
 
@@ -162,22 +133,11 @@ public class KhanContentScraper implements ContentScraper {
     @Override
     public String scrapeImageUrl(String url) {
         try {
-            logger.info("경향신문 이미지 URL 스크래핑 시작: {}", url);
             Document document = connectToUrl(url);
-            logger.info("경향신문 URL 연결 성공 (이미지 스크래핑): {}", url);
-
             String imageUrl = extractImageUrlFromDocument(document);
-
-            if (imageUrl.isEmpty()) {
-                logger.warn("경향신문 이미지 URL 스크래핑 실패: 이미지를 찾을 수 없음");
-            } else {
-                logger.info("경향신문 이미지 URL 스크래핑 성공: {}", imageUrl);
-            }
-
             return imageUrl;
         } catch (Exception e) {
-            logger.error("경향신문 이미지 URL 스크래핑 오류: {}", e.getMessage(), e);
-            throw e;
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR, e);
         }
     }
 
@@ -188,22 +148,18 @@ public class KhanContentScraper implements ContentScraper {
      * @return 추출된 이미지 URL
      */
     private String extractImageUrlFromDocument(Document document) {
-
         Element metaImg = document.selectFirst("meta[property=og:image]");
         if (metaImg != null && !metaImg.attr("content").isEmpty()) {
-            logger.debug("메타 태그에서 이미지 URL 찾음 (og:image)");
             return metaImg.attr("content");
         }
 
         Element mainImg = document.selectFirst("picture img");
         if (mainImg != null && !mainImg.attr("src").isEmpty()) {
-            logger.debug("picture > img에서 이미지 URL 찾음");
             return mainImg.attr("abs:src");
         }
 
         Element source = document.selectFirst("picture source");
         if (source != null && !source.attr("srcset").isEmpty()) {
-            logger.debug("picture > source에서 이미지 URL 찾음");
             String srcset = source.attr("srcset");
             String[] sources = srcset.split(",");
             if (sources.length > 0) {
@@ -214,29 +170,24 @@ public class KhanContentScraper implements ContentScraper {
 
         Element contentImg = document.selectFirst("article.art_body img");
         if (contentImg != null && !contentImg.attr("src").isEmpty()) {
-            logger.debug("article.art_body img에서 이미지 URL 찾음");
             return contentImg.attr("abs:src");
         }
 
         Element imgContainer = document.selectFirst("div.art_photo img");
         if (imgContainer != null && !imgContainer.attr("src").isEmpty()) {
-            logger.debug("div.art_photo img에서 이미지 URL 찾음");
             return imgContainer.attr("abs:src");
         }
 
         Element figureImg = document.selectFirst("figure img");
         if (figureImg != null && !figureImg.attr("src").isEmpty()) {
-            logger.debug("figure img에서 이미지 URL 찾음");
             return figureImg.attr("abs:src");
         }
 
         Element anyImg = document.selectFirst("img");
         if (anyImg != null && !anyImg.attr("src").isEmpty()) {
-            logger.debug("첫 번째 img 태그에서 이미지 URL 찾음");
             return anyImg.attr("abs:src");
         }
 
-        logger.warn("어떤 방법으로도 이미지 URL을 찾을 수 없음");
         return "";
     }
 

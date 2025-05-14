@@ -74,5 +74,4 @@ public class ArticleEntity {
     public String getSummary() {
         return summary != null ? summary : "";
     }
-
 }

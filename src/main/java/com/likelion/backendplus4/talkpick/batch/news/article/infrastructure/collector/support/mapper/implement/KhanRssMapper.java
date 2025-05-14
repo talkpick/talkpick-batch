@@ -31,8 +31,6 @@ import java.util.stream.Collectors;
 @Component
 public class KhanRssMapper extends AbstractRssMapper {
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
-
     private final ScraperFactory scraperFactory;
 
     @Autowired
@@ -170,25 +168,66 @@ public class KhanRssMapper extends AbstractRssMapper {
      * @throws ArticleCollectorException 링크가 null이거나 ID를 추출할 수 없는 경우
      */
     private String extractUniqueIdFromLink(String link) {
-        if (link == null || link.trim().isEmpty()) {
-            throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR);
-        }
+        validateLink(link);
 
         try {
-            String[] parts = link.split("/");
-            for (int i = 0; i < parts.length; i++) {
-                if ("article".equals(parts[i]) && i + 1 < parts.length) {
-                    String id = parts[i + 1];
-                    if (id != null && !id.trim().isEmpty()) {
-                        return id;
-                    }
-                }
-            }
+            String[] pathParts = splitLinkPath(link);
+            return findArticleIdInPath(pathParts);
         } catch (Exception e) {
             throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR, e);
         }
+    }
+
+    /**
+     * 링크 유효성 검사
+     *
+     * @param link 검사할 링크
+     * @throws ArticleCollectorException 링크가 null이거나 비어있는 경우
+     */
+    private void validateLink(String link) {
+        if (link == null || link.trim().isEmpty()) {
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR);
+        }
+    }
+
+    /**
+     * 링크를 경로 부분으로 분리
+     *
+     * @param link 분리할 링크
+     * @return 경로 부분 배열
+     */
+    private String[] splitLinkPath(String link) {
+        return link.split("/");
+    }
+
+    /**
+     * 경로 부분에서 기사 ID 찾기
+     *
+     * @param pathParts 경로 부분 배열
+     * @return 기사 ID
+     * @throws ArticleCollectorException 기사 ID를 찾을 수 없는 경우
+     */
+    private String findArticleIdInPath(String[] pathParts) {
+        for (int i = 0; i < pathParts.length; i++) {
+            if ("article".equals(pathParts[i]) && i + 1 < pathParts.length) {
+                String id = pathParts[i + 1];
+                if (isValidArticleId(id)) {
+                    return id;
+                }
+            }
+        }
 
         throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR);
+    }
+
+    /**
+     * 기사 ID 유효성 검사
+     *
+     * @param id 검사할 ID
+     * @return 유효성 여부
+     */
+    private boolean isValidArticleId(String id) {
+        return id != null && !id.trim().isEmpty();
     }
 
     /**
@@ -245,78 +284,5 @@ public class KhanRssMapper extends AbstractRssMapper {
     @Override
     protected String extractCategory(SyndEntry entry, RssSource source) {
         return source.getCategoryName();
-    }
-
-    /**
-     * 문단 리스트를 JSON으로 직렬화
-     *
-     * @param paragraphs 문단 리스트
-     * @return JSON 문자열
-     */
-    private String serializeParagraphs(List<String> paragraphs) {
-        try {
-            return objectMapper.writeValueAsString(paragraphs);
-        } catch (JsonProcessingException e) {
-            return String.join("\n\n", paragraphs);
-        }
-    }
-
-    /**
-     * HTML 문자열에서 모든 태그를 제거하고 문단을 추출하는 메서드
-     *
-     * @param html HTML 문자열
-     * @return 정제된 문단 리스트
-     */
-    private List<String> extractCleanParagraphs(String html) {
-        if (html == null || html.isEmpty()) {
-            return new ArrayList<>();
-        }
-
-        try {
-            String withBreaks = html.replaceAll("<br\\s*/?>", "PARAGRAPH_BREAK");
-            String noTags = withBreaks.replaceAll("<[^>]*>", "");
-            String decoded = noTags.replace("&nbsp;", " ")
-                    .replace("&#160;", " ")
-                    .replace("&lt;", "<")
-                    .replace("&gt;", ">")
-                    .replace("&amp;", "&")
-                    .replace("&quot;", "\"")
-                    .replace("&apos;", "'");
-
-            decoded = decoded.replaceAll("\\s+", " ").trim();
-            String[] paragraphs = decoded.split("PARAGRAPH_BREAK");
-
-            return Arrays.stream(paragraphs)
-                    .map(String::trim)
-                    .filter(p -> !p.isEmpty())
-                    .collect(Collectors.toList());
-        } catch (Exception e) {
-            List<String> fallback = new ArrayList<>();
-            fallback.add(removeAllHtmlTags(html));
-            return fallback;
-        }
-    }
-
-    /**
-     * 모든 HTML 태그 제거
-     *
-     * @param html HTML 문자열
-     * @return 태그가 제거된 문자열
-     */
-    private String removeAllHtmlTags(String html) {
-        if (html == null || html.isEmpty()) {
-            return "";
-        }
-
-        String noTags = html.replaceAll("<[^>]*>", "");
-        String decoded = noTags.replace("&nbsp;", " ")
-                .replace("&#160;", " ")
-                .replace("&lt;", "<")
-                .replace("&gt;", ">")
-                .replace("&amp;", "&")
-                .replace("&quot;", "\"")
-                .replace("&apos;", "'");
-
-        return decoded.replaceAll("\\s+", " ").trim();
     }
 }

@@ -54,10 +54,6 @@ public class RssEntryProcessor implements ItemProcessor<RssSource, List<ArticleE
 		List<SyndEntry> rssParseResult = parseRss(source);
 		AbstractRssMapper mapper = getMapper(source);
 
-		if (rssParseResult.isEmpty()) {
-			return new ArrayList<>();
-		}
-
 		return buildArticleEntityList(source, rssParseResult, mapper);
 	}
 

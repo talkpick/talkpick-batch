@@ -1,5 +1,7 @@
 package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.mapper;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.likelion.backendplus4.talkpick.batch.news.article.exception.ArticleCollectorException;
 import com.likelion.backendplus4.talkpick.batch.news.article.exception.error.ArticleCollectorErrorCode;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.config.batch.RssSource;
@@ -13,8 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Date;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * RSS를 ArticleEntity로 변환하는 추상 클래스
@@ -27,6 +29,7 @@ import java.util.Optional;
 public abstract class AbstractRssMapper {
 
     protected abstract ScraperFactory getScraperFactory();
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * RSS 피드를 ArticleEntity 엔티티로 변환
@@ -239,5 +242,92 @@ public abstract class AbstractRssMapper {
                 .description(description)
                 .imageUrl(imageUrl)
                 .build();
+    }
+
+    /**
+     * HTML 문자열에서 모든 태그를 제거하고 문단을 추출하는 공통 메서드
+     *
+     * @param html HTML 문자열
+     * @return 정제된 문단 리스트
+     */
+    protected List<String> extractCleanParagraphs(String html) {
+        if (html == null || html.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        try {
+            String withBreaks = html.replaceAll("<br\\s*/?>", "PARAGRAPH_BREAK");
+            String noTags = withBreaks.replaceAll("<[^>]*>", "");
+            String decoded = noTags.replace("&nbsp;", " ")
+                    .replace("&#160;", " ")
+                    .replace("&lt;", "<")
+                    .replace("&gt;", ">")
+                    .replace("&amp;", "&")
+                    .replace("&quot;", "\"")
+                    .replace("&apos;", "'");
+
+            decoded = decoded.replaceAll("\\s+", " ").trim();
+            String[] paragraphs = decoded.split("PARAGRAPH_BREAK");
+
+            return Arrays.stream(paragraphs)
+                    .map(String::trim)
+                    .filter(p -> !p.isEmpty())
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            List<String> fallback = new ArrayList<>();
+            fallback.add(removeAllHtmlTags(html));
+            return fallback;
+        }
+    }
+
+    /**
+     * 모든 HTML 태그 제거하는 공통 메서드
+     *
+     * @param html HTML 문자열
+     * @return 태그가 제거된 문자열
+     */
+    protected String removeAllHtmlTags(String html) {
+        if (html == null || html.isEmpty()) {
+            return "";
+        }
+
+        String noTags = html.replaceAll("<[^>]*>", "");
+        String decoded = decodeHtmlEntities(noTags);
+
+        return decoded.replaceAll("\\s+", " ").trim();
+    }
+
+    /**
+     * HTML 엔티티를 디코딩하는 유틸리티 메서드
+     *
+     * @param text HTML 엔티티가 포함된 문자열
+     * @return 디코딩된 문자열
+     */
+    protected String decodeHtmlEntities(String text) {
+        if (text == null || text.isEmpty()) {
+            return "";
+        }
+
+        return text.replace("&nbsp;", " ")
+                .replace("&#160;", " ")
+                .replace("&lt;", "<")
+                .replace("&gt;", ">")
+                .replace("&amp;", "&")
+                .replace("&quot;", "\"")
+                .replace("&apos;", "'");
+    }
+
+    /**
+     * 문단 리스트를 JSON으로 직렬화하는 공통 메서드
+     *
+     * @param paragraphs 문단 리스트
+     * @return JSON 문자열
+     */
+    protected String serializeParagraphs(List<String> paragraphs) {
+        try {
+            return objectMapper.writeValueAsString(paragraphs);
+        } catch (JsonProcessingException e) {
+            return String.join("\n\n", paragraphs);
+        }
     }
 }

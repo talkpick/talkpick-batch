@@ -10,34 +10,34 @@ import java.util.stream.Collectors;
  * 각 항목은 언론사, 카테고리, URL 정보를 포함
  *
  * @author 양병학
- * @since 2025-05-10
  * @modified 2025-05-12 표준 카테고리(NewsCategory) 도입 및 동아일보, 경향신문 카테고리별 피드 추가
+ * @since 2025-05-10
  */
 @Getter
 public enum RssSource {
     // 국민일보 RSS 피드
-    KMIB_POLITICS("국민일보", NewsCategory.POLITICS, "https://www.kmib.co.kr/rss/data/kmibPolRss.xml", "km", true,true),
-    KMIB_ECONOMY("국민일보", NewsCategory.ECONOMY, "https://www.kmib.co.kr/rss/data/kmibEcoRss.xml", "km", true,true),
-    KMIB_SOCIETY("국민일보", NewsCategory.SOCIETY, "https://www.kmib.co.kr/rss/data/kmibSocRss.xml", "km", true,true),
-    KMIB_INTERNATIONAL("국민일보", NewsCategory.INTERNATIONAL, "https://www.kmib.co.kr/rss/data/kmibIntRss.xml", "km", true,true),
-    KMIB_ENTERTAINMENT("국민일보", NewsCategory.ENTERTAINMENT, "https://www.kmib.co.kr/rss/data/kmibEntRss.xml", "km", true,true),
-    KMIB_SPORTS("국민일보", NewsCategory.SPORTS, "https://www.kmib.co.kr/rss/data/kmibSpoRss.xml", "km", true,true),
+    KMIB_POLITICS("국민일보", NewsCategory.POLITICS, "https://www.kmib.co.kr/rss/data/kmibPolRss.xml", "km", true, true),
+    KMIB_ECONOMY("국민일보", NewsCategory.ECONOMY, "https://www.kmib.co.kr/rss/data/kmibEcoRss.xml", "km", true, true),
+    KMIB_SOCIETY("국민일보", NewsCategory.SOCIETY, "https://www.kmib.co.kr/rss/data/kmibSocRss.xml", "km", true, true),
+    KMIB_INTERNATIONAL("국민일보", NewsCategory.INTERNATIONAL, "https://www.kmib.co.kr/rss/data/kmibIntRss.xml", "km", true, true),
+    KMIB_ENTERTAINMENT("국민일보", NewsCategory.ENTERTAINMENT, "https://www.kmib.co.kr/rss/data/kmibEntRss.xml", "km", true, true),
+    KMIB_SPORTS("국민일보", NewsCategory.SPORTS, "https://www.kmib.co.kr/rss/data/kmibSpoRss.xml", "km", true, true),
 
     // 동아일보 RSS 피드
-    DONGA_POLITICS("동아일보", NewsCategory.POLITICS, "https://rss.donga.com/politics.xml", "da", true,false),
-    DONGA_ECONOMY("동아일보", NewsCategory.ECONOMY, "https://rss.donga.com/economy.xml", "da", true,false),
-    DONGA_SOCIETY("동아일보", NewsCategory.SOCIETY, "https://rss.donga.com/national.xml", "da", true,false),
-    DONGA_INTERNATIONAL("동아일보", NewsCategory.INTERNATIONAL, "https://rss.donga.com/international.xml", "da", true,false),
-    DONGA_ENTERTAINMENT("동아일보", NewsCategory.ENTERTAINMENT, "https://rss.donga.com/entertainment.xml", "da", true,false),
-    DONGA_SPORTS("동아일보", NewsCategory.SPORTS, "https://rss.donga.com/sports.xml", "da", true,false),
+    DONGA_POLITICS("동아일보", NewsCategory.POLITICS, "https://rss.donga.com/politics.xml", "da", true, false),
+    DONGA_ECONOMY("동아일보", NewsCategory.ECONOMY, "https://rss.donga.com/economy.xml", "da", true, false),
+    DONGA_SOCIETY("동아일보", NewsCategory.SOCIETY, "https://rss.donga.com/national.xml", "da", true, false),
+    DONGA_INTERNATIONAL("동아일보", NewsCategory.INTERNATIONAL, "https://rss.donga.com/international.xml", "da", true, false),
+    DONGA_ENTERTAINMENT("동아일보", NewsCategory.ENTERTAINMENT, "https://rss.donga.com/entertainment.xml", "da", true, false),
+    DONGA_SPORTS("동아일보", NewsCategory.SPORTS, "https://rss.donga.com/sports.xml", "da", true, false),
 
     // 경향신문 RSS 피드
-    KHAN_POLITICS("경향신문", NewsCategory.POLITICS, "https://www.khan.co.kr/rss/rssdata/politic_news.xml", "kh", true,false),
-    KHAN_ECONOMY("경향신문", NewsCategory.ECONOMY, "https://www.khan.co.kr/rss/rssdata/economy_news.xml", "kh", true,false),
-    KHAN_SOCIETY("경향신문", NewsCategory.SOCIETY, "https://www.khan.co.kr/rss/rssdata/society_news.xml", "kh", true,false),
-    KHAN_INTERNATIONAL("경향신문", NewsCategory.INTERNATIONAL, "https://www.khan.co.kr/rss/rssdata/world_news.xml", "kh", true,false),
-    KHAN_ENTERTAINMENT("경향신문", NewsCategory.ENTERTAINMENT, "https://www.khan.co.kr/rss/rssdata/art_news.xml", "kh", true,false),
-    KHAN_SPORTS("경향신문", NewsCategory.SPORTS, "https://www.khan.co.kr/rss/rssdata/sports_news.xml", "kh", true,false);
+    KHAN_POLITICS("경향신문", NewsCategory.POLITICS, "https://www.khan.co.kr/rss/rssdata/politic_news.xml", "kh", true, false),
+    KHAN_ECONOMY("경향신문", NewsCategory.ECONOMY, "https://www.khan.co.kr/rss/rssdata/economy_news.xml", "kh", true, false),
+    KHAN_SOCIETY("경향신문", NewsCategory.SOCIETY, "https://www.khan.co.kr/rss/rssdata/society_news.xml", "kh", true, false),
+    KHAN_INTERNATIONAL("경향신문", NewsCategory.INTERNATIONAL, "https://www.khan.co.kr/rss/rssdata/world_news.xml", "kh", true, false),
+    KHAN_ENTERTAINMENT("경향신문", NewsCategory.ENTERTAINMENT, "https://www.khan.co.kr/rss/rssdata/art_news.xml", "kh", true, false),
+    KHAN_SPORTS("경향신문", NewsCategory.SPORTS, "https://www.khan.co.kr/rss/rssdata/sports_news.xml", "kh", true, false);
 
     /*
     // MBN RSS 피드

@@ -28,8 +28,6 @@ import java.util.stream.Collectors;
 @Component
 public class DongaRssMapper extends AbstractRssMapper {
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
-
     private final ScraperFactory scraperFactory;
 
     @Autowired
@@ -138,79 +136,6 @@ public class DongaRssMapper extends AbstractRssMapper {
             return serializeParagraphs(paragraphs);
         } catch (Exception e) {
             return removeAllHtmlTags(htmlContent);
-        }
-    }
-
-    /**
-     * HTML 문자열에서 모든 태그를 제거하고 문단을 추출하는 메서드
-     *
-     * @param html HTML 문자열
-     * @return 정제된 문단 리스트
-     */
-    private List<String> extractCleanParagraphs(String html) {
-        if (html == null || html.isEmpty()) {
-            return new ArrayList<>();
-        }
-
-        try {
-            String withBreaks = html.replaceAll("<br\\s*/?>", "PARAGRAPH_BREAK");
-            String noTags = withBreaks.replaceAll("<[^>]*>", "");
-            String decoded = noTags.replace("&nbsp;", " ")
-                    .replace("&#160;", " ")
-                    .replace("&lt;", "<")
-                    .replace("&gt;", ">")
-                    .replace("&amp;", "&")
-                    .replace("&quot;", "\"")
-                    .replace("&apos;", "'");
-
-            decoded = decoded.replaceAll("\\s+", " ").trim();
-            String[] paragraphs = decoded.split("PARAGRAPH_BREAK");
-
-            return Arrays.stream(paragraphs)
-                    .map(String::trim)
-                    .filter(p -> !p.isEmpty())
-                    .collect(Collectors.toList());
-        } catch (Exception e) {
-            List<String> fallback = new ArrayList<>();
-            fallback.add(removeAllHtmlTags(html));
-            return fallback;
-        }
-    }
-
-    /**
-     * 모든 HTML 태그 제거
-     *
-     * @param html HTML 문자열
-     * @return 태그가 제거된 문자열
-     */
-    private String removeAllHtmlTags(String html) {
-        if (html == null || html.isEmpty()) {
-            return "";
-        }
-
-        String noTags = html.replaceAll("<[^>]*>", "");
-        String decoded = noTags.replace("&nbsp;", " ")
-                .replace("&#160;", " ")
-                .replace("&lt;", "<")
-                .replace("&gt;", ">")
-                .replace("&amp;", "&")
-                .replace("&quot;", "\"")
-                .replace("&apos;", "'");
-
-        return decoded.replaceAll("\\s+", " ").trim();
-    }
-
-    /**
-     * 문단 리스트를 JSON으로 직렬화
-     *
-     * @param paragraphs 문단 리스트
-     * @return JSON 문자열
-     */
-    private String serializeParagraphs(List<String> paragraphs) {
-        try {
-            return objectMapper.writeValueAsString(paragraphs);
-        } catch (JsonProcessingException e) {
-            return String.join("\n\n", paragraphs);
         }
     }
 }

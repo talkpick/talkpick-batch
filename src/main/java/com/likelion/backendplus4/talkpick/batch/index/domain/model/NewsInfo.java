@@ -13,4 +13,5 @@ public class NewsInfo{
 	private final String content;
 	private final LocalDateTime publishedAt;
 	private final String imageUrl;
+	private final String category;
 	}

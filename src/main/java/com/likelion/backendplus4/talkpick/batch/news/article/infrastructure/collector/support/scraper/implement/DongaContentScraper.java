@@ -73,7 +73,6 @@ public class DongaContentScraper implements ContentScraper {
             }
         }
 
-        // 따옴표가 없거나 문단이 추출되지 않은 경우 전체 텍스트를 하나의 문단으로 처리
         if (paragraphs.isEmpty() && !text.trim().isEmpty()) {
             paragraphs.add(text.trim());
         }

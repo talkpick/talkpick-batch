@@ -40,7 +40,6 @@ public class KhanContentScraper implements ContentScraper {
             Document document = connectToUrl(url);
             logger.info("경향신문 URL 연결 성공: {}", url);
 
-            // 디버깅: HTML 구조 출력
             logger.debug("연결된 문서 제목: {}", document.title());
 
             List<String> paragraphs = extractKhanContent(document);
@@ -64,12 +63,10 @@ public class KhanContentScraper implements ContentScraper {
      * @return 문단 리스트
      */
     private List<String> extractKhanContent(Document document) {
-        // 다양한 컨테이너 선택자 시도
         Element artBody = HtmlScraperUtils.findElement(document, "article.art_body");
 
         if (artBody == null) {
             logger.debug("article.art_body 선택자로 본문을 찾을 수 없음, 다른 선택자 시도");
-            // 다른 가능한 선택자 시도
             artBody = HtmlScraperUtils.findElement(document, "div.art_body");
         }
 
@@ -86,7 +83,6 @@ public class KhanContentScraper implements ContentScraper {
         if (artBody == null) {
             logger.warn("모든 선택자로 본문을 찾을 수 없음");
 
-            // 전체 HTML 구조 로깅
             logger.debug("HTML 구조: {}", document.toString().substring(0, Math.min(1000, document.toString().length())));
 
             return new ArrayList<>();
@@ -103,10 +99,8 @@ public class KhanContentScraper implements ContentScraper {
      * @return 문단 리스트
      */
     private List<String> extractKhanContentFromElement(Element artBody) {
-        // h3, div.art_photo, img 태그 제거
         Element processedBody = HtmlScraperUtils.removeTags(artBody, "h3", "div.art_photo", "img");
 
-        // 스타일 관련 속성 제거
         processedBody.select("*").forEach(el -> {
             el.removeAttr("align");
             el.removeAttr("vspace");
@@ -116,10 +110,8 @@ public class KhanContentScraper implements ContentScraper {
             el.removeAttr("height");
         });
 
-        // p 태그 시도
         Elements paragraphs = processedBody.select("p");
 
-        // p 태그가 없으면 다른 태그 시도
         if (paragraphs.isEmpty()) {
             logger.debug("p 태그가 없음, div 태그로 시도");
             paragraphs = processedBody.select("div.article_paragraph");
@@ -196,23 +188,19 @@ public class KhanContentScraper implements ContentScraper {
      * @return 추출된 이미지 URL
      */
     private String extractImageUrlFromDocument(Document document) {
-        // 모든 시도를 로깅
 
-        // 1. 메타 태그 시도 (og:image) - 가장 신뢰할 수 있는 소스
         Element metaImg = document.selectFirst("meta[property=og:image]");
         if (metaImg != null && !metaImg.attr("content").isEmpty()) {
             logger.debug("메타 태그에서 이미지 URL 찾음 (og:image)");
             return metaImg.attr("content");
         }
 
-        // 2. 대표 이미지 (picture > img) 시도
         Element mainImg = document.selectFirst("picture img");
         if (mainImg != null && !mainImg.attr("src").isEmpty()) {
             logger.debug("picture > img에서 이미지 URL 찾음");
             return mainImg.attr("abs:src");
         }
 
-        // 3. picture > source 시도
         Element source = document.selectFirst("picture source");
         if (source != null && !source.attr("srcset").isEmpty()) {
             logger.debug("picture > source에서 이미지 URL 찾음");
@@ -224,28 +212,24 @@ public class KhanContentScraper implements ContentScraper {
             }
         }
 
-        // 4. 본문 내 첫 번째 이미지 시도
         Element contentImg = document.selectFirst("article.art_body img");
         if (contentImg != null && !contentImg.attr("src").isEmpty()) {
             logger.debug("article.art_body img에서 이미지 URL 찾음");
             return contentImg.attr("abs:src");
         }
 
-        // 5. div.art_photo 내 이미지 시도
         Element imgContainer = document.selectFirst("div.art_photo img");
         if (imgContainer != null && !imgContainer.attr("src").isEmpty()) {
             logger.debug("div.art_photo img에서 이미지 URL 찾음");
             return imgContainer.attr("abs:src");
         }
 
-        // 6. figure 내 이미지 시도
         Element figureImg = document.selectFirst("figure img");
         if (figureImg != null && !figureImg.attr("src").isEmpty()) {
             logger.debug("figure img에서 이미지 URL 찾음");
             return figureImg.attr("abs:src");
         }
 
-        // 7. 첫 번째 이미지 태그 시도 (최후의 수단)
         Element anyImg = document.selectFirst("img");
         if (anyImg != null && !anyImg.attr("src").isEmpty()) {
             logger.debug("첫 번째 img 태그에서 이미지 URL 찾음");

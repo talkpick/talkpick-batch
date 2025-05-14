@@ -13,7 +13,6 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * 동아일보 기사 본문 스크래퍼 구현체
@@ -32,12 +31,8 @@ public class DongaContentScraper implements ContentScraper {
      */
     @Override
     public List<String> scrapeParagraphs(String url) {
-        try {
-            Document document = Jsoup.connect(url).get();
-            return extractDongaContent(document);
-        } catch (IOException e) {
-            throw new ArticleCollectorException(ArticleCollectorErrorCode.FEED_PARSING_ERROR, e);
-        }
+        Document document = connectToUrl(url);
+        return extractDongaContent(document);
     }
 
     /**
@@ -52,7 +47,7 @@ public class DongaContentScraper implements ContentScraper {
             return new ArrayList<>();
         }
 
-        Element processedView = HtmlScraperUtils.removeTags(newsView, "h2", "figure");
+        Element processedView = HtmlScraperUtils.removeTags(newsView, "h2", "figure", "img");
 
         String fullText = processedView.text();
         List<String> paragraphs = extractParagraphsByQuotes(fullText);
@@ -103,15 +98,26 @@ public class DongaContentScraper implements ContentScraper {
      *
      * @param url 기사 URL
      * @return 스크래핑된 이미지 URL
+     * @throws ArticleCollectorException 스크래핑 중 오류 발생 시 FEED_PARSING_ERROR 예외 발생
      */
     @Override
     public String scrapeImageUrl(String url) {
         try {
             Document document = Jsoup.connect(url).get();
-            return HtmlScraperUtils.extractImageUrl(document, "section.news_view figure img");
+            return extractImageUrlFromDocument(document);
         } catch (IOException e) {
-            return "";
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.FEED_PARSING_ERROR, e);
         }
+    }
+
+    /**
+     * Document에서 이미지 URL 추출
+     *
+     * @param document 파싱된 JSoup Document
+     * @return 추출된 이미지 URL
+     */
+    private String extractImageUrlFromDocument(Document document) {
+        return HtmlScraperUtils.extractImageUrl(document, "section.news_view figure img");
     }
 
     /**

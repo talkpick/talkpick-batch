@@ -9,7 +9,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.entity.ArticleEntity;
-import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.repository.NewsInfoJpaRepository;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.repository.RssNewsRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class ArticleWriter implements ItemWriter<List<ArticleEntity>> {
 
-	private final NewsInfoJpaRepository newsInfoJpaRepository;
+	private final RssNewsRepository rssNewsRepository;
 
 	/**
 	 * 기사 리스트를 저장하며, 중복된 기사는 건너뛴다.
@@ -44,7 +44,7 @@ public class ArticleWriter implements ItemWriter<List<ArticleEntity>> {
 		AtomicInteger savedCount = new AtomicInteger();
 		chunk.getItems().stream()
 			.flatMap(List::stream)
-			.filter(item -> !newsInfoJpaRepository.existsByLink(item.getLink()))
+			.filter(item -> !rssNewsRepository.existsByLink(item.getLink()))
 			.forEach(item -> {saveItem(item, savedCount);});
 		log.info("새로 저장된 뉴스 개수: {}", savedCount.get());
 	}
@@ -59,7 +59,7 @@ public class ArticleWriter implements ItemWriter<List<ArticleEntity>> {
 	 */
 	private void saveItem(ArticleEntity item, AtomicInteger savedCount) {
 		try {
-			newsInfoJpaRepository.save(item);
+			rssNewsRepository.save(item);
 			savedCount.incrementAndGet();
 		} catch (DataIntegrityViolationException e) {
 			log.debug("중복 항목 감지: {}", item.getLink());

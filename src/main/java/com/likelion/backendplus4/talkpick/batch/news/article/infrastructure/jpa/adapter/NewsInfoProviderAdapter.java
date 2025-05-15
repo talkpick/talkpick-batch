@@ -35,7 +35,9 @@ public class NewsInfoProviderAdapter implements NewsInfoProviderPort {
 	 */
 	@Override
 	public List<NewsInfo> fetchAll() {
-		Pageable pageable = PageRequest.of(0, 100)
+		private static final int MAX_NEWS_COUNT = 100;
+		
+		Pageable pageable = PageRequest.of(0, MAX_NEWS_COUNT)
 			.withSort(Sort.by("pubDate").descending());
 
 		return newsInfoJpaRepository.findAll(pageable)

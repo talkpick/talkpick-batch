@@ -80,11 +80,15 @@ public class ElasticsearchNewsInfoAdapter implements NewsInfoIndexRepositoryPort
 	 * @since 2025-05-15
 	 */
 	private void ensureIndexExists(IndexOperations ops) {
-		if (!ops.exists()) {
-			ops.create();
-			ops.putMapping(Document
-				.create()
-				.append("properties", mappingProperties()));
+		try {
+			if (!ops.exists()) {
+				ops.create();
+				ops.putMapping(Document
+					.create()
+					.append("properties", mappingProperties()));
+			}
+		} catch (Exception e) {
+			throw new RuntimeException("Failed to create or map index [" + indexName + "]", e);
 		}
 	}
 
@@ -99,22 +103,22 @@ public class ElasticsearchNewsInfoAdapter implements NewsInfoIndexRepositoryPort
 		return Map.of(
 			NewsInfoDocument.FIELD_ID, Map.of("type", "keyword"),
 			NewsInfoDocument.FIELD_TITLE, Map.of(
-				"type",     "text",
+				"type", "text",
 				"analyzer", NewsInfoDocument.ANALYZER_NORI,
-				"fields",   Map.of(
+				"fields", Map.of(
 					NewsInfoDocument.FIELD_KEYWORD, Map.of("type", "keyword")
 				)
 			),
 			NewsInfoDocument.FIELD_CONTENT, Map.of(
-				"type",     "text",
+				"type", "text",
 				"analyzer", NewsInfoDocument.ANALYZER_NORI,
-				"fields",   Map.of(
+				"fields", Map.of(
 					NewsInfoDocument.FIELD_KEYWORD, Map.of("type", "keyword")
 				)
 			),
 			NewsInfoDocument.FIELD_PUBLISHED_AT, Map.of("type", "date"),
-			NewsInfoDocument.FIELD_IMAGE_URL,   Map.of("type", "keyword"),
-			NewsInfoDocument.FIELD_CATEGORY,    Map.of("type", "keyword")
+			NewsInfoDocument.FIELD_IMAGE_URL, Map.of("type", "keyword"),
+			NewsInfoDocument.FIELD_CATEGORY, Map.of("type", "keyword")
 		);
 	}
 
@@ -147,11 +151,18 @@ public class ElasticsearchNewsInfoAdapter implements NewsInfoIndexRepositoryPort
 	private List<IndexedObjectInformation> bulkIndex(IndexOperations indexOperations,
 		List<IndexQuery> queries) {
 
-		BulkOptions bulkOptions = BulkOptions.builder()
-			.withRefreshPolicy(RefreshPolicy.NONE)
-			.build();
+		try {
+			BulkOptions bulkOptions = BulkOptions.builder()
+				.withRefreshPolicy(RefreshPolicy.NONE)
+				.build();
 
-		return esOperations.bulkIndex(queries, bulkOptions,
-			indexOperations.getIndexCoordinates());
+			return esOperations.bulkIndex(
+				queries,
+				bulkOptions,
+				indexOperations.getIndexCoordinates()
+			);
+		} catch (Exception e) {
+			throw new RuntimeException("Failed to bulk index documents into [" + indexName + "]", e);
+		}
 	}
 }

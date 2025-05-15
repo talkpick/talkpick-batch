@@ -324,10 +324,18 @@ public abstract class AbstractRssMapper {
      * @return JSON 문자열
      */
     protected String serializeParagraphs(List<String> paragraphs) {
-        try {
-            return objectMapper.writeValueAsString(paragraphs);
-        } catch (JsonProcessingException e) {
-            return String.join("\n\n", paragraphs);
+        if (paragraphs == null || paragraphs.isEmpty()) {
+            return "";
         }
+
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < paragraphs.size(); i++) {
+            if (i > 0) {
+                sb.append("PARAGRAPH_BREAK");
+            }
+            sb.append(paragraphs.get(i));
+        }
+
+        return sb.toString();
     }
 }

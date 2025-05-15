@@ -5,6 +5,7 @@ import com.likelion.backendplus4.talkpick.batch.news.article.exception.error.Art
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.scraper.ContentScraper;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.scraper.util.HtmlScraperUtils;
 
+import lombok.extern.slf4j.Slf4j;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -19,6 +20,7 @@ import java.util.List;
  * @author 양병학
  * @since 2025-05-13 최초 작성
  */
+@Slf4j
 @Component
 public class KhanContentScraper implements ContentScraper {
 
@@ -30,13 +32,11 @@ public class KhanContentScraper implements ContentScraper {
      */
     @Override
     public List<String> scrapeParagraphs(String url) {
-        try {
+        return executeWithRetry(() -> {
             Document document = connectToUrl(url);
-            List<String> paragraphs = extractKhanContent(document);
-            return paragraphs;
-        } catch (Exception e) {
-            throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR, e);
-        }
+
+            return extractKhanContent(document);
+        }, ArticleCollectorErrorCode.ITEM_MAPPING_ERROR);
     }
 
     /**
@@ -109,19 +109,22 @@ public class KhanContentScraper implements ContentScraper {
                 .filter(text -> !text.trim().isEmpty())
                 .toList();
 
+        log.info("경향신문 스크래핑 로깅: " + result);
         return result;
     }
 
     /**
-     * 경향신문 기사 URL에서 본문 내용을 텍스트로 스크래핑
+     * 경향신문 기사 URL에서 본문 내용을 PARAGRAPH_BREAK로 구분된 문자열로 스크래핑
      *
      * @param url 기사 URL
-     * @return 스크래핑된 본문
+     * @return PARAGRAPH_BREAK로 구분된 본문 문자열
      */
     @Override
     public String scrapeContent(String url) {
-        List<String> paragraphs = scrapeParagraphs(url);
-        return String.join("\n\n", paragraphs);
+        return executeWithRetry(() -> {
+            List<String> paragraphs = scrapeParagraphs(url);
+            return String.join("PARAGRAPH_BREAK", paragraphs);
+        }, ArticleCollectorErrorCode.ITEM_MAPPING_ERROR);
     }
 
     /**
@@ -132,13 +135,10 @@ public class KhanContentScraper implements ContentScraper {
      */
     @Override
     public String scrapeImageUrl(String url) {
-        try {
+        return executeWithRetry(() -> {
             Document document = connectToUrl(url);
-            String imageUrl = extractImageUrlFromDocument(document);
-            return imageUrl;
-        } catch (Exception e) {
-            throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR, e);
-        }
+            return extractImageUrlFromDocument(document);
+        }, ArticleCollectorErrorCode.ITEM_MAPPING_ERROR);
     }
 
     /**

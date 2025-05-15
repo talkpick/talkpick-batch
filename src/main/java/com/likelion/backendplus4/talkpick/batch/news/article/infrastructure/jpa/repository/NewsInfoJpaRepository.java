@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 
 @Repository
-public interface RssNewsRepository extends JpaRepository<ArticleEntity, Long> {
+public interface NewsInfoJpaRepository extends JpaRepository<ArticleEntity, Long> {
 
     boolean existsByLink(String link);
 

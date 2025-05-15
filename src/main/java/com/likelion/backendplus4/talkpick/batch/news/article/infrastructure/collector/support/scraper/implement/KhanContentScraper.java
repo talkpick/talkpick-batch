@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 경향신문 기사 본문 스크래퍼 구현체
@@ -35,7 +36,14 @@ public class KhanContentScraper implements ContentScraper {
         return executeWithRetry(() -> {
             Document document = connectToUrl(url);
 
-            return extractKhanContent(document);
+            List<String> content = extractKhanContent(document);
+
+            if (content == null || content.isEmpty() || content.stream().allMatch(String::isEmpty)) {
+                log.warn("경향신문 스크래핑 결과가 비어있습니다: {}", url);
+                throw new ArticleCollectorException(ArticleCollectorErrorCode.FEED_PARSING_ERROR);
+            }
+
+            return content;
         }, ArticleCollectorErrorCode.ITEM_MAPPING_ERROR);
     }
 
@@ -104,12 +112,14 @@ public class KhanContentScraper implements ContentScraper {
             return fallback;
         }
 
-        List<String> result = paragraphs.stream()
-                .map(Element::text)
-                .filter(text -> !text.trim().isEmpty())
-                .toList();
+        List<String> result = new ArrayList<>();
+        for (Element p : paragraphs) {
+            String text = p.text().trim();
+            if (!text.isEmpty()) {
+                result.add(text);
+            }
+        }
 
-        log.info("경향신문 스크래핑 로깅: " + result);
         return result;
     }
 
@@ -119,11 +129,17 @@ public class KhanContentScraper implements ContentScraper {
      * @param url 기사 URL
      * @return PARAGRAPH_BREAK로 구분된 본문 문자열
      */
-    @Override
     public String scrapeContent(String url) {
+
         return executeWithRetry(() -> {
-            List<String> paragraphs = scrapeParagraphs(url);
-            return String.join("PARAGRAPH_BREAK", paragraphs);
+            try {
+                Document document = connectToUrl(url);
+                List<String> paragraphs = extractKhanContent(document);
+                return String.join("PARAGRAPH_BREAK", paragraphs);
+            } catch (Exception e) {
+                log.error("스크래핑 실패: {}", e.getMessage());
+                return "";
+            }
         }, ArticleCollectorErrorCode.ITEM_MAPPING_ERROR);
     }
 

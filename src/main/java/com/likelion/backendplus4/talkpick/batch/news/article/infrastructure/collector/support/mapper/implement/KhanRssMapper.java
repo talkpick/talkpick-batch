@@ -15,6 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 경향신문 RSS 매퍼 구현체
@@ -29,22 +31,12 @@ import java.time.LocalDateTime;
 public class KhanRssMapper extends AbstractRssMapper {
 
     private static final Logger log = LoggerFactory.getLogger(KhanRssMapper.class);
+    private static final Map<String, ArticleEntity> RESULT_CACHE = new ConcurrentHashMap<>();
     private final ScraperFactory scraperFactory;
 
     @Autowired
     public KhanRssMapper(ScraperFactory scraperFactory) {
         this.scraperFactory = scraperFactory;
-    }
-
-    /**
-     * 템플릿 메서드 패턴에서 사용할 ScraperFactory 반환
-     *
-     * @return 주입받은 ScraperFactory 인스턴스
-     * @since 2025-05-15
-     */
-    @Override
-    protected ScraperFactory getScraperFactory() {
-        return this.scraperFactory;
     }
 
     /**
@@ -54,20 +46,26 @@ public class KhanRssMapper extends AbstractRssMapper {
      * @param entry 변환할 SyndEntry(Rss 데이터) 객체
      * @param source RSS 소스 정보
      * @return 변환된 ArticleEntity 엔티티
-     * @since 2025-05-17
+     * @since 2025-05-10
+     * @modified 2025-05-17 스크래핑 로직 추가
      */
     @Override
     public ArticleEntity mapToRssNews(SyndEntry entry, RssSource source) {
+        String guid = extractGuid(entry, source);
+
+        if (RESULT_CACHE.containsKey(guid)) {
+            return RESULT_CACHE.get(guid);
+        }
+
         String title = extractTitle(entry);
         String link = extractLink(entry);
         LocalDateTime pubDate = extractPubDate(entry);
-        String guid = extractGuid(entry, source);
         String category = extractCategory(entry, source);
         String imageUrl = extractImageUrl(entry);
         String description = "";
 
         try {
-            ContentScraper scraper = getScraperFactory().getScraper(getMapperType())
+            ContentScraper scraper = scraperFactory.getScraper("kh")
                     .orElseThrow(() -> new ArticleCollectorException(ArticleCollectorErrorCode.MAPPER_NOT_FOUND));
 
             String scrapedContent = scraper.scrapeContent(link);
@@ -79,10 +77,10 @@ public class KhanRssMapper extends AbstractRssMapper {
                 imageUrl = scraper.scrapeImageUrl(link);
             }
         } catch (Exception e) {
-        log.error("경향일보 스크래핑 실패: {}", e.getMessage());
-    }
+            log.error("경향일보 스크래핑 실패: {}", e.getMessage());
+        }
 
-        return ArticleEntity.builder()
+        ArticleEntity article = ArticleEntity.builder()
                 .title(title)
                 .link(link)
                 .pubDate(pubDate)
@@ -91,6 +89,23 @@ public class KhanRssMapper extends AbstractRssMapper {
                 .description(description)
                 .imageUrl(imageUrl)
                 .build();
+
+        RESULT_CACHE.put(guid, article);
+
+        return article;
+    }
+
+
+
+    /**
+     * 템플릿 메서드 패턴에서 사용할 ScraperFactory 반환
+     *
+     * @return 주입받은 ScraperFactory 인스턴스
+     * @since 2025-05-15
+     */
+    @Override
+    protected ScraperFactory getScraperFactory() {
+        return this.scraperFactory;
     }
 
     /**
@@ -140,9 +155,7 @@ public class KhanRssMapper extends AbstractRssMapper {
     @Override
     protected String extractGuid(SyndEntry entry, RssSource source) {
         String uniqueId = extractUniqueIdFromLink(entry.getLink());
-        String guid = source.getCodePrefix() + uniqueId;
-        log.info("로깅 Guid: " + guid);
-        return guid;
+        return source.getCodePrefix() + uniqueId;
     }
 
     /**

@@ -53,6 +53,7 @@ public class RssEntryProcessor implements ItemProcessor<RssSource, List<ArticleE
 	public List<ArticleEntity> process(RssSource source) {
 		List<SyndEntry> rssParseResult = parseRss(source);
 		AbstractRssMapper mapper = getMapper(source);
+
 		return buildArticleEntityList(source, rssParseResult, mapper);
 	}
 
@@ -63,9 +64,10 @@ public class RssEntryProcessor implements ItemProcessor<RssSource, List<ArticleE
 	 * @return 파싱된 RSS 엔트리 리스트
 	 * @since 2025-05-10
 	 * @author 함예정
+	 * @modified 2025-05-18 매퍼 타입 전달하도록 수정
 	 */
 	private List<SyndEntry> parseRss(RssSource source) {
-		return rssFeedReader.getFeed(source.getUrl());
+		return rssFeedReader.getFeed(source.getUrl(), source.getMapperType());
 	}
 
 	/**

@@ -23,7 +23,8 @@ import lombok.RequiredArgsConstructor;
  */
 @Component
 @RequiredArgsConstructor
-public class NewsInfoProviderAdapter implements NewsInfoProviderPort {
+public class NewsInfoProviderAdapter implements NewsInfoProviderPort 
+	private static final int MAX_NEWS_COUNT = 100;
 	private final NewsInfoJpaRepository newsInfoJpaRepository;
 
 	/**
@@ -35,8 +36,6 @@ public class NewsInfoProviderAdapter implements NewsInfoProviderPort {
 	 */
 	@Override
 	public List<NewsInfo> fetchAll() {
-		private static final int MAX_NEWS_COUNT = 100;
-		
 		Pageable pageable = PageRequest.of(0, MAX_NEWS_COUNT)
 			.withSort(Sort.by("pubDate").descending());
 

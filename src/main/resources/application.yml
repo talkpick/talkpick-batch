@@ -5,6 +5,8 @@ server:
       enabled: false
 
 spring:
+  elasticsearch:
+    uris: ${ELS_URI}
   ai:
     openai:
       api-key: ${OPENAI_API_KEY}
@@ -52,3 +54,7 @@ decorator:
 article-collector:
   quartz:
     cron: "0 */1 * * * ?"
+
+news:
+  index:
+    name: news_index

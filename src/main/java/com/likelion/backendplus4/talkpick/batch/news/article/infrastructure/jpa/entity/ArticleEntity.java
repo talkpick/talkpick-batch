@@ -51,8 +51,13 @@ public class ArticleEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "is_summary")
-    private boolean isSummary;
+    @Setter
+    @Column(name = "summary", columnDefinition = "TEXT")
+    private String summary;
+
+    @Setter
+    @Column(name = "image_url")
+    private String imageUrl;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -66,4 +71,7 @@ public class ArticleEntity {
         return description != null ? description : "";
     }
 
+    public String getSummary() {
+        return summary != null ? summary : "";
+    }
 }

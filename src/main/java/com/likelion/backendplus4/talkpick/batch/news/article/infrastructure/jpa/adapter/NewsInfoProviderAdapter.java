@@ -2,6 +2,7 @@ package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa
 
 import java.util.List;
 
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -23,7 +24,8 @@ import lombok.RequiredArgsConstructor;
  */
 @Component
 @RequiredArgsConstructor
-public class NewsInfoProviderAdapter implements NewsInfoProviderPort 
+@Primary
+public class NewsInfoProviderAdapter implements NewsInfoProviderPort {
 	private static final int MAX_NEWS_COUNT = 100;
 	private final NewsInfoJpaRepository newsInfoJpaRepository;
 

@@ -11,7 +11,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.entity.ArticleEntity;
-import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.repository.RssNewsRepository;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.repository.NewsInfoJpaRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,27 +34,26 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class ArticleWriter implements ItemWriter<List<ArticleEntity>> {
 
+	private final NewsInfoJpaRepository newsInfoJpaRepository;
 	private static final String PARAGRAPH_BREAK = "PARAGRAPH_BREAK";
-	private final RssNewsRepository rssNewsRepository;
 
 	/**
 	 * 기사 리스트를 저장하며, 중복된 기사는 건너뛴다.
-	 * 저장 전 description 필드가 JSON 형식인지 확인하고 필요시 직렬화
+	 * 저장 성공 시 개수를 집계하고, 로그로 남긴다.
 	 *
 	 * @param chunk Spring Batch가 전달하는 기사 리스트 Chunk
 	 * @since 2025-05-10
 	 * @author 함예정
-	 * @modified 2025-05-25 직렬화 확인 로직 추가
-	 * @modified 2025-05-26 PARAGRAPH_BREAK 기반 문단 처리 추가
 	 */
 	@Override
 	public void write(Chunk<? extends List<ArticleEntity>> chunk) {
 		AtomicInteger savedCount = new AtomicInteger();
 		chunk.getItems().stream()
-				.flatMap(List::stream)
-				.peek(this::processAndSerializeDescription)
-				.filter(item -> !rssNewsRepository.existsByLink(item.getLink()))
-				.forEach(item -> {saveItem(item, savedCount);});
+			.flatMap(List::stream)
+			.peek(this::processAndSerializeDescription)
+			.filter(item -> !newsInfoJpaRepository.existsByLink(item.getLink()))
+			.forEach(item -> {saveItem(item, savedCount);});
+
 		log.info("새로 저장된 뉴스 개수: {}", savedCount.get());
 	}
 
@@ -189,12 +188,12 @@ public class ArticleWriter implements ItemWriter<List<ArticleEntity>> {
 	 *
 	 * @param item 저장할 뉴스
 	 * @param savedCount 저장된 갯수
-	 * @since 2025-05-12
 	 * @author 함예정
+	 * @since 2025-05-12
 	 */
 	private void saveItem(ArticleEntity item, AtomicInteger savedCount) {
 		try {
-			rssNewsRepository.save(item);
+			newsInfoJpaRepository.save(item);
 			savedCount.incrementAndGet();
 		} catch (DataIntegrityViolationException e) {
 			log.debug("중복 항목 감지: {}", item.getLink());

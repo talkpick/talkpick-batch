@@ -15,8 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 경향신문 RSS 매퍼 구현체
@@ -31,7 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class KhanRssMapper extends AbstractRssMapper {
 
     private static final Logger log = LoggerFactory.getLogger(KhanRssMapper.class);
-    private static final Map<String, ArticleEntity> RESULT_CACHE = new ConcurrentHashMap<>();
+//    private static final Map<String, ArticleEntity> RESULT_CACHE = new ConcurrentHashMap<>();
     private final ScraperFactory scraperFactory;
 
     @Autowired
@@ -52,10 +50,6 @@ public class KhanRssMapper extends AbstractRssMapper {
     @Override
     public ArticleEntity mapToRssNews(SyndEntry entry, RssSource source) {
         String guid = extractGuid(entry, source);
-
-        if (RESULT_CACHE.containsKey(guid)) {
-            return RESULT_CACHE.get(guid);
-        }
 
         String title = extractTitle(entry);
         String link = extractLink(entry);
@@ -89,8 +83,6 @@ public class KhanRssMapper extends AbstractRssMapper {
                 .description(description)
                 .imageUrl(imageUrl)
                 .build();
-
-        RESULT_CACHE.put(guid, article);
 
         return article;
     }

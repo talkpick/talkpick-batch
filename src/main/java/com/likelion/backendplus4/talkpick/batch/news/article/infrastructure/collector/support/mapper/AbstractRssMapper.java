@@ -10,7 +10,6 @@ import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.coll
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.entity.ArticleEntity;
 import com.rometools.rome.feed.synd.SyndContent;
 import com.rometools.rome.feed.synd.SyndEntry;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -26,6 +25,7 @@ import java.util.stream.Collectors;
  * @since 2025-05-13 최초 작성
  * @modified 2025-05-15 의존성 주입 방식 개선 (템플릿 메서드 패턴 적용)
  */
+
 public abstract class AbstractRssMapper {
 
     protected abstract ScraperFactory getScraperFactory();
@@ -39,18 +39,29 @@ public abstract class AbstractRssMapper {
      * @return 변환된 ArticleEntity 엔티티
      */
     public ArticleEntity mapToRssNews(SyndEntry entry, RssSource source) {
-        ArticleInfo info = extractBasicInfo(entry, source);
+        String guid = null;
+        try {
+            guid = extractGuid(entry, source);
+        } catch (Exception e) {
+            // 실패시 대체 값 생성
+            guid = "unknown-guid-" + System.currentTimeMillis();
+        }
 
-        String content = determineContent(info.description, info.link, source);
+        try {
+            ArticleInfo info = extractBasicInfo(entry, source);
+            String content = determineContent(info.description, info.link, source);
 
-        return buildArticleEntity(
-                info.title,
-                info.link,
-                info.pubDate,
-                info.guid,
-                content,
-                info.category,
-                info.imageUrl);
+            return buildArticleEntity(
+                    info.title,
+                    info.link,
+                    info.pubDate,
+                    info.guid,
+                    content,
+                    info.category,
+                    info.imageUrl);
+        } catch (Exception e) {
+            throw e;
+        }
     }
 
     /**
@@ -78,6 +89,7 @@ public abstract class AbstractRssMapper {
 
         return getContentWithScraping(description, link, source.getMapperType());
     }
+
 
     /**
      * 기사 기본 정보를 담는 내부 클래스
@@ -172,8 +184,12 @@ public abstract class AbstractRssMapper {
      * @return 최종 본문 내용
      */
     private String getContentWithScraping(String originalDescription, String link, String mapperType) {
-        ContentScraper scraper = findScraper(mapperType);
-        return scrapeContent(scraper, link, originalDescription);
+        try {
+            ContentScraper scraper = findScraper(mapperType);
+            return scrapeContent(scraper, link, originalDescription);
+        } catch (Exception e) {
+            throw e;
+        }
     }
 
     /**
@@ -184,8 +200,13 @@ public abstract class AbstractRssMapper {
      * @throws ArticleCollectorException 스크래퍼를 찾을 수 없는 경우
      */
     private ContentScraper findScraper(String mapperType) {
-        return getScraperFactory().getScraper(mapperType)
-                .orElseThrow(() -> new ArticleCollectorException(ArticleCollectorErrorCode.MAPPER_NOT_FOUND));
+        try {
+            ScraperFactory factory = getScraperFactory();
+            return factory.getScraper(mapperType)
+                    .orElseThrow(() -> new ArticleCollectorException(ArticleCollectorErrorCode.MAPPER_NOT_FOUND));
+        } catch (Exception e) {
+            throw e;
+        }
     }
 
     /**

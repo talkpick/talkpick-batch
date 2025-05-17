@@ -11,7 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 수집된 뉴스를 요약하고 임베딩을 계산하는 스케줄 작업
  * application.yml의 spring.quartz.article-embedding.cron 속성으로 실행 주기 설정
-
  * @since 2025-05-17
  */
 @Slf4j

@@ -48,7 +48,8 @@ public class ArticleEmbeddingProcessor implements ItemProcessor<ArticleEntity, A
 	 */
 	@Override
 	public ArticleEntity process(ArticleEntity item) {
-		log.info("뉴스 임베딩: id = {}, guid = {}, Thread = {}", item.getId(), item.getGuid(), Thread.currentThread().getName());
+		log.info("뉴스 임베딩: id = {}, guid = {}, Thread = {}",
+			item.getId(), item.getGuid(), Thread.currentThread().getName());
 		String newsContent = item.getSummary();
 		float[] vector = getEmbedding(newsContent);
 		return item.changeSummaryVector(vector);

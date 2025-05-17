@@ -1,11 +1,25 @@
 package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
-
 import java.time.LocalDateTime;
 
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.converter.FloatArrayToJsonConverter;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 /**
  * RSS 피드를 수집 객체
@@ -27,61 +41,61 @@ import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.
 @EqualsAndHashCode(of = "id")
 public class ArticleEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    @Setter
-    @Column(nullable = false)
-    private String title;
+	@Setter
+	@Column(nullable = false)
+	private String title;
 
-    @Column(nullable = false, unique = true)
-    private String link;
+	@Column(nullable = false, unique = true)
+	private String link;
 
-    @Setter
-    @Column(name = "pub_date")
-    private LocalDateTime pubDate;
+	@Setter
+	@Column(name = "pub_date")
+	private LocalDateTime pubDate;
 
-    @Column
-    private String category;
+	@Column
+	private String category;
 
-    @Column
-    private String guid;
+	@Column
+	private String guid;
 
-    @Setter
-    @Column(columnDefinition = "TEXT")
-    private String description;
+	@Setter
+	@Column(columnDefinition = "TEXT")
+	private String description;
 
-    @Setter
-    @Column(name = "summary", columnDefinition = "TEXT")
-    private String summary;
+	@Setter
+	@Column(name = "summary", columnDefinition = "TEXT")
+	private String summary;
 
-    @Setter
-    @Column(name = "image_url")
-    private String imageUrl;
+	@Setter
+	@Column(name = "image_url")
+	private String imageUrl;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
+	@Column(name = "created_at")
+	private LocalDateTime createdAt;
 
-    @Convert(converter = FloatArrayToJsonConverter.class)
-    @Column( name= "summary_vector", columnDefinition = "JSON")
-    private float[] summaryVector;
+	@Convert(converter = FloatArrayToJsonConverter.class)
+	@Column(name = "summary_vector", columnDefinition = "JSON")
+	private float[] summaryVector;
 
-    public ArticleEntity changeSummaryVector(float[] vector){
-        summaryVector = vector;
-        return this;
-    }
+	public ArticleEntity changeSummaryVector(float[] vector) {
+		summaryVector = vector;
+		return this;
+	}
 
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
+	@PrePersist
+	protected void onCreate() {
+		createdAt = LocalDateTime.now();
+	}
 
-    public String getDescription(){
-        return description != null ? description : "";
-    }
+	public String getDescription() {
+		return description != null ? description : "";
+	}
 
-    public String getSummary() {
-        return summary != null ? summary : "";
-    }
+	public String getSummary() {
+		return summary != null ? summary : "";
+	}
 }

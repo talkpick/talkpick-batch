@@ -6,6 +6,7 @@ import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
 /**
  * Spring Batch Job 설정 클래스. <p>
  * 수집된 기사를 OpenAI를 활용해 뉴스 내용을 요약하는

@@ -2,10 +2,8 @@ package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.emb
 
 import org.quartz.CronScheduleBuilder;
 import org.quartz.JobDetail;
-import org.quartz.Scheduler;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
-import org.quartz.TriggerKey;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

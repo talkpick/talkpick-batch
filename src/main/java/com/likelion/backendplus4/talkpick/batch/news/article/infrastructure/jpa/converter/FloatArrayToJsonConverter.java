@@ -97,5 +97,4 @@ public class FloatArrayToJsonConverter implements AttributeConverter<float[], St
 		}
 	}
 
-
 }

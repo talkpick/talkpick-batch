@@ -53,7 +53,6 @@ public class SummaryStepConfig {
 		this.writer = articleSummaryWriter;
 	}
 
-
 	/**
 	 * 파티셔닝된 마스터 Step을 정의한다.
 	 * 각 파티션은 {@code articleSummarySlaveStep}을 실행하며, 병렬 처리를 위해 TaskExecutor가 사용된다.

@@ -38,6 +38,7 @@ public class ArticleSummaryProcessor implements ItemProcessor<ArticleEntity, Art
 		item.setSummary(summary);
 		return item;
 	}
+
 	/**
 	 * 주어진 뉴스 기사 본문을 AI 모델을 통해 요약한다.
 	 *

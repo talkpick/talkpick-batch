@@ -28,7 +28,6 @@ import lombok.RequiredArgsConstructor;
  * 002: 두 번째 오류
  * 003: 세 번째 오류, 등등
  *
- * @modified 2025-05-09
  * @since 2025-05-09
  */
 @RequiredArgsConstructor

@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.converter.FloatArrayToJsonConverter;
 
 /**
  * RSS 피드를 수집 객체
@@ -61,6 +62,15 @@ public class ArticleEntity {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @Convert(converter = FloatArrayToJsonConverter.class)
+    @Column( name= "summary_vector", columnDefinition = "JSON")
+    private float[] summaryVector;
+
+    public ArticleEntity changeSummaryVector(float[] vector){
+        summaryVector = vector;
+        return this;
+    }
 
     @PrePersist
     protected void onCreate() {

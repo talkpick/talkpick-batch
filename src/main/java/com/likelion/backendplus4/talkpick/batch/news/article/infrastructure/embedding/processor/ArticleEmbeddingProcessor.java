@@ -1,4 +1,4 @@
-package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.embedding.adapter;
+package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.embedding.processor;
 
 import java.util.List;
 
@@ -8,44 +8,42 @@ import org.springframework.ai.openai.OpenAiEmbeddingModel;
 import org.springframework.ai.openai.OpenAiEmbeddingOptions;
 import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.ai.retry.RetryUtils;
+import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import com.likelion.backendplus4.talkpick.batch.common.annotation.logging.EntryExitLog;
-import com.likelion.backendplus4.talkpick.batch.common.annotation.logging.LogMethodValues;
-import com.likelion.backendplus4.talkpick.batch.common.annotation.logging.TimeTracker;
-import com.likelion.backendplus4.talkpick.batch.news.article.application.port.out.EmbeddingPort;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.embedding.exception.EmbeddingException;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.embedding.exception.error.EmbeddingErrorCode;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.entity.ArticleEntity;
 
-/**
- * OpenAI API를 사용하여 텍스트 임베딩을 생성하는 어댑터 구현체
- *
- * @since 2025-05-11
- */
 @Component
-public class OpenAIEmbeddingAdapter implements EmbeddingPort {
+public class ArticleEmbeddingProcessor implements ItemProcessor<ArticleEntity, ArticleEntity> {
 	private final OpenAiApi openAiApi;
 	private final String embeddingModelName;
 
-	public OpenAIEmbeddingAdapter(OpenAiApi openAiApi,
+	public ArticleEmbeddingProcessor(OpenAiApi openAiApi,
 		@Value("${spring.ai.openai.embedding-model}") String embeddingModelName) {
 		this.openAiApi = openAiApi;
 		this.embeddingModelName = embeddingModelName;
 	}
 
-	/**
-	 * 주어진 텍스트에 대한 임베딩 벡터를 반환한다.
-	 *
-	 * @param text 입력 텍스트
-	 * @return 텍스트 임베딩 벡터 배열
-	 * @since 2025-05-11
-	 */
-	@EntryExitLog
-	@LogMethodValues
-	@TimeTracker
 	@Override
-	public float[] getEmbedding(String text) {
+	public ArticleEntity process(ArticleEntity item) {
+		String newsContent = item.getSummary();
+		float[] vector = getEmbedding(newsContent);
+		return item.changeSummaryVector(vector);
+	}
+
+	/**
+	 * 주어진 텍스트에 대해 임베딩 벡터(float 배열)를 생성한다.
+	 * 내부적으로 OpenAI 임베딩 모델을 생성하고 실행한다.
+	 *
+	 * @param text 임베딩할 입력 텍스트
+	 * @return 텍스트에 대한 임베딩 벡터
+	 * @author 정안식
+	 * @date 2025-05-11
+	 */
+	private float[] getEmbedding(String text) {
 		OpenAiEmbeddingModel model = createModel();
 		return executeEmbedding(model, text);
 	}

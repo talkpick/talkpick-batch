@@ -16,6 +16,13 @@ import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.embe
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.embedding.exception.error.EmbeddingErrorCode;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.entity.ArticleEntity;
 
+/**
+ * 뉴스 기사 요약(summary)을 기반으로 임베딩 벡터를 생성하고
+ * 해당 벡터를 ArticleEntity에 설정하는 ItemProcessor 구현체.
+ * Spring Batch의 처리 단계에서 사용된다.
+ *
+ * @since 2025-05-17
+ */
 @Component
 public class ArticleEmbeddingProcessor implements ItemProcessor<ArticleEntity, ArticleEntity> {
 	private final OpenAiApi openAiApi;
@@ -27,6 +34,15 @@ public class ArticleEmbeddingProcessor implements ItemProcessor<ArticleEntity, A
 		this.embeddingModelName = embeddingModelName;
 	}
 
+	/**
+	 * ArticleEntity의 summary 필드를 기반으로 임베딩 벡터를 생성하고,
+	 * 해당 벡터를 summaryVector 필드에 설정하여 반환한다.
+	 *
+	 * @param item 임베딩할 summary를 가진 ArticleEntity
+	 * @return summaryVector가 설정된 ArticleEntity
+	 * @author 함예정
+	 * @since 2025-05-17
+	 */
 	@Override
 	public ArticleEntity process(ArticleEntity item) {
 		String newsContent = item.getSummary();
@@ -41,7 +57,7 @@ public class ArticleEmbeddingProcessor implements ItemProcessor<ArticleEntity, A
 	 * @param text 임베딩할 입력 텍스트
 	 * @return 텍스트에 대한 임베딩 벡터
 	 * @author 정안식
-	 * @date 2025-05-11
+	 * @since 2025-05-11
 	 */
 	private float[] getEmbedding(String text) {
 		OpenAiEmbeddingModel model = createModel();

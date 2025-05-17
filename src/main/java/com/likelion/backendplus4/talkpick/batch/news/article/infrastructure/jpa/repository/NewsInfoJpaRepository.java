@@ -24,14 +24,24 @@ public interface NewsInfoJpaRepository extends JpaRepository<ArticleEntity, Long
      */
     @Query("SELECT MAX(a.pubDate) FROM ArticleEntity a WHERE a.guid LIKE CONCAT(:guidPrefix, '%')")
     LocalDateTime findLatestPubDateByGuidPrefix(@Param("guidPrefix") String guidPrefix);
+    
+    /**
+     * summary가 null인 ArticleEntity 목록을 페이지 형태로 조회한다.
+     *
+     * @param pageable 페이징 정보
+     * @return summary가 null인 ArticleEntity 페이지
+     * @author 함예정
+     * @date 2025-05-17
+     */
+    Page<ArticleEntity> findBySummaryIsNull(Pageable pageable);
 
     /**
-     * 요약 정보가 없는 뉴스 개수 조회
-     * @return 요약 정보 없는 뉴스 개수
+     * summary는 존재하지만 summaryVector는 null인 ArticleEntity 목록을 페이지 형태로 조회한다.
+     *
+     * @param pageable 페이징 정보
+     * @return summary는 존재하고 summaryVector는 null인 ArticleEntity 페이지
      * @author 함예정
-     * @since 2025-05-17
+     * @date 2025-05-17
      */
-    long countBySummaryIsNull();
-
-    Page<ArticleEntity> findBySummaryIsNull(Pageable pageable);
+    Page<ArticleEntity> findBySummaryIsNotNullAndSummaryVectorIsNull(Pageable pageable);
 }

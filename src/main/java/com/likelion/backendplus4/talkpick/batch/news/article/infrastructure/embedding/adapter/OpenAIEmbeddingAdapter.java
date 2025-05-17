@@ -1,4 +1,4 @@
-package com.likelion.backendplus4.talkpick.batch.embedding;
+package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.embedding.adapter;
 
 import java.util.List;
 
@@ -14,8 +14,9 @@ import org.springframework.stereotype.Component;
 import com.likelion.backendplus4.talkpick.batch.common.annotation.logging.EntryExitLog;
 import com.likelion.backendplus4.talkpick.batch.common.annotation.logging.LogMethodValues;
 import com.likelion.backendplus4.talkpick.batch.common.annotation.logging.TimeTracker;
-import com.likelion.backendplus4.talkpick.batch.embedding.exception.EmbeddingException;
-import com.likelion.backendplus4.talkpick.batch.embedding.exception.error.EmbeddingErrorCode;
+import com.likelion.backendplus4.talkpick.batch.news.article.application.port.out.EmbeddingPort;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.embedding.exception.EmbeddingException;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.embedding.exception.error.EmbeddingErrorCode;
 
 /**
  * OpenAI API를 사용하여 텍스트 임베딩을 생성하는 어댑터 구현체

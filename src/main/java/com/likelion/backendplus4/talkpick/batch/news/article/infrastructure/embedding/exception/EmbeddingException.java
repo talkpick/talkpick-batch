@@ -1,4 +1,4 @@
-package com.likelion.backendplus4.talkpick.batch.embedding.exception;
+package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.embedding.exception;
 
 import com.likelion.backendplus4.talkpick.batch.common.exception.CustomException;
 import com.likelion.backendplus4.talkpick.batch.common.exception.error.ErrorCode;

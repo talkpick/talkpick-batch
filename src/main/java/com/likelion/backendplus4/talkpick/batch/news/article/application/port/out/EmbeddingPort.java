@@ -1,4 +1,4 @@
-package com.likelion.backendplus4.talkpick.batch.embedding;
+package com.likelion.backendplus4.talkpick.batch.news.article.application.port.out;
 
 public interface EmbeddingPort {
 

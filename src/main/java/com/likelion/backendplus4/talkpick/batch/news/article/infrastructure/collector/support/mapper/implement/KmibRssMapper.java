@@ -4,6 +4,7 @@ import com.likelion.backendplus4.talkpick.batch.news.article.exception.ArticleCo
 import com.likelion.backendplus4.talkpick.batch.news.article.exception.error.ArticleCollectorErrorCode;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.config.batch.RssSource;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.mapper.AbstractRssMapper;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.result.ScrapingResult;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.scraper.factory.ScraperFactory;
 import com.rometools.rome.feed.synd.SyndEntry;
 
@@ -58,27 +59,41 @@ public class KmibRssMapper extends AbstractRssMapper {
         return "km";
     }
 
-    /**
-     * GUID 추출, 링크에서 arcid를 추출하여 생성
-     *
-     * @param entry RSS 항목
-     * @param source RSS 소스 정보
-     * @return 형식: [언론사코드][arcid]
-     * @throws ArticleCollectorException 링크가 없거나 arcid 추출 실패 시
-     * @since 2025-05-10
-     */
     @Override
-    protected String extractGuid(SyndEntry entry, RssSource source) {
-        if (entry.getLink() == null || entry.getLink().trim().isEmpty()) {
-            throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR);
+    protected ScrapingResult performSpecificMapping(
+            SyndEntry entry,
+            RssSource source,
+            String link,
+            String baseDescription,
+            String baseImageUrl) {
+
+        // KmibRssMapper는 RSS 데이터만 사용하되, HTML 태그 제거 및 문단 처리
+        String processedDescription = processDescription(entry);
+
+        // 이미지 URL이 없으면 description에서 추출 시도
+        String finalImageUrl = baseImageUrl.isEmpty()
+                ? extractImageFromDescription(entry)
+                : baseImageUrl;
+
+        return new ScrapingResult(processedDescription, finalImageUrl);
+    }
+
+    private String processDescription(SyndEntry entry) {
+        if (entry.getDescription() == null) {
+            return "";
         }
 
-        String arcId = extractArcIdFromLink(entry.getLink());
-        if (arcId.trim().isEmpty()) {
-            throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR);
+        String rawDescription = entry.getDescription().getValue();
+        if (rawDescription == null || rawDescription.isEmpty()) {
+            return "";
         }
 
-        return source.getCodePrefix() + arcId;
+        try {
+            List<String> paragraphs = extractCleanParagraphs(rawDescription);
+            return serializeParagraphs(paragraphs);
+        } catch (Exception e) {
+            return removeAllHtmlTags(rawDescription);
+        }
     }
 
     /**
@@ -89,20 +104,23 @@ public class KmibRssMapper extends AbstractRssMapper {
      * @throws ArticleCollectorException 링크가 null이거나 arcid 추출 실패 시
      * @since 2025-05-10
      */
-    private String extractArcIdFromLink(String link) {
+    @Override
+    protected String extractUniqueIdFromLink(String link) {
         if (link == null || link.trim().isEmpty()) {
             throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR);
         }
 
         Matcher matcher = ARCID_PATTERN.matcher(link);
-        if (matcher.find()) {
-            String arcId = matcher.group(1);
-            if (arcId != null && !arcId.trim().isEmpty()) {
-                return arcId;
-            }
+        if (!matcher.find()) {
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR);
         }
 
-        throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR);
+        String arcId = matcher.group(1);
+        if (arcId == null || arcId.trim().isEmpty()) {
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR);
+        }
+
+        return arcId;
     }
 
     /**

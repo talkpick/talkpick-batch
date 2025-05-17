@@ -4,6 +4,7 @@ import com.likelion.backendplus4.talkpick.batch.news.article.exception.ArticleCo
 import com.likelion.backendplus4.talkpick.batch.news.article.exception.error.ArticleCollectorErrorCode;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.config.batch.RssSource;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.mapper.AbstractRssMapper;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.result.ScrapingResult;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.scraper.ContentScraper;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.scraper.factory.ScraperFactory;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.entity.ArticleEntity;
@@ -29,7 +30,7 @@ import java.time.LocalDateTime;
 public class KhanRssMapper extends AbstractRssMapper {
 
     private static final Logger log = LoggerFactory.getLogger(KhanRssMapper.class);
-//    private static final Map<String, ArticleEntity> RESULT_CACHE = new ConcurrentHashMap<>();
+    //    private static final Map<String, ArticleEntity> RESULT_CACHE = new ConcurrentHashMap<>();
     private final ScraperFactory scraperFactory;
 
     @Autowired
@@ -38,53 +39,82 @@ public class KhanRssMapper extends AbstractRssMapper {
     }
 
     /**
-     * RSS 피드를 ArticleEntity 엔티티로 변환
-     * ContentScraper를 사용하여 기사 본문 스크래핑
+     * 매퍼 타입 반환
      *
-     * @param entry 변환할 SyndEntry(Rss 데이터) 객체
-     * @param source RSS 소스 정보
-     * @return 변환된 ArticleEntity 엔티티
+     * @return 매퍼 타입 (kh: 경향신문)
      * @since 2025-05-10
-     * @modified 2025-05-17 스크래핑 로직 추가
      */
     @Override
-    public ArticleEntity mapToRssNews(SyndEntry entry, RssSource source) {
-        String guid = extractGuid(entry, source);
+    public String getMapperType() {
+        return "kh";
+    }
 
-        String title = extractTitle(entry);
-        String link = extractLink(entry);
-        LocalDateTime pubDate = extractPubDate(entry);
-        String category = extractCategory(entry, source);
-        String imageUrl = extractImageUrl(entry);
-        String description = "";
+    /**
+     * 본문 + 이미지 링크를 스크래핑 하는 메소드
+     *
+     * @return ScrapingResult 객체 (스크래핑 정보)
+     * @since 2025-05-17
+     */
+    @Override
+    protected ScrapingResult performSpecificMapping(
+            SyndEntry entry,
+            RssSource source,
+            String link,
+            String baseDescription,
+            String baseImageUrl) {
 
-        try {
-            ContentScraper scraper = scraperFactory.getScraper("kh")
-                    .orElseThrow(() -> new ArticleCollectorException(ArticleCollectorErrorCode.MAPPER_NOT_FOUND));
+        ContentScraper scraper = getContentScraper();
 
-            String scrapedContent = scraper.scrapeContent(link);
-            if (scrapedContent != null && !scrapedContent.isEmpty()) {
-                description = removeUnwantedPhrases(scrapedContent);
-            }
+        String scrapedContent = scrapeAndProcessContent(scraper, link);
 
-            if (imageUrl == null || imageUrl.isEmpty()) {
-                imageUrl = scraper.scrapeImageUrl(link);
-            }
-        } catch (Exception e) {
-            log.error("경향일보 스크래핑 실패: {}", e.getMessage());
+        String finalImageUrl = baseImageUrl;
+        if (finalImageUrl == null || finalImageUrl.isEmpty()) {
+            finalImageUrl = scrapeImageUrl(scraper, link);
         }
 
-        ArticleEntity article = ArticleEntity.builder()
-                .title(title)
-                .link(link)
-                .pubDate(pubDate)
-                .category(category)
-                .guid(guid)
-                .description(description)
-                .imageUrl(imageUrl)
-                .build();
+        return new ScrapingResult(scrapedContent, finalImageUrl);
+    }
 
-        return article;
+    /**
+     * 경향신문 스크래퍼 가져오기
+     *
+     * @return 경향신문 ContentScraper
+     * @throws ArticleCollectorException 스크래퍼를 찾을 수 없는 경우
+     * @since 2025-05-17
+     */
+    private ContentScraper getContentScraper() {
+        return scraperFactory.getScraper("kh")
+                .orElseThrow(() -> new ArticleCollectorException(ArticleCollectorErrorCode.MAPPER_NOT_FOUND));
+    }
+
+    /**
+     * 기사 콘텐츠 스크래핑 및 처리
+     *
+     * @param scraper 사용할 ContentScraper
+     * @param link 기사 링크
+     * @return 스크래핑되고 처리된 콘텐츠
+     * @throws ArticleCollectorException 스크래핑 실패 시
+     * @since 2025-05-17
+     */
+    private String scrapeAndProcessContent(ContentScraper scraper, String link) {
+        String scrapedContent = scraper.scrapeContent(link);
+        if (scrapedContent == null || scrapedContent.isEmpty()) {
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.FEED_PARSING_ERROR);
+        }
+        return removeUnwantedPhrases(scrapedContent);
+    }
+
+    /**
+     * 이미지 URL 스크래핑
+     *
+     * @param scraper 사용할 ContentScraper
+     * @param link 기사 링크
+     * @return 스크래핑된 이미지 URL
+     * @throws ArticleCollectorException 스크래핑 실패 시
+     * @since 2025-05-17
+     */
+    private String scrapeImageUrl(ContentScraper scraper, String link) {
+        return scraper.scrapeImageUrl(link);
     }
 
 
@@ -124,41 +154,8 @@ public class KhanRssMapper extends AbstractRssMapper {
         return content.trim();
     }
 
-    /**
-     * 매퍼 타입 반환
-     *
-     * @return 매퍼 타입 (kh)
-     * @since 2025-05-10
-     */
     @Override
-    public String getMapperType() {
-        return "kh";
-    }
-
-    /**
-     * GUID 추출, 링크에서 기사 ID를 추출하여 사용
-     *
-     * @param entry RSS 항목
-     * @param source RSS 소스 정보
-     * @return 신문사 코드 + 기사 ID 형태의 GUID
-     * @throws ArticleCollectorException 링크가 없거나 ID 추출 실패 시
-     * @since 2025-05-10
-     */
-    @Override
-    protected String extractGuid(SyndEntry entry, RssSource source) {
-        String uniqueId = extractUniqueIdFromLink(entry.getLink());
-        return source.getCodePrefix() + uniqueId;
-    }
-
-    /**
-     * 경향신문 링크에서 고유 ID 추출
-     *
-     * @param link 기사 링크
-     * @return 추출된 고유 ID
-     * @throws ArticleCollectorException 링크가 null이거나 ID를 추출할 수 없는 경우
-     * @since 2025-05-10
-     */
-    private String extractUniqueIdFromLink(String link) {
+    protected String extractUniqueIdFromLink(String link) {
         validateLink(link);
 
         try {
@@ -202,12 +199,14 @@ public class KhanRssMapper extends AbstractRssMapper {
      * @since 2025-05-10
      */
     private String findArticleIdInPath(String[] pathParts) {
-        for (int i = 0; i < pathParts.length; i++) {
-            if ("article".equals(pathParts[i]) && i + 1 < pathParts.length) {
-                String id = pathParts[i + 1];
-                if (isValidArticleId(id)) {
-                    return id;
-                }
+        for (int i = 0; i < pathParts.length - 1; i++) {
+            if (!"article".equals(pathParts[i])) {
+                continue;
+            }
+
+            String id = pathParts[i + 1];
+            if (isValidArticleId(id)) {
+                return id;
             }
         }
 

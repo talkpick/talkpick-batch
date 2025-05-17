@@ -4,6 +4,7 @@ import com.likelion.backendplus4.talkpick.batch.news.article.exception.ArticleCo
 import com.likelion.backendplus4.talkpick.batch.news.article.exception.error.ArticleCollectorErrorCode;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.config.batch.RssSource;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.mapper.AbstractRssMapper;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.result.ScrapingResult;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.scraper.ContentScraper;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.scraper.factory.ScraperFactory;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.entity.ArticleEntity;
@@ -65,18 +66,59 @@ public class DongaRssMapper extends AbstractRssMapper {
     }
 
     /**
-     * GUID 추출, 링크에서 고유 ID를 추출하여 사용
+     * 카테고리 정보 추출
      *
      * @param entry RSS 항목
      * @param source RSS 소스 정보
-     * @return 신문사 코드 + 고유 ID 형태의 GUID
-     * @throws ArticleCollectorException 링크가 없거나 ID 추출 실패 시
+     * @return 카테고리
      * @since 2025-05-10
      */
     @Override
-    protected String extractGuid(SyndEntry entry, RssSource source) {
-        String uniqueId = extractUniqueIdFromLink(entry.getLink());
-        return source.getCodePrefix() + uniqueId;
+    protected String extractCategory(SyndEntry entry, RssSource source) {
+        return source.getCategoryName();
+    }
+
+    /**
+     * 본문만 스크래핑 하는 메소드
+     *
+     * @return ScrapingResult 객체 (스크래핑 정보)
+     * @since 2025-05-17
+     */
+    @Override
+    protected ScrapingResult performSpecificMapping(
+            SyndEntry entry,
+            RssSource source,
+            String link,
+            String baseDescription,
+            String baseImageUrl) {
+
+        String scrapedContent = scrapeContent(link);
+
+        return new ScrapingResult(scrapedContent, baseImageUrl);
+    }
+
+    /**
+     * 본문 스크래핑을 진행하는 메소드
+     *
+     * @return 스크래핑된 본문 String
+     * @since 2025-05-17
+     */
+    private String scrapeContent(String link) {
+        try {
+            ContentScraper scraper = getScraperFactory().getScraper(getMapperType())
+                    .orElseThrow(() -> new ArticleCollectorException(ArticleCollectorErrorCode.MAPPER_NOT_FOUND));
+
+            String scrapedContent = scraper.scrapeContent(link);
+            if (scrapedContent == null || scrapedContent.isEmpty()) {
+                throw new ArticleCollectorException(ArticleCollectorErrorCode.FEED_PARSING_ERROR);
+            }
+
+            return removeUnwantedPhrases(scrapedContent);
+        } catch (ArticleCollectorException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.FEED_PARSING_ERROR, e);
+        }
     }
 
     /**
@@ -87,7 +129,8 @@ public class DongaRssMapper extends AbstractRssMapper {
      * @throws ArticleCollectorException 링크가 null이거나 ID를 추출할 수 없는 경우
      * @since 2025-05-10
      */
-    private String extractUniqueIdFromLink(String link) {
+    @Override
+    protected String extractUniqueIdFromLink(String link) {
         if (link == null || link.trim().isEmpty()) {
             throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR);
         }
@@ -102,66 +145,6 @@ public class DongaRssMapper extends AbstractRssMapper {
         }
 
         throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR);
-    }
-
-    /**
-     * 카테고리 정보 추출
-     *
-     * @param entry RSS 항목
-     * @param source RSS 소스 정보
-     * @return 카테고리
-     * @since 2025-05-10
-     */
-    @Override
-    protected String extractCategory(SyndEntry entry, RssSource source) {
-        return source.getCategoryName();
-    }
-
-    /**
-     * RSS 피드를 ArticleEntity 엔티티로 변환
-     * ContentScraper를 사용하여 기사 본문 스크래핑
-     *
-     * @param entry 변환할 SyndEntry(Rss 데이터) 객체
-     * @param source RSS 소스 정보
-     * @return 변환된 ArticleEntity 엔티티
-     * @since 2025-05-10
-     * @modified 2025-05-17 스크래핑 로직 추가
-     */
-    @Override
-    public ArticleEntity mapToRssNews(SyndEntry entry, RssSource source) {
-        String title = extractTitle(entry);
-        String link = extractLink(entry);
-        LocalDateTime pubDate = extractPubDate(entry);
-        String guid = extractGuid(entry, source);
-        String category = extractCategory(entry, source);
-        String imageUrl = extractImageUrl(entry);
-        String description = "";
-
-        try {
-            ContentScraper scraper = getScraperFactory().getScraper(getMapperType())
-                    .orElseThrow(() -> new ArticleCollectorException(ArticleCollectorErrorCode.MAPPER_NOT_FOUND));
-
-            String scrapedContent = scraper.scrapeContent(link);
-            if (scrapedContent != null && !scrapedContent.isEmpty()) {
-                description = removeUnwantedPhrases(scrapedContent);
-            }
-
-            if (imageUrl == null || imageUrl.isEmpty()) {
-                imageUrl = scraper.scrapeImageUrl(link);
-            }
-        } catch (Exception e) {
-            log.error("동아일보 스크래핑 실패: {}", e.getMessage());
-        }
-
-        return ArticleEntity.builder()
-                .title(title)
-                .link(link)
-                .pubDate(pubDate)
-                .category(category)
-                .guid(guid)
-                .description(description)
-                .imageUrl(imageUrl)
-                .build();
     }
 
     /**

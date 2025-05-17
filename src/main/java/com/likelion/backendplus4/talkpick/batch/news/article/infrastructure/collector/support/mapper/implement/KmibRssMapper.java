@@ -1,39 +1,36 @@
 package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.mapper.implement;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.likelion.backendplus4.talkpick.batch.news.article.exception.ArticleCollectorException;
 import com.likelion.backendplus4.talkpick.batch.news.article.exception.error.ArticleCollectorErrorCode;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.config.batch.RssSource;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.mapper.AbstractRssMapper;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.result.ScrapingResult;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.scraper.factory.ScraperFactory;
 import com.rometools.rome.feed.synd.SyndEntry;
 
+import groovy.util.logging.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * 국민일보 RSS 매퍼 구현체
+ * HTML 태그를 제거하고 문단을 PARAGRAPH_BREAK로 구분하여 반환한다.
  *
  * @author 양병학
  * @since 2025-05-10 최초 작성
  * @modified 2025-05-15 템플릿 메서드 패턴 적용, 의존성 주입 방식 개선
- * @modified 2025-05-17 HTML 태그 제거 및 문단 직렬화 기능 추가
+ * @modified 2025-05-17 HTML 태그 제거 및 문단 구분 기능 추가
  */
+@Slf4j
 @Component
 public class KmibRssMapper extends AbstractRssMapper {
 
     private static final Pattern ARCID_PATTERN = Pattern.compile("arcid=([0-9]+)");
-    private static final Pattern IMG_SRC_PATTERN = Pattern.compile("""
-    <img\\s+src=["']([^"']+)["']
-    """.trim());
+    private static final Pattern IMG_SRC_PATTERN = Pattern.compile("<img\\s+src=[\"']([^\"']+)[\"']");
 
     private final ScraperFactory scraperFactory;
 
@@ -43,9 +40,10 @@ public class KmibRssMapper extends AbstractRssMapper {
     }
 
     /**
-     * 템플릿 메서드 패턴
+     * 템플릿 메서드 패턴에서 사용할 ScraperFactory 반환
      *
      * @return 주입받은 ScraperFactory 인스턴스
+     * @since 2025-05-15
      */
     @Override
     protected ScraperFactory getScraperFactory() {
@@ -56,53 +54,75 @@ public class KmibRssMapper extends AbstractRssMapper {
      * 매퍼 타입 반환
      *
      * @return 매퍼 타입 (km)
+     * @since 2025-05-10
      */
     @Override
     public String getMapperType() {
         return "km";
     }
 
-    /**
-     * GUID 추출, 링크에서 arcid를 추출하여 생성
-     *
-     * @param entry RSS 항목
-     * @param source RSS 소스 정보
-     * @return 형식: [언론사코드][arcid]
-     */
     @Override
-    protected String extractGuid(SyndEntry entry, RssSource source) {
-        if (entry.getLink() == null || entry.getLink().trim().isEmpty()) {
-            throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR);
+    protected ScrapingResult performSpecificMapping(
+            SyndEntry entry,
+            RssSource source,
+            String link,
+            String baseDescription,
+            String baseImageUrl) {
+
+        // KmibRssMapper는 RSS 데이터만 사용하되, HTML 태그 제거 및 문단 처리
+        String processedDescription = processDescription(entry);
+
+        // 이미지 URL이 없으면 description에서 추출 시도
+        String finalImageUrl = baseImageUrl.isEmpty()
+                ? extractImageFromDescription(entry)
+                : baseImageUrl;
+
+        return new ScrapingResult(processedDescription, finalImageUrl);
+    }
+
+    private String processDescription(SyndEntry entry) {
+        if (entry.getDescription() == null) {
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.RSS_CONTENT_EMPTY);
         }
 
-        String arcId = extractArcIdFromLink(entry.getLink());
-        if (arcId.trim().isEmpty()) {
-            throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR);
+        String rawDescription = entry.getDescription().getValue();
+        if (rawDescription == null || rawDescription.isEmpty()) {
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.RSS_CONTENT_EMPTY);
         }
 
-        return source.getCodePrefix() + arcId;
+        List<String> paragraphs = extractCleanParagraphs(rawDescription);
+        if (paragraphs.isEmpty()) {
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.RSS_CONTENT_EMPTY);
+        }
+
+        return serializeParagraphs(paragraphs);
     }
 
     /**
      * 링크에서 arcid 값 추출
      *
      * @param link 기사 링크
-     * @return 추출된 arcid, 없으면 타임스탬프 반환
+     * @return 추출된 arcid
+     * @throws ArticleCollectorException 링크가 null이거나 arcid 추출 실패 시
+     * @since 2025-05-10
      */
-    private String extractArcIdFromLink(String link) {
+    @Override
+    protected String extractUniqueIdFromLink(String link) {
         if (link == null || link.trim().isEmpty()) {
-            throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR);
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.ARTICLE_ID_EXTRACTION_ERROR);
         }
 
         Matcher matcher = ARCID_PATTERN.matcher(link);
-        if (matcher.find()) {
-            String arcId = matcher.group(1);
-            if (arcId != null && !arcId.trim().isEmpty()) {
-                return arcId;
-            }
+        if (!matcher.find()) {
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.ARTICLE_ID_EXTRACTION_ERROR);
         }
 
-        throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR);
+        String arcId = matcher.group(1);
+        if (arcId == null || arcId.trim().isEmpty()) {
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.ARTICLE_ID_EXTRACTION_ERROR);
+        }
+
+        return arcId;
     }
 
     /**
@@ -111,6 +131,7 @@ public class KmibRssMapper extends AbstractRssMapper {
      *
      * @param entry RSS 항목
      * @return 이미지 URL
+     * @since 2025-05-10
      */
     @Override
     protected String extractImageUrl(SyndEntry entry) {
@@ -127,6 +148,7 @@ public class KmibRssMapper extends AbstractRssMapper {
      *
      * @param entry RSS 항목
      * @return 추출된 이미지 URL 또는 빈 문자열
+     * @since 2025-05-10
      */
     private String extractImageFromDescription(SyndEntry entry) {
         if (entry.getDescription() == null) {
@@ -143,10 +165,12 @@ public class KmibRssMapper extends AbstractRssMapper {
     }
 
     /**
-     * RSS description에서 HTML 태그를 제거하고 문단을 추출하여 직렬화
+     * RSS description에서 HTML 태그를 제거하고 문단을 추출하여 PARAGRAPH_BREAK로 구분
      *
      * @param entry RSS 항목
-     * @return 직렬화된 문단 JSON 또는 원본 description
+     * @return PARAGRAPH_BREAK로 구분된 문단 텍스트
+     * @since 2025-05-10
+     * @modified 2025-05-17 HTML 태그 제거 및 문단 구분 기능 추가
      */
     @Override
     protected String extractDescription(SyndEntry entry) {

@@ -1,30 +1,39 @@
 package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.mapper.implement;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.likelion.backendplus4.talkpick.batch.news.article.exception.ArticleCollectorException;
 import com.likelion.backendplus4.talkpick.batch.news.article.exception.error.ArticleCollectorErrorCode;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.config.batch.RssSource;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.mapper.AbstractRssMapper;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.result.ScrapingResult;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.scraper.ContentScraper;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.scraper.factory.ScraperFactory;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.entity.ArticleEntity;
 import com.rometools.rome.feed.synd.SyndEntry;
 
+import groovy.util.logging.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
  * 동아일보 RSS 매퍼 구현체
+ * HTML에서 문단을 추출하고 PARAGRAPH_BREAK로 구분하여 반환한다.
  *
  * @author 양병학
  * @since 2025-05-10 최초 작성
  * @modified 2025-05-15 템플릿 메서드 패턴 적용, 의존성 주입 방식 개선
- * @modified 2025-05-17 HTML 태그 제거 및 문단 직렬화 기능 추가
+ * @modified 2025-05-17 HTML 태그 제거 및 문단 구분 기능 추가
  */
+@Slf4j
 @Component
 public class DongaRssMapper extends AbstractRssMapper {
 
@@ -36,9 +45,10 @@ public class DongaRssMapper extends AbstractRssMapper {
     }
 
     /**
-     * 템플릿 메서드 패턴
+     * 템플릿 메서드 패턴에서 사용할 ScraperFactory 반환
      *
      * @return 주입받은 ScraperFactory 인스턴스
+     * @since 2025-05-15
      */
     @Override
     protected ScraperFactory getScraperFactory() {
@@ -49,6 +59,7 @@ public class DongaRssMapper extends AbstractRssMapper {
      * 매퍼 타입 반환
      *
      * @return 매퍼 타입 (da)
+     * @since 2025-05-10
      */
     @Override
     public String getMapperType() {
@@ -56,16 +67,53 @@ public class DongaRssMapper extends AbstractRssMapper {
     }
 
     /**
-     * GUID 추출, URI를 GUID로 사용
+     * 카테고리 정보 추출
      *
      * @param entry RSS 항목
      * @param source RSS 소스 정보
-     * @return URI 또는 생성된 고유 ID
+     * @return 카테고리
+     * @since 2025-05-10
      */
     @Override
-    protected String extractGuid(SyndEntry entry, RssSource source) {
-        String uniqueId = extractUniqueIdFromLink(entry.getLink());
-        return source.getCodePrefix() + uniqueId;
+    protected String extractCategory(SyndEntry entry, RssSource source) {
+        return source.getCategoryName();
+    }
+
+    /**
+     * 본문만 스크래핑 하는 메소드
+     *
+     * @return ScrapingResult 객체 (스크래핑 정보)
+     * @since 2025-05-17
+     */
+    @Override
+    protected ScrapingResult performSpecificMapping(
+            SyndEntry entry,
+            RssSource source,
+            String link,
+            String baseDescription,
+            String baseImageUrl) {
+
+        String scrapedContent = scrapeContent(link);
+
+        return new ScrapingResult(scrapedContent, baseImageUrl);
+    }
+
+    /**
+     * 본문 스크래핑을 진행하는 메소드
+     *
+     * @return 스크래핑된 본문 String
+     * @since 2025-05-17
+     */
+    private String scrapeContent(String link) {
+        ContentScraper scraper = getScraperFactory().getScraper(getMapperType())
+                .orElseThrow(() -> new ArticleCollectorException(ArticleCollectorErrorCode.SCRAPER_NOT_FOUND));
+
+        String scrapedContent = scraper.scrapeContent(link);
+        if (scrapedContent == null || scrapedContent.isEmpty()) {
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.EMPTY_ARTICLE_CONTENT);
+        }
+
+        return removeUnwantedPhrases(scrapedContent);
     }
 
     /**
@@ -74,68 +122,46 @@ public class DongaRssMapper extends AbstractRssMapper {
      * @param link 기사 링크
      * @return 추출된 고유 ID
      * @throws ArticleCollectorException 링크가 null이거나 ID를 추출할 수 없는 경우
+     * @since 2025-05-10
      */
-    private String extractUniqueIdFromLink(String link) {
+    @Override
+    protected String extractUniqueIdFromLink(String link) {
         if (link == null || link.trim().isEmpty()) {
-            throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR);
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.ARTICLE_ID_EXTRACTION_ERROR);
         }
 
-        try {
-            String[] parts = link.split("/");
-            if (parts.length >= 2) {
-                return parts[parts.length - 2];
+        String[] parts = link.split("/");
+        if (parts.length >= 2) {
+            String id = parts[parts.length - 2];
+            if (id != null && !id.trim().isEmpty()) {
+                return id;
             }
-        } catch (Exception e) {
-            throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR, e);
         }
 
-        throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR);
+        throw new ArticleCollectorException(ArticleCollectorErrorCode.ARTICLE_ID_EXTRACTION_ERROR);
     }
 
     /**
-     * 카테고리 정보 추출
+     * 불용어 제거 메서드
+     * 저작권 문구, 광고 문구 등 불필요한 문구 제거
      *
-     * @param entry RSS 항목
-     * @param source RSS 소스 정보
-     * @return 결합된 카테고리 문자열
+     * @param content 원본 내용
+     * @return 불용어가 제거된 내용
+     * @since 2025-05-17
      */
-    @Override
-    protected String extractCategory(SyndEntry entry, RssSource source) {
-        return source.getCategoryName();
-    }
-
-    /**
-     * RSS description에서 HTML 태그를 제거하고 문단을 추출하여 직렬화
-     *
-     * @param entry RSS 항목
-     * @return 직렬화된 문단 JSON 또는 원본 description
-     */
-    @Override
-    protected String extractDescription(SyndEntry entry) {
-        if (entry.getDescription() == null) {
+    private String removeUnwantedPhrases(String content) {
+        if (content == null || content.isEmpty()) {
             return "";
         }
 
-        String rawDescription = entry.getDescription().getValue();
-        if (rawDescription == null || rawDescription.isEmpty()) {
-            return "";
-        }
+        content = content.replaceAll("\\(c\\)\\s*동아일보", "");
+        content = content.replaceAll("저작권자.*동아일보.*무단.*전재.*금지", "");
+        content = content.replaceAll("무단전재 및 재배포 금지", "");
+        content = content.replaceAll("\\S+기자\\s+\\S+@donga\\.com", "");
+        content = content.replaceAll("동아닷컴 뉴스스탠드", "");
+        content = content.replaceAll("동아일보 홈페이지", "");
+        content = content.replaceAll("PARAGRAPH_BREAKPARAGRAPH_BREAK", "PARAGRAPH_BREAK");
 
-        return processHtmlContent(rawDescription);
-    }
-
-    /**
-     * HTML 콘텐츠 처리하여 정제된 문단 직렬화
-     *
-     * @param htmlContent HTML 콘텐츠
-     * @return 직렬화된 문단 JSON 또는 태그가 제거된 텍스트
-     */
-    private String processHtmlContent(String htmlContent) {
-        try {
-            List<String> paragraphs = extractCleanParagraphs(htmlContent);
-            return serializeParagraphs(paragraphs);
-        } catch (Exception e) {
-            return removeAllHtmlTags(htmlContent);
-        }
+        return content.trim();
     }
 }

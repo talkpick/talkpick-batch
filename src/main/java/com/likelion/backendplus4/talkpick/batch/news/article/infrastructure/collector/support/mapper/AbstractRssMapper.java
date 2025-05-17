@@ -5,12 +5,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.likelion.backendplus4.talkpick.batch.news.article.exception.ArticleCollectorException;
 import com.likelion.backendplus4.talkpick.batch.news.article.exception.error.ArticleCollectorErrorCode;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.config.batch.RssSource;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.result.ScrapingResult;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.scraper.ContentScraper;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.scraper.factory.ScraperFactory;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.entity.ArticleEntity;
 import com.rometools.rome.feed.synd.SyndContent;
 import com.rometools.rome.feed.synd.SyndEntry;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -26,77 +26,70 @@ import java.util.stream.Collectors;
  * @since 2025-05-13 최초 작성
  * @modified 2025-05-15 의존성 주입 방식 개선 (템플릿 메서드 패턴 적용)
  */
+
 public abstract class AbstractRssMapper {
 
     protected abstract ScraperFactory getScraperFactory();
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
-     * RSS 피드를 ArticleEntity 엔티티로 변환
+     * 매퍼의 유형을 식별하는 코드 반환
+     * 소문자 언론사 코드 형태 (예: "km", "da", "kh")
+     */
+    public abstract String getMapperType();
+
+    /**
+     * RSS 피드를 ArticleEntity 엔티티로 변환하는 템플릿 메소드
      *
      * @param entry 변환할 SyndEntry(Rss 데이터) 객체
      * @param source RSS 소스 정보
      * @return 변환된 ArticleEntity 엔티티
      */
-    public ArticleEntity mapToRssNews(SyndEntry entry, RssSource source) {
-        ArticleInfo info = extractBasicInfo(entry, source);
+    public final ArticleEntity mapToRssNews(SyndEntry entry, RssSource source) {
+        // 1. 메타데이터 추출
+        String guid = extractGuid(entry, source);
+        String title = extractTitle(entry);
+        String link = extractLink(entry);
+        LocalDateTime pubDate = extractPubDate(entry);
+        String category = extractCategory(entry, source);
 
-        String content = determineContent(info.description, info.link, source);
+        // 2. 기본 이미지 URL 추출 (RSS에서)
+        String imageUrl = extractImageUrl(entry);
 
-        return buildArticleEntity(
-                info.title,
-                info.link,
-                info.pubDate,
-                info.guid,
-                content,
-                info.category,
-                info.imageUrl);
+        // 3. 기본 설명 추출 (RSS에서)
+        String baseDescription = extractDescription(entry);
+
+        // 4. 매퍼 유형에 따른 처리 (자식 클래스에서 구현)
+        ScrapingResult result = performSpecificMapping(entry, source, link, baseDescription, imageUrl);
+
+        // 5. ArticleEntity 생성 및 반환
+        return ArticleEntity.builder()
+                .title(title)
+                .link(link)
+                .pubDate(pubDate)
+                .category(category)
+                .guid(guid)
+                .description(result.getDescription())
+                .imageUrl(result.getImageUrl())
+                .build();
     }
 
     /**
-     * RSS 항목에서 기본 정보 추출
+     * 매퍼 유형에 따른 처리를 수행하는 추상 메소드
+     *
+     * @param entry RSS 항목
+     * @param source RSS 소스 정보
+     * @param link 기사 링크
+     * @param baseDescription RSS에서 추출한 기본 설명
+     * @param baseImageUrl RSS에서 추출한 기본 이미지 URL
+     * @return 매핑 결과 (설명과 이미지 URL)
      */
-    private ArticleInfo extractBasicInfo(SyndEntry entry, RssSource source) {
-        return new ArticleInfo(
-                extractTitle(entry),
-                extractLink(entry),
-                extractPubDate(entry),
-                extractGuid(entry, source),
-                extractDescription(entry),
-                extractCategory(entry, source),
-                extractImageUrl(entry)
-        );
-    }
-
-    /**
-     * 본문 내용 결정 (RSS 또는 스크래핑)
-     */
-    private String determineContent(String description, String link, RssSource source) {
-        if (source.hasFullContent()) {
-            return description;
-        }
-
-        return getContentWithScraping(description, link, source.getMapperType());
-    }
-
-    /**
-     * 기사 기본 정보를 담는 내부 클래스
-     */
-    private record ArticleInfo(
-            String title,
+    protected abstract ScrapingResult performSpecificMapping(
+            SyndEntry entry,
+            RssSource source,
             String link,
-            LocalDateTime pubDate,
-            String guid,
-            String description,
-            String category,
-            String imageUrl
-    ) {}
-
-    /**
-     * 매퍼의 유형을 식별하는 코드 반환
-     * 소문자 언론사 코드 형태 (예: "km", "da", "kh")
-     */
-    public abstract String getMapperType();
+            String baseDescription,
+            String baseImageUrl);
 
     /**
      * Date 객체를 LocalDateTime으로 변환
@@ -164,54 +157,6 @@ public abstract class AbstractRssMapper {
     }
 
     /**
-     * 본문 내용을 가져오는 메서드
-     *
-     * @param originalDescription RSS에서 추출한 기본 설명
-     * @param link 기사 URL
-     * @param mapperType 매퍼 타입
-     * @return 최종 본문 내용
-     */
-    private String getContentWithScraping(String originalDescription, String link, String mapperType) {
-        ContentScraper scraper = findScraper(mapperType);
-        return scrapeContent(scraper, link, originalDescription);
-    }
-
-    /**
-     * 매퍼 타입에 맞는 스크래퍼를 찾음
-     *
-     * @param mapperType 매퍼 타입
-     * @return 스크래퍼 객체
-     * @throws ArticleCollectorException 스크래퍼를 찾을 수 없는 경우
-     */
-    private ContentScraper findScraper(String mapperType) {
-        return getScraperFactory().getScraper(mapperType)
-                .orElseThrow(() -> new ArticleCollectorException(ArticleCollectorErrorCode.MAPPER_NOT_FOUND));
-    }
-
-    /**
-     * 스크래퍼를 사용하여 콘텐츠 스크래핑 수행
-     *
-     * @param scraper 스크래퍼 객체
-     * @param link 기사 URL
-     * @param fallbackContent 스크래핑 실패 시 사용할 대체 콘텐츠
-     * @return 스크래핑된 콘텐츠 또는 대체 콘텐츠
-     */
-    private String scrapeContent(ContentScraper scraper, String link, String fallbackContent) {
-        try {
-            String scrapedContent = scraper.scrapeContent(link);
-            return scrapedContent != null && !scrapedContent.isEmpty()
-                    ? scrapedContent
-                    : fallbackContent;
-        } catch (ArticleCollectorException e) {
-            throw e;
-        } catch (IllegalArgumentException e) {
-            throw new ArticleCollectorException(ArticleCollectorErrorCode.INVALID_JOB_PARAMETER, e);
-        } catch (Exception e) {
-            throw new ArticleCollectorException(ArticleCollectorErrorCode.FEED_PARSING_ERROR, e);
-        }
-    }
-
-    /**
      * 카테고리 추출 메서드
      *
      * @param entry RSS 항목
@@ -229,7 +174,36 @@ public abstract class AbstractRssMapper {
      * @param source RSS 소스 정보
      * @return GUID
      */
-    protected abstract String extractGuid(SyndEntry entry, RssSource source);
+    /**
+     * GUID 추출을 위한 템플릿 메소드
+     *
+     * @param entry RSS 항목
+     * @param source RSS 소스 정보
+     * @return 신문사 코드 + 고유 ID 형태의 GUID
+     * @throws ArticleCollectorException 링크가 없거나 ID 추출 실패 시
+     */
+    protected final String extractGuid(SyndEntry entry, RssSource source) {
+        if (entry.getLink() == null || entry.getLink().trim().isEmpty()) {
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.ARTICLE_ID_EXTRACTION_ERROR);
+        }
+
+        String uniqueId = extractUniqueIdFromLink(entry.getLink());
+        if (uniqueId == null || uniqueId.trim().isEmpty()) {
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.ARTICLE_ID_EXTRACTION_ERROR);
+        }
+
+        return source.getCodePrefix() + uniqueId;
+    }
+
+    /**
+     * 링크에서 고유 ID를 추출하는 추상 메소드
+     * 각 매퍼가 자신의 URL 패턴에 맞게 구현
+     *
+     * @param link 기사 링크
+     * @return 추출된 고유 ID
+     * @throws ArticleCollectorException 링크가 null이거나 ID를 추출할 수 없는 경우
+     */
+    protected abstract String extractUniqueIdFromLink(String link);
 
     private ArticleEntity buildArticleEntity(String title, String link, LocalDateTime pubDate,
                                              String guid, String description, String category, String imageUrl) {
@@ -324,10 +298,18 @@ public abstract class AbstractRssMapper {
      * @return JSON 문자열
      */
     protected String serializeParagraphs(List<String> paragraphs) {
-        try {
-            return objectMapper.writeValueAsString(paragraphs);
-        } catch (JsonProcessingException e) {
-            return String.join("\n\n", paragraphs);
+        if (paragraphs == null || paragraphs.isEmpty()) {
+            return "";
         }
+
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < paragraphs.size(); i++) {
+            if (i > 0) {
+                sb.append("PARAGRAPH_BREAK");
+            }
+            sb.append(paragraphs.get(i));
+        }
+
+        return sb.toString();
     }
 }

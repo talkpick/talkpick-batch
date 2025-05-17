@@ -2,6 +2,7 @@ package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.col
 
 import com.likelion.backendplus4.talkpick.batch.news.article.exception.ArticleCollectorException;
 import com.likelion.backendplus4.talkpick.batch.news.article.exception.error.ArticleCollectorErrorCode;
+import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
@@ -16,7 +17,6 @@ import java.util.List;
  * @since 2025-05-13 최초 작성
  */
 public interface ContentScraper {
-
     /**
      * 뉴스 URL에서 본문 내용을 문단 단위로 스크래핑
      *
@@ -27,10 +27,10 @@ public interface ContentScraper {
     List<String> scrapeParagraphs(String url) throws ArticleCollectorException;
 
     /**
-     * 뉴스 URL에서 본문 내용을 텍스트로 스크래핑
+     * 기사 URL에서 본문 내용을 PARAGRAPH_BREAK로 구분된 문자열로 스크래핑
      *
-     * @param url 뉴스 URL
-     * @return 스크래핑된 본문
+     * @param url 기사 URL
+     * @return PARAGRAPH_BREAK로 구분된 본문 문자열
      * @throws ArticleCollectorException 스크래핑 중 오류 발생 시
      */
     String scrapeContent(String url) throws ArticleCollectorException;
@@ -40,8 +40,9 @@ public interface ContentScraper {
      *
      * @param url 뉴스 URL
      * @return 스크래핑된 이미지 URL
+     * @throws ArticleCollectorException 스크래핑 중 오류 발생 시
      */
-    String scrapeImageUrl(String url);
+    String scrapeImageUrl(String url) throws ArticleCollectorException;
 
     /**
      * 스크래퍼가 지원하는 Mapper type 반환
@@ -50,15 +51,14 @@ public interface ContentScraper {
      */
     String getSupportedMapperType();
 
-
     /**
      * URL에 연결하여 Document 객체 반환 (기본 구현)
      *
      * @param url 연결할 URL
      * @return 파싱된 JSoup Document
-     * @throws ArticleCollectorException 연결 오류 발생 시 FEED_PARSING_ERROR 예외 발생
+     * @throws ArticleCollectorException 연결 오류 발생 시 SCRAPER_CONNECTION_ERROR 예외 발생
      */
-    default Document connectToUrl(String url) {
+    default Document connectToUrl(String url) throws ArticleCollectorException {
         try {
             return Jsoup.connect(url)
                     .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
@@ -68,7 +68,7 @@ public interface ContentScraper {
                     .followRedirects(true)
                     .get();
         } catch (IOException e) {
-            throw new ArticleCollectorException(ArticleCollectorErrorCode.FEED_PARSING_ERROR, e);
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.SCRAPER_CONNECTION_ERROR, e);
         }
     }
 }

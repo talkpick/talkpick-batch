@@ -36,8 +36,19 @@ public enum ArticleCollectorErrorCode implements ErrorCode {
     FEED_TIMEOUT_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, 450003, "RSS 피드 로드 중 시간 초과가 발생했습니다."),
 
     // Mapper 관련 오류
+    RSS_CONTENT_EMPTY(HttpStatus.INTERNAL_SERVER_ERROR, 450012, "RSS 피드 내용이 비어있습니다."),
+    RSS_PARSING_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, 450013, "RSS 피드 내용 파싱 중 오류가 발생했습니다."),
+    RSS_IMAGE_MISSING(HttpStatus.INTERNAL_SERVER_ERROR, 450014, "RSS 피드에서 이미지를 찾을 수 없습니다."),
+    ARTICLE_ID_EXTRACTION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, 450015, "기사 ID 추출 중 오류가 발생했습니다."),
     MAPPER_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, 450004, "요청한 매퍼를 찾을 수 없습니다."),
     ITEM_MAPPING_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, 450005,"RSS 항목 매핑 중 오류가 발생했습니다."),
+
+    // 스크래퍼 관련 오류
+    SCRAPER_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, 450007, "요청한 스크래퍼를 찾을 수 없습니다."),
+    SCRAPER_CONNECTION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, 450008, "기사 웹페이지 연결 중 오류가 발생했습니다."),
+    SCRAPER_PARSING_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, 450009, "기사 내용 파싱 중 오류가 발생했습니다."),
+    EMPTY_ARTICLE_CONTENT(HttpStatus.INTERNAL_SERVER_ERROR, 450010, "스크래핑된 기사 내용이 없습니다."),
+    EMPTY_ARTICLE_IMAGE(HttpStatus.INTERNAL_SERVER_ERROR, 450011, "스크래핑된 기사 이미지가 없습니다."),
 
     // 데이터베이스 관련 오류
     DB_SAVE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, 530001, "RSS 뉴스를 저장하는 중 오류가 발생했습니다."),

@@ -12,6 +12,7 @@ import org.springframework.core.task.TaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import com.likelion.backendplus4.talkpick.batch.news.article.exception.ArticleCollectorException;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.batch.support.PagePartitioner;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.summary.batch.processor.ArticleSummaryProcessor;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.summary.batch.processor.ArticleSummaryTotalPageCalculator;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.summary.batch.reader.ArticleSummaryPageReader;
@@ -34,14 +35,14 @@ public class SummaryStepConfig {
 	private final ItemWriter<ArticleEntity> writer;
 
 	public SummaryStepConfig(JobRepository jobRepository,
-		Partitioner articlePageRangePartitioner,
+		PagePartitioner partitioner,
 		PlatformTransactionManager platformTransactionManager,
 		@Qualifier(executorName)
 		TaskExecutor taskExecutor,
 		ArticleSummaryProcessor summaryProcessor,
 		ItemWriter<ArticleEntity> articleSummaryWriter) {
 		this.jobRepository = jobRepository;
-		this.partitioner = articlePageRangePartitioner;
+		this.partitioner = partitioner;
 		this.transactionManager = platformTransactionManager;
 		this.taskExecutor = taskExecutor;
 		this.summaryProcessor = summaryProcessor;

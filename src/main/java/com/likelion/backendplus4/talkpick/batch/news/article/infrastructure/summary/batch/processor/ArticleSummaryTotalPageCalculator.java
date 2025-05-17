@@ -9,7 +9,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
-import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.summary.batch.partitioner.ArticleSummaryPartitioner;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.batch.support.PagePartitioner;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.repository.NewsInfoJpaRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 public class ArticleSummaryTotalPageCalculator implements Tasklet {
-	private final ArticleSummaryPartitioner articleSummaryPartitioner;
+	private final PagePartitioner pagePartitioner;
 	private final NewsInfoJpaRepository newsInfoJpaRepository;
 
 	@Override
@@ -29,7 +29,7 @@ public class ArticleSummaryTotalPageCalculator implements Tasklet {
 		int totalPages = newsInfoJpaRepository
 			.findBySummaryIsNull(pageable)
 			.getTotalPages();
-		articleSummaryPartitioner.setTotalPages(totalPages);
+		pagePartitioner.setTotalPages(totalPages);
 		log.info("[뉴스요약-Total-Page-Calculator] 총 페이지 수 계산 완료: " + totalPages);
 		if (totalPages == 0) {
 			contribution.setExitStatus(new ExitStatus("ITEMS_NOT_FOUND"));

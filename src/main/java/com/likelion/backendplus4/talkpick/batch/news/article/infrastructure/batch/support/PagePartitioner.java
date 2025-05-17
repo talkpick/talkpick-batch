@@ -1,10 +1,11 @@
-package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.summary.batch.partitioner;
+package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.batch.support;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.partition.support.Partitioner;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.stereotype.Component;
@@ -22,7 +23,8 @@ import lombok.Setter;
  */
 @Component
 @Setter
-public class ArticleSummaryPartitioner implements Partitioner {
+@StepScope
+public class PagePartitioner implements Partitioner {
 	private int totalPages = 0;
 
 	/**

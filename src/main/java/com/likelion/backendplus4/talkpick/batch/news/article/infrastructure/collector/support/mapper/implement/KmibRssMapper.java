@@ -8,6 +8,7 @@ import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.coll
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.scraper.factory.ScraperFactory;
 import com.rometools.rome.feed.synd.SyndEntry;
 
+import groovy.util.logging.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -24,6 +25,7 @@ import java.util.regex.Pattern;
  * @modified 2025-05-15 템플릿 메서드 패턴 적용, 의존성 주입 방식 개선
  * @modified 2025-05-17 HTML 태그 제거 및 문단 구분 기능 추가
  */
+@Slf4j
 @Component
 public class KmibRssMapper extends AbstractRssMapper {
 
@@ -80,20 +82,20 @@ public class KmibRssMapper extends AbstractRssMapper {
 
     private String processDescription(SyndEntry entry) {
         if (entry.getDescription() == null) {
-            return "";
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.RSS_CONTENT_EMPTY);
         }
 
         String rawDescription = entry.getDescription().getValue();
         if (rawDescription == null || rawDescription.isEmpty()) {
-            return "";
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.RSS_CONTENT_EMPTY);
         }
 
-        try {
-            List<String> paragraphs = extractCleanParagraphs(rawDescription);
-            return serializeParagraphs(paragraphs);
-        } catch (Exception e) {
-            return removeAllHtmlTags(rawDescription);
+        List<String> paragraphs = extractCleanParagraphs(rawDescription);
+        if (paragraphs.isEmpty()) {
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.RSS_CONTENT_EMPTY);
         }
+
+        return serializeParagraphs(paragraphs);
     }
 
     /**
@@ -107,17 +109,17 @@ public class KmibRssMapper extends AbstractRssMapper {
     @Override
     protected String extractUniqueIdFromLink(String link) {
         if (link == null || link.trim().isEmpty()) {
-            throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR);
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.ARTICLE_ID_EXTRACTION_ERROR);
         }
 
         Matcher matcher = ARCID_PATTERN.matcher(link);
         if (!matcher.find()) {
-            throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR);
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.ARTICLE_ID_EXTRACTION_ERROR);
         }
 
         String arcId = matcher.group(1);
         if (arcId == null || arcId.trim().isEmpty()) {
-            throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR);
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.ARTICLE_ID_EXTRACTION_ERROR);
         }
 
         return arcId;

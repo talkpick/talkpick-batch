@@ -1,5 +1,7 @@
 package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.scraper.factory;
 
+import com.likelion.backendplus4.talkpick.batch.news.article.exception.ArticleCollectorException;
+import com.likelion.backendplus4.talkpick.batch.news.article.exception.error.ArticleCollectorErrorCode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -41,6 +43,10 @@ public class ScraperFactory {
      * @return 해당 타입의 스크래퍼 or null일시 Optional로 빈 값 반환
      */
     public Optional<ContentScraper> getScraper(String mapperType) {
-        return Optional.ofNullable(scrapers.get(mapperType));
+        ContentScraper scraper = scrapers.get(mapperType);
+        if (scraper == null) {
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.SCRAPER_NOT_FOUND);
+        }
+        return Optional.of(scraper);
     }
 }

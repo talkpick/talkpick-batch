@@ -184,12 +184,12 @@ public abstract class AbstractRssMapper {
      */
     protected final String extractGuid(SyndEntry entry, RssSource source) {
         if (entry.getLink() == null || entry.getLink().trim().isEmpty()) {
-            throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR);
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.ARTICLE_ID_EXTRACTION_ERROR);
         }
 
         String uniqueId = extractUniqueIdFromLink(entry.getLink());
         if (uniqueId == null || uniqueId.trim().isEmpty()) {
-            throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR);
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.ARTICLE_ID_EXTRACTION_ERROR);
         }
 
         return source.getCodePrefix() + uniqueId;

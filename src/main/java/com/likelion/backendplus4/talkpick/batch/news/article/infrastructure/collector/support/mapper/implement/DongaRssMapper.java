@@ -10,6 +10,7 @@ import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.coll
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.entity.ArticleEntity;
 import com.rometools.rome.feed.synd.SyndEntry;
 
+import groovy.util.logging.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,10 +33,10 @@ import java.util.stream.Collectors;
  * @modified 2025-05-15 템플릿 메서드 패턴 적용, 의존성 주입 방식 개선
  * @modified 2025-05-17 HTML 태그 제거 및 문단 구분 기능 추가
  */
+@Slf4j
 @Component
 public class DongaRssMapper extends AbstractRssMapper {
 
-    private static final Logger log = LoggerFactory.getLogger(DongaRssMapper.class);
     private final ScraperFactory scraperFactory;
 
     @Autowired
@@ -104,21 +105,15 @@ public class DongaRssMapper extends AbstractRssMapper {
      * @since 2025-05-17
      */
     private String scrapeContent(String link) {
-        try {
-            ContentScraper scraper = getScraperFactory().getScraper(getMapperType())
-                    .orElseThrow(() -> new ArticleCollectorException(ArticleCollectorErrorCode.MAPPER_NOT_FOUND));
+        ContentScraper scraper = getScraperFactory().getScraper(getMapperType())
+                .orElseThrow(() -> new ArticleCollectorException(ArticleCollectorErrorCode.SCRAPER_NOT_FOUND));
 
-            String scrapedContent = scraper.scrapeContent(link);
-            if (scrapedContent == null || scrapedContent.isEmpty()) {
-                throw new ArticleCollectorException(ArticleCollectorErrorCode.FEED_PARSING_ERROR);
-            }
-
-            return removeUnwantedPhrases(scrapedContent);
-        } catch (ArticleCollectorException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new ArticleCollectorException(ArticleCollectorErrorCode.FEED_PARSING_ERROR, e);
+        String scrapedContent = scraper.scrapeContent(link);
+        if (scrapedContent == null || scrapedContent.isEmpty()) {
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.EMPTY_ARTICLE_CONTENT);
         }
+
+        return removeUnwantedPhrases(scrapedContent);
     }
 
     /**
@@ -132,19 +127,18 @@ public class DongaRssMapper extends AbstractRssMapper {
     @Override
     protected String extractUniqueIdFromLink(String link) {
         if (link == null || link.trim().isEmpty()) {
-            throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR);
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.ARTICLE_ID_EXTRACTION_ERROR);
         }
 
-        try {
-            String[] parts = link.split("/");
-            if (parts.length >= 2) {
-                return parts[parts.length - 2];
+        String[] parts = link.split("/");
+        if (parts.length >= 2) {
+            String id = parts[parts.length - 2];
+            if (id != null && !id.trim().isEmpty()) {
+                return id;
             }
-        } catch (Exception e) {
-            throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR, e);
         }
 
-        throw new ArticleCollectorException(ArticleCollectorErrorCode.ITEM_MAPPING_ERROR);
+        throw new ArticleCollectorException(ArticleCollectorErrorCode.ARTICLE_ID_EXTRACTION_ERROR);
     }
 
     /**

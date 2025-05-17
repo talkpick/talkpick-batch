@@ -84,7 +84,7 @@ public class KhanRssMapper extends AbstractRssMapper {
      */
     private ContentScraper getContentScraper() {
         return scraperFactory.getScraper("kh")
-                .orElseThrow(() -> new ArticleCollectorException(ArticleCollectorErrorCode.MAPPER_NOT_FOUND));
+                .orElseThrow(() -> new ArticleCollectorException(ArticleCollectorErrorCode.SCRAPER_NOT_FOUND));
     }
 
     /**
@@ -93,13 +93,13 @@ public class KhanRssMapper extends AbstractRssMapper {
      * @param scraper 사용할 ContentScraper
      * @param link 기사 링크
      * @return 스크래핑되고 처리된 콘텐츠
-     * @throws ArticleCollectorException 스크래핑 실패 시
+     * @throws ArticleCollectorException 스크래핑 실패 시 (내용이 비어있음)
      * @since 2025-05-17
      */
     private String scrapeAndProcessContent(ContentScraper scraper, String link) {
         String scrapedContent = scraper.scrapeContent(link);
         if (scrapedContent == null || scrapedContent.isEmpty()) {
-            throw new ArticleCollectorException(ArticleCollectorErrorCode.FEED_PARSING_ERROR);
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.EMPTY_ARTICLE_CONTENT);
         }
         return removeUnwantedPhrases(scrapedContent);
     }
@@ -114,7 +114,11 @@ public class KhanRssMapper extends AbstractRssMapper {
      * @since 2025-05-17
      */
     private String scrapeImageUrl(ContentScraper scraper, String link) {
-        return scraper.scrapeImageUrl(link);
+        String imageUrl = scraper.scrapeImageUrl(link);
+        if (imageUrl == null || imageUrl.isEmpty()) {
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.EMPTY_ARTICLE_IMAGE);
+        }
+        return imageUrl;
     }
 
 

@@ -33,6 +33,13 @@ public class ArticleSummaryPartitioner implements Partitioner {
 	@PersistenceContext
 	private EntityManager entityManager;
 
+	/**
+	 * ID 범위를 기준으로 데이터를 분할한다.
+	 * Spring Batch에서 마스터 Step이 병렬로 슬레이브 Step을 실행할 수 있도록 파티션을 생성한다.
+	 *
+	 * @author 함예정
+	 * @since 2025-05-17
+	 */
 	@Override
 	public Map<String, ExecutionContext> partition(int gridSize) {
 		Long minId = createQuery(QUERY_GET_MIN_ID);
@@ -46,6 +53,14 @@ public class ArticleSummaryPartitioner implements Partitioner {
 		return partitionByIdRange(gridSize, maxId, minId);
 	}
 
+	/**
+	 * 주어진 JPQL 쿼리를 실행하여 단일 Long 값을 반환한다.
+	 *
+	 * @param query 실행할 JPQL 쿼리 문자열
+	 * @return 조회된 Long 값
+	 * @author 함예정
+	 * @since 2025-05-17
+	 */
 	private Long createQuery(String query) {
 		return entityManager.createQuery(
 			query,
@@ -53,10 +68,29 @@ public class ArticleSummaryPartitioner implements Partitioner {
 		).getSingleResult();
 	}
 
+	/**
+	 * ID 범위가 유효한지 확인한다.
+	 *
+	 * @param minId 조회된 최소 ID
+	 * @param maxId 조회된 최대 ID
+	 * @return 범위가 유효하지 않으면 true 반환
+	 * @author 함예정
+	 * @since 2025-05-17
+	 */
 	private boolean isInvalidIdRange(Long minId, Long maxId) {
 		return minId == null || maxId == null || minId > maxId;
 	}
 
+	/**
+	 * ID 범위를 기준으로 파티션을 생성한다.
+	 *
+	 * @param gridSize 파티션 개수
+	 * @param maxId 최대 ID 값
+	 * @param minId 최소 ID 값
+	 * @return 파티션 이름과 ExecutionContext 매핑
+	 * @author 함예정
+	 * @since 2025-05-17
+	 */
 	private Map<String, ExecutionContext> partitionByIdRange(int gridSize, Long maxId, Long minId) {
 		Map<String, ExecutionContext> partitions = new LinkedHashMap<>();
 		long targetSize = ((maxId - minId) + 1) / gridSize;

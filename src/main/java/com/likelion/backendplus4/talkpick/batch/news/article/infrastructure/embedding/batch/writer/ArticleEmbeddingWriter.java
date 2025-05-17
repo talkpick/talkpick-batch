@@ -1,4 +1,4 @@
-package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.embedding.writer;
+package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.embedding.batch.writer;
 
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemWriter;
@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ArticleEmbeddingWriter implements ItemWriter<ArticleEntity> {
 	private final NewsInfoJpaRepository newsInfoJpaRepository;
+
 	@Override
 	public void write(Chunk<? extends ArticleEntity> chunk) {
 		newsInfoJpaRepository.saveAll(chunk);

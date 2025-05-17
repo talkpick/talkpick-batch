@@ -44,11 +44,15 @@ spring:
     job:
       enabled: false
     jdbc:
-      initialize-schema: never
+      initialize-schema: embedded
   quartz:
     job-store-type: jdbc
     jdbc:
-      initialize-schema: never
+      initialize-schema: embedded
+    article-collector:
+      cron: "0 */1 * * * ?"
+    article-embedding:
+      cron: "0 */5 * * * ?"
 
 log:
   rolling:
@@ -57,15 +61,16 @@ log:
     pattern: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - [TraceId: %X{traceId:-no-trace}] - %msg%n"
     max-history: 30
     total-size-cap: 10MB
+
+logging:
+  level:
+    org.quartz: DEBUG
+  file:
+    name: talkpick-batch.log
 decorator:
   datasource:
     p6spy:
       enable-logging: false
-
-article-collector:
-  quartz:
-    cron: "0 */1 * * * ?"
-
 news:
   index:
     name: news_index

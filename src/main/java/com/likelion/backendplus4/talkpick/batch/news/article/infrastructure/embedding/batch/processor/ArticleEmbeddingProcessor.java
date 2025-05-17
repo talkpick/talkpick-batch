@@ -1,4 +1,4 @@
-package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.embedding.processor;
+package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.embedding.batch.processor;
 
 import java.util.List;
 
@@ -12,9 +12,11 @@ import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.embedding.exception.EmbeddingException;
-import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.embedding.exception.error.EmbeddingErrorCode;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.embedding.batch.exception.EmbeddingException;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.embedding.batch.exception.error.EmbeddingErrorCode;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.entity.ArticleEntity;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 뉴스 기사 요약(summary)을 기반으로 임베딩 벡터를 생성하고
@@ -24,6 +26,7 @@ import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.
  * @since 2025-05-17
  */
 @Component
+@Slf4j
 public class ArticleEmbeddingProcessor implements ItemProcessor<ArticleEntity, ArticleEntity> {
 	private final OpenAiApi openAiApi;
 	private final String embeddingModelName;
@@ -45,6 +48,7 @@ public class ArticleEmbeddingProcessor implements ItemProcessor<ArticleEntity, A
 	 */
 	@Override
 	public ArticleEntity process(ArticleEntity item) {
+		log.info("뉴스 임베딩: id = {}, guid = {}, Thread = {}", item.getId(), item.getGuid(), Thread.currentThread().getName());
 		String newsContent = item.getSummary();
 		float[] vector = getEmbedding(newsContent);
 		return item.changeSummaryVector(vector);

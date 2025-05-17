@@ -1,4 +1,4 @@
-package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.embedding.exception.error;
+package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.embedding.batch.exception.error;
 
 import org.springframework.http.HttpStatus;
 

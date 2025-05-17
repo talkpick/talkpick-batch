@@ -10,15 +10,18 @@ import com.likelion.backendplus4.talkpick.batch.common.annotation.logging.TimeTr
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.entity.ArticleEntity;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class ArticleSummaryProcessor implements ItemProcessor<ArticleEntity, ArticleEntity> {
 	private final String prompt = "Summarize the following news in 3–5 concise sentences, objectively, in Korean.\n\n news: \n";
 	private final ChatClient chatClient;
 
 	@Override
 	public ArticleEntity process(ArticleEntity item) {
+		log.info("뉴스 요약: id = {}, guid = {}", item.getId(), item.getGuid());
 		String newsContent = item.getDescription();
 		String summary = getSummary(newsContent);
 		item.setSummary(summary);

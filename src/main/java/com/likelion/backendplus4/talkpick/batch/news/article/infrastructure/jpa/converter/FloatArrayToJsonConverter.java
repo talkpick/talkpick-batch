@@ -24,7 +24,6 @@ public class FloatArrayToJsonConverter implements AttributeConverter<float[], St
 
 	private final ObjectMapper objectMapper = new ObjectMapper();
 
-
 	/**
 	 * float 배열을 JSON 문자열로 변환하여 DB에 저장한다.
 	 *
@@ -35,7 +34,7 @@ public class FloatArrayToJsonConverter implements AttributeConverter<float[], St
 	 */
 	@Override
 	public String convertToDatabaseColumn(float[] attribute) {
-		if (attribute == null) {
+		if (attribute == null || attribute.length == 0) {
 			return null;
 		}
 		return toStringFromFloatArray(attribute);
@@ -97,5 +96,6 @@ public class FloatArrayToJsonConverter implements AttributeConverter<float[], St
 			throw new JpaConvertorException(JpaConvertorErrorCode.JSON_CONVERT_ERROR, e);
 		}
 	}
+
 
 }

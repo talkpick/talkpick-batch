@@ -12,11 +12,10 @@ import org.springframework.core.task.TaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import com.likelion.backendplus4.talkpick.batch.news.article.exception.ArticleCollectorException;
-import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.batch.support.PagePartitioner;
-import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.summary.batch.processor.ArticleSummaryProcessor;
-import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.summary.batch.processor.ArticleSummaryTotalPageCalculator;
-import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.summary.batch.reader.ArticleSummaryPageReader;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.entity.ArticleEntity;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.summary.batch.partitioner.ArticleSummaryPartitioner;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.summary.batch.processor.ArticleSummaryProcessor;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.summary.batch.reader.ArticleSummaryPageReader;
 
 @Configuration
 public class SummaryStepConfig {
@@ -35,7 +34,7 @@ public class SummaryStepConfig {
 	private final ItemWriter<ArticleEntity> writer;
 
 	public SummaryStepConfig(JobRepository jobRepository,
-		PagePartitioner partitioner,
+		ArticleSummaryPartitioner partitioner,
 		PlatformTransactionManager platformTransactionManager,
 		@Qualifier(executorName)
 		TaskExecutor taskExecutor,
@@ -47,14 +46,6 @@ public class SummaryStepConfig {
 		this.taskExecutor = taskExecutor;
 		this.summaryProcessor = summaryProcessor;
 		this.writer = articleSummaryWriter;
-	}
-
-	@Bean
-	Step summaryTotalPageCheckStep(JobRepository jobRepository, PlatformTransactionManager txManager,
-		ArticleSummaryTotalPageCalculator totalPageCalculator) {
-		return new StepBuilder("summaryTotalPageCheckStep", jobRepository)
-			.tasklet(totalPageCalculator, txManager)
-			.build();
 	}
 
 	@Bean

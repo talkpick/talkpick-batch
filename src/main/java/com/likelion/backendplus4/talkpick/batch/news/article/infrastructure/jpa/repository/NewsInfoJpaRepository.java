@@ -2,6 +2,8 @@ package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa
 
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.entity.ArticleEntity;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,4 +24,14 @@ public interface NewsInfoJpaRepository extends JpaRepository<ArticleEntity, Long
      */
     @Query("SELECT MAX(a.pubDate) FROM ArticleEntity a WHERE a.guid LIKE CONCAT(:guidPrefix, '%')")
     LocalDateTime findLatestPubDateByGuidPrefix(@Param("guidPrefix") String guidPrefix);
+
+    /**
+     * 요약 정보가 없는 뉴스 개수 조회
+     * @return 요약 정보 없는 뉴스 개수
+     * @author 함예정
+     * @since 2025-05-17
+     */
+    long countBySummaryIsNull();
+
+    Page<ArticleEntity> findBySummaryIsNull(Pageable pageable);
 }

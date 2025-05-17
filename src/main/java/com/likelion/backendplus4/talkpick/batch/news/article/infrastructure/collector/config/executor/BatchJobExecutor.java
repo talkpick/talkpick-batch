@@ -5,11 +5,7 @@ import org.quartz.JobExecutionContext;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
-import org.springframework.batch.core.JobParametersInvalidException;
 import org.springframework.batch.core.launch.JobLauncher;
-import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
-import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
-import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.stereotype.Component;
 
 import com.likelion.backendplus4.talkpick.batch.news.article.exception.BatchJobExceptionTranslator;
@@ -34,7 +30,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class BatchJobExecutor implements org.quartz.Job {
 	private final JobLauncher jobLauncher;
-	private final Job articleCollectorBatchJob;
+	private final Job articleCollectJob;
+	private final Job summaryJob;
 	private final BatchJobExceptionTranslator batchJobExceptionTranslator;
 
 	/**
@@ -64,7 +61,7 @@ public class BatchJobExecutor implements org.quartz.Job {
 			.toJobParameters();
 
 		try {
-			jobLauncher.run(articleCollectorBatchJob, params);
+			jobLauncher.run(articleCollectJob, params);
 		} catch (Exception e) {
 			ArticleCollectorErrorCode exceptionCode = batchJobExceptionTranslator.translate(e);
 			throw new ArticleCollectorException(exceptionCode);

@@ -29,7 +29,9 @@ public class NewsIndexServiceTestImpl implements NewsInfoProviderPort{
 				"첫 번째 테스트 뉴스의 내용입니다.",
 				LocalDateTime.of(2025, 5, 14, 10, 0),
 				"https://example.com/image1.jpg",
-				"테스트"
+				"테스트",
+				"요약1",
+				new float[] {1.0f, 2.5f, 3.3f}
 			),
 			new NewsInfo(
 				"news-2",
@@ -37,7 +39,9 @@ public class NewsIndexServiceTestImpl implements NewsInfoProviderPort{
 				"두 번째 테스트 뉴스의 내용입니다.",
 				LocalDateTime.of(2025, 5, 13, 11, 30),
 				"https://example.com/image2.jpg",
-				"테스트"
+				"테스트",
+				"요약2",
+				new float[] {1.0f, 2.5f, 3.3f}
 			),
 			new NewsInfo(
 				"news-3",
@@ -45,7 +49,9 @@ public class NewsIndexServiceTestImpl implements NewsInfoProviderPort{
 				"세 번째 테스트 뉴스의 내용입니다.",
 				LocalDateTime.of(2025, 5, 12, 14, 45),
 				"https://example.com/image3.jpg",
-				"테스트"
+				"테스트",
+				"요약3",
+				new float[] {1.0f, 2.5f, 3.3f}
 			)
 		);
 	}

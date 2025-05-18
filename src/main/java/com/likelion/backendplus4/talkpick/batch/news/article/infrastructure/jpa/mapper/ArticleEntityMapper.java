@@ -10,8 +10,10 @@ public class ArticleEntityMapper {
 			.title(articleEntity.getTitle())
 			.content(articleEntity.getDescription())
 			.publishedAt(articleEntity.getPubDate())
-			.imageUrl(null) // TODO: 나중에 추가 예정
+			.imageUrl(articleEntity.getImageUrl())
 			.category(articleEntity.getCategory())
+			.summary(articleEntity.getSummary())
+			.summaryVector(articleEntity.getSummaryVector())
 			.build();
 	}
 }

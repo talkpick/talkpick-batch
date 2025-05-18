@@ -32,7 +32,6 @@ import java.util.stream.Collectors;
 public abstract class AbstractRssMapper {
 
     protected abstract ScraperFactory getScraperFactory();
-    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * 매퍼의 유형을 식별하는 코드 반환

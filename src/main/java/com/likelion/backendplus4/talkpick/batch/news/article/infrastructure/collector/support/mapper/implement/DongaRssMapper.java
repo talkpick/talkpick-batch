@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -123,9 +124,9 @@ public class DongaRssMapper extends AbstractRssMapper {
     }
 
     private void validateScrapedContent(String content) {
-        if (null == content || content.isEmpty()) {
-            throw new ArticleCollectorException(ArticleCollectorErrorCode.EMPTY_ARTICLE_CONTENT);
-        }
+        Optional.ofNullable(content)
+                .filter(c -> !c.isEmpty())
+                .orElseThrow(() -> new ArticleCollectorException(ArticleCollectorErrorCode.EMPTY_ARTICLE_CONTENT));
     }
 
     /**

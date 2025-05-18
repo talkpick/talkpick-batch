@@ -1,4 +1,4 @@
-package com.likelion.backendplus4.talkpick.batch.embedding.exception.error;
+package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.summary.batch.exception.error;
 
 import org.springframework.http.HttpStatus;
 
@@ -28,13 +28,11 @@ import lombok.RequiredArgsConstructor;
  * 002: 두 번째 오류
  * 003: 세 번째 오류, 등등
  *
- * @modified 2025-05-09
- * @since 2025-05-09
+ * @since 2025-05-18
  */
 @RequiredArgsConstructor
-public enum EmbeddingErrorCode implements ErrorCode {
-	MODEL_CREATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, 440001, "임베딩 모델 생성 실패"),
-	API_CALL_ERROR(HttpStatus.SERVICE_UNAVAILABLE, 440002, "임베딩 API 호출 실패");
+public enum ArticleSummaryErrorCode implements ErrorCode {
+	ITEM_NOT_FOUND(HttpStatus.SERVICE_UNAVAILABLE, 450001, "요약할 뉴스가 없습니다");
 
 	private final HttpStatus status;
 	private final int code;

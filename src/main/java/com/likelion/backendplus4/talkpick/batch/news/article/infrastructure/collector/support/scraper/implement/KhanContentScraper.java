@@ -12,6 +12,7 @@ import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -170,58 +171,88 @@ public class KhanContentScraper implements ContentScraper {
     }
 
     /**
-     * Document에서 이미지 URL 추출
+     * 문서에서 이미지 URL을 추출합니다.
+     * 여러 선택자를 순차적으로 시도하여 첫 번째로 발견된 유효한 이미지 URL을 반환합니다.
      *
-     * @param document 파싱된 JSoup Document
-     * @return 추출된 이미지 URL
-     * @throws ArticleCollectorException 이미지 추출 중 오류 발생 시
+     * @param document 이미지를 추출할 JSoup Document
+     * @return 추출된 이미지 URL 또는 빈 문자열
+     * @throws ArticleCollectorException 파싱 중 오류 발생 시
+     * @since 2025-05-18
+     * @author 양병학
      */
     private String extractImageUrlFromDocument(Document document) throws ArticleCollectorException {
         try {
-            Element metaImg = document.selectFirst("meta[property=og:image]");
-            if (metaImg != null && !metaImg.attr("content").isEmpty()) {
-                return metaImg.attr("content");
+            String metaImageUrl = extractMetaImageUrl(document);
+            if (!metaImageUrl.isEmpty()) {
+                return metaImageUrl;
             }
 
-            Element mainImg = document.selectFirst("picture img");
-            if (mainImg != null && !mainImg.attr("src").isEmpty()) {
-                return mainImg.attr("abs:src");
-            }
-
-            Element source = document.selectFirst("picture source");
-            if (source != null && !source.attr("srcset").isEmpty()) {
-                String srcset = source.attr("srcset");
-                String[] sources = srcset.split(",");
-                if (sources.length > 0) {
-                    String firstSource = sources[0].trim().split("\\s+")[0];
-                    return source.absUrl("srcset").isEmpty() ? firstSource : source.absUrl("srcset");
-                }
-            }
-
-            Element contentImg = document.selectFirst("article.art_body img");
-            if (contentImg != null && !contentImg.attr("src").isEmpty()) {
-                return contentImg.attr("abs:src");
-            }
-
-            Element imgContainer = document.selectFirst("div.art_photo img");
-            if (imgContainer != null && !imgContainer.attr("src").isEmpty()) {
-                return imgContainer.attr("abs:src");
-            }
-
-            Element figureImg = document.selectFirst("figure img");
-            if (figureImg != null && !figureImg.attr("src").isEmpty()) {
-                return figureImg.attr("abs:src");
-            }
-
-            Element anyImg = document.selectFirst("img");
-            if (anyImg != null && !anyImg.attr("src").isEmpty()) {
-                return anyImg.attr("abs:src");
-            }
-
-            return "";
+            return extractImageUrlFromSelectors(document);
         } catch (Exception e) {
             throw new ArticleCollectorException(ArticleCollectorErrorCode.SCRAPER_PARSING_ERROR, e);
         }
+    }
+
+    /**
+     * 메타 태그에서 이미지 URL을 추출합니다.
+     *
+     * @param document 이미지를 추출할 JSoup Document
+     * @return 추출된 이미지 URL 또는 빈 문자열
+     */
+    private String extractMetaImageUrl(Document document) {
+        Element metaImg = document.selectFirst("meta[property=og:image]");
+        if (metaImg != null && !metaImg.attr("content").isEmpty()) {
+            return metaImg.attr("content");
+        }
+        return "";
+    }
+
+    /**
+     * 다양한 이미지 선택자를 시도하여 이미지 URL을 추출합니다.
+     *
+     * @param document 이미지를 추출할 JSoup Document
+     * @return 추출된 이미지 URL 또는 빈 문자열
+     */
+    private String extractImageUrlFromSelectors(Document document) {
+        List<String> simpleSelectors = List.of(
+                "picture img",
+                "article.art_body img",
+                "div.art_photo img",
+                "figure img",
+                "img"
+        );
+
+        return simpleSelectors.stream()
+                .map(document::selectFirst)
+                .filter(Objects::nonNull)
+                .filter(img -> !img.attr("src").isEmpty())
+                .map(img -> img.attr("abs:src"))
+                .findFirst()
+                .orElseGet(() -> {
+                    Element source = document.selectFirst("picture source");
+                    if (source != null && !source.attr("srcset").isEmpty()) {
+                        return extractSourceSetImageUrl(source);
+                    }
+                    return "";
+                });
+    }
+
+    /**
+     * source 태그의 srcset 속성에서 이미지 URL을 추출합니다.
+     *
+     * @param source srcset 속성을 가진 source 요소
+     * @return 추출된 이미지 URL 또는 빈 문자열
+     */
+    private String extractSourceSetImageUrl(Element source) {
+        String srcset = source.attr("srcset");
+        String[] sources = srcset.split(",");
+
+        if (sources.length > 0) {
+            String firstSource = sources[0].trim().split("\\s+")[0];
+            return source.absUrl("srcset").isEmpty() ? firstSource : source.absUrl("srcset");
+        }
+
+        return "";
     }
 
     /**

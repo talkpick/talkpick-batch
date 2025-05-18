@@ -3,7 +3,9 @@ package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.col
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemWriter;
@@ -15,6 +17,8 @@ import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import static java.util.Map.entry;
 
 /**
  * 기사 데이터를 DB에 저장하는 Spring Batch ItemWriter 구현체.
@@ -145,40 +149,39 @@ public class ArticleWriter implements ItemWriter<List<ArticleEntity>> {
 		return sb.toString();
 	}
 
+	private static final Map<Character, String> JSON_ESCAPES = Map.ofEntries(
+			entry('\"', "\\\""),
+			entry('\\', "\\\\"),
+			entry('/', "\\/"),
+			entry('\b', "\\b"),
+			entry('\f', "\\f"),
+			entry('\n', "\\n"),
+			entry('\r', "\\r"),
+			entry('\t', "\\t")
+	);
+
 	/**
 	 * JSON 문자열 이스케이프 처리
 	 *
 	 * @param input 이스케이프할 문자열
 	 * @return 이스케이프된 문자열
 	 */
-	private String escapeJsonString(String input) {
-		if (input == null) return "";
-		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < input.length(); i++) {
-			char c = input.charAt(i);
-			switch (c) {
-				case '\"': sb.append("\\\""); break;
-				case '\\': sb.append("\\\\"); break;
-				case '/': sb.append("\\/"); break;
-				case '\b': sb.append("\\b"); break;
-				case '\f': sb.append("\\f"); break;
-				case '\n': sb.append("\\n"); break;
-				case '\r': sb.append("\\r"); break;
-				case '\t': sb.append("\\t"); break;
-				default:
-					if (c < ' ') {
-						String hex = Integer.toHexString(c);
-						sb.append("\\u");
-						for (int j = 0; j < 4 - hex.length(); j++) {
-							sb.append('0');
-						}
-						sb.append(hex);
-					} else {
-						sb.append(c);
-					}
-			}
+	protected String escapeJsonString(String input) {
+		if (input == null) {
+			return "";
 		}
-		return sb.toString();
+		return input.chars()
+				.mapToObj(cp -> {
+					char c = (char) cp;
+					if (JSON_ESCAPES.containsKey(c)) {
+						return JSON_ESCAPES.get(c);
+					}
+					if (cp < 0x20) {
+						return String.format("\\u%04x", cp);
+					}
+					return String.valueOf(c);
+				})
+				.collect(Collectors.joining());
 	}
 
 	/**

@@ -43,7 +43,7 @@ public class ArticleEmbeddingPartitioner implements Partitioner {
 		Long maxId = createQuery(QUERY_GET_MAX_ID);
 
 		if (isInvalidIdRange(minId, maxId)) {
-			throw new EmbeddingException(EmbeddingErrorCode.API_CALL_ERROR);
+			throw new EmbeddingException(EmbeddingErrorCode.ITEM_NOT_FOUND);
 		}
 
 		return partitionByIdRange(gridSize, maxId, minId);

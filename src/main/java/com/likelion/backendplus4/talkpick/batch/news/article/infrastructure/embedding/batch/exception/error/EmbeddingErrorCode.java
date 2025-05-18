@@ -33,7 +33,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum EmbeddingErrorCode implements ErrorCode {
 	MODEL_CREATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, 440001, "임베딩 모델 생성 실패"),
-	API_CALL_ERROR(HttpStatus.SERVICE_UNAVAILABLE, 440002, "임베딩 API 호출 실패");
+	API_CALL_ERROR(HttpStatus.SERVICE_UNAVAILABLE, 440002, "임베딩 API 호출 실패"),
+	ITEM_NOT_FOUND(HttpStatus.SERVICE_UNAVAILABLE, 450001, "임베딩할 아이템이 없습니다");
 
 	private final HttpStatus status;
 	private final int code;

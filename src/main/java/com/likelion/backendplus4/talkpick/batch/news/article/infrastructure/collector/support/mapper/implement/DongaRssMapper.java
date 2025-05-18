@@ -144,21 +144,18 @@ public class DongaRssMapper extends AbstractRssMapper {
     }
 
     private void validateLink(String link) {
-        if (null == link || link.trim().isEmpty()) {
-            throw new ArticleCollectorException(ArticleCollectorErrorCode.ARTICLE_ID_EXTRACTION_ERROR);
-        }
+        Optional.ofNullable(link)
+                .map(String::trim)
+                .filter(l -> !l.isEmpty())
+                .orElseThrow(() -> new ArticleCollectorException(ArticleCollectorErrorCode.ARTICLE_ID_EXTRACTION_ERROR));
     }
 
     private String extractIdFromParts(String link) {
-        String[] parts = link.split("/");
-        if (parts.length >= 2) {
-            String id = parts[parts.length - 2];
-            if (isValidId(id)) {
-                return id;
-            }
-        }
-
-        throw new ArticleCollectorException(ArticleCollectorErrorCode.ARTICLE_ID_EXTRACTION_ERROR);
+        return Optional.of(link.split("/"))
+                .filter(parts -> parts.length >= 2)
+                .map(parts -> parts[parts.length - 2])
+                .filter(this::isValidId)
+                .orElseThrow(() -> new ArticleCollectorException(ArticleCollectorErrorCode.ARTICLE_ID_EXTRACTION_ERROR));
     }
 
     private boolean isValidId(String id) {
@@ -173,19 +170,22 @@ public class DongaRssMapper extends AbstractRssMapper {
      * @return 불용어가 제거된 내용
      * @since 2025-05-17
      */
-    private String removeUnwantedPhrases(String content) {
-        if (content == null || content.isEmpty()) {
-            return "";
-        }
+    private static final List<String> UNWANTED_PATTERNS = List.of(
+        "\\(c\\)\\s*동아일보",
+        "저작권자.*동아일보.*무단.*전재.*금지",
+        "무단전재 및 재배포 금지",
+        "\\S+기자\\s+\\S+@donga\\.com",
+        "동아닷컴 뉴스스탠드",
+        "동아일보 홈페이지",
+        "PARAGRAPH_BREAKPARAGRAPH_BREAK"
+    );
 
-        content = content.replaceAll("\\(c\\)\\s*동아일보", "");
-        content = content.replaceAll("저작권자.*동아일보.*무단.*전재.*금지", "");
-        content = content.replaceAll("무단전재 및 재배포 금지", "");
-        content = content.replaceAll("\\S+기자\\s+\\S+@donga\\.com", "");
-        content = content.replaceAll("동아닷컴 뉴스스탠드", "");
-        content = content.replaceAll("동아일보 홈페이지", "");
-        content = content.replaceAll("PARAGRAPH_BREAKPARAGRAPH_BREAK", "PARAGRAPH_BREAK");
-
-        return content.trim();
+    protected String removeUnwantedPhrases(String content) {
+        return Optional.ofNullable(content)
+                .filter(c -> !c.isEmpty())
+                .map(c -> UNWANTED_PATTERNS.stream()
+                        .reduce(c, (current, regex) -> current.replaceAll(regex, "")))
+                .map(String::trim)
+                .orElse("");
     }
 }

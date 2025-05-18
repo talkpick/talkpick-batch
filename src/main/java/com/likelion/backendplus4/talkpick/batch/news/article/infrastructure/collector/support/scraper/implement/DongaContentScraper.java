@@ -38,24 +38,35 @@ public class DongaContentScraper implements ContentScraper {
     @Override
     public List<String> scrapeParagraphs(String url) throws ArticleCollectorException {
         Document document = connectToUrl(url);
-        List<String> content;
+        List<String> content = extractContent(url, document);
+        validateContent(content);
+        return content;
+    }
 
-        try {
-            if (isSportsArticle(url, document)) {
-                content = extractDongaSportsContent(document);
-            } else {
-                content = extractDongaContent(document);
-            }
+    /**
+     * URL과 문서에 따라 적절한 콘텐츠 추출 메서드를 호출
+     *
+     * @param url 기사 URL
+     * @param document 파싱된 JSoup Document
+     * @return 추출된 문단 리스트
+     * @throws ArticleCollectorException 콘텐츠 추출 중 오류 발생 시
+     */
+    private List<String> extractContent(String url, Document document) throws ArticleCollectorException {
+        if (isSportsArticle(url, document)) {
+            return extractDongaSportsContent(document);
+        }
+        return extractDongaContent(document);
+    }
 
-            if (content == null || content.isEmpty() || content.stream().allMatch(String::isEmpty)) {
-                throw new ArticleCollectorException(ArticleCollectorErrorCode.EMPTY_ARTICLE_CONTENT);
-            }
-
-            return content;
-        } catch (ArticleCollectorException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new ArticleCollectorException(ArticleCollectorErrorCode.SCRAPER_PARSING_ERROR, e);
+    /**
+     * 추출된 콘텐츠의 유효성 검증
+     *
+     * @param content 추출된 문단 리스트
+     * @throws ArticleCollectorException 콘텐츠가 비어있거나 유효하지 않을 때
+     */
+    private void validateContent(List<String> content) throws ArticleCollectorException {
+        if (content == null || content.isEmpty() || content.stream().allMatch(String::isEmpty)) {
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.EMPTY_ARTICLE_CONTENT);
         }
     }
 
@@ -83,26 +94,22 @@ public class DongaContentScraper implements ContentScraper {
      * @throws ArticleCollectorException 본문 파싱 중 오류 발생 시
      */
     private List<String> extractDongaContent(Document document) throws ArticleCollectorException {
-        Element newsView = HtmlScraperUtils.findElement(document, "section.news_view");
-        if (null == newsView) {
-            return new ArrayList<>();
-        }
-
         try {
-            String html = newsView.html();
-            html = html.replaceAll("<br\\s*/?\\s*>", "PARAGRAPH_BREAK");
-            newsView = Jsoup.parse(html).body();
+            Element newsView = findNewsViewElement(document);
+            if (null == newsView) {
+                return new ArrayList<>();
+            }
 
-            Element processedView = HtmlScraperUtils.removeTags(newsView, "h2", "figure", "img");
+            // HTML 처리 및 불필요한 태그 제거
+            Element processedView = processHtmlElement(newsView);
+
+            // 전체 텍스트 추출
             String fullText = processedView.text();
 
-            String[] paragraphsArray = fullText.split("PARAGRAPH_BREAK");
+            // 문단 추출
+            List<String> paragraphs = extractParagraphsFromText(fullText);
 
-            List<String> paragraphs = Arrays.stream(paragraphsArray)
-                    .map(String::trim)
-                    .filter(p -> !p.isEmpty())
-                    .collect(Collectors.toList());
-
+            // 문단이 없는 경우 전체 텍스트를 하나의 문단으로 처리
             if (paragraphs.isEmpty() && !fullText.trim().isEmpty()) {
                 paragraphs.add(fullText.trim());
             }
@@ -111,6 +118,45 @@ public class DongaContentScraper implements ContentScraper {
         } catch (Exception e) {
             throw new ArticleCollectorException(ArticleCollectorErrorCode.SCRAPER_PARSING_ERROR, e);
         }
+    }
+
+    /**
+     * 문서에서 뉴스 본문 영역 찾기
+     *
+     * @param document JSoup Document
+     * @return 뉴스 본문 Element
+     */
+    private Element findNewsViewElement(Document document) {
+        return HtmlScraperUtils.findElement(document, "section.news_view");
+    }
+
+    /**
+     * HTML 요소 처리 - <br> 태그를 문단 구분자로 변환하고 불필요한 태그 제거
+     *
+     * @param element 처리할 HTML 요소
+     * @return 처리된 HTML 요소
+     */
+    private Element processHtmlElement(Element element) {
+        String html = element.html();
+        html = html.replaceAll("<br\\s*/?\\s*>", "PARAGRAPH_BREAK");
+        Element parsedElement = Jsoup.parse(html).body();
+
+        return HtmlScraperUtils.removeTags(parsedElement, "h2", "figure", "img");
+    }
+
+    /**
+     * 텍스트에서 문단 추출
+     *
+     * @param text 전체 텍스트
+     * @return 문단 리스트
+     */
+    private List<String> extractParagraphsFromText(String text) {
+        String[] paragraphsArray = text.split("PARAGRAPH_BREAK");
+
+        return Arrays.stream(paragraphsArray)
+                .map(String::trim)
+                .filter(p -> !p.isEmpty())
+                .collect(Collectors.toList());
     }
 
     /**

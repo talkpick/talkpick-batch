@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -120,6 +121,7 @@ public class DongaContentScraper implements ContentScraper {
      * @throws ArticleCollectorException 본문 파싱 중 오류 발생 시
      */
     private List<String> extractDongaSportsContent(Document document) throws ArticleCollectorException {
+        // 시도할 선택자들을 배열로 정의
         String[] selectors = {
                 "div.article_word#article_body",
                 "div.article_word"
@@ -127,7 +129,7 @@ public class DongaContentScraper implements ContentScraper {
 
         Element articleBody = Arrays.stream(selectors)
                 .map(selector -> HtmlScraperUtils.findElement(document, selector))
-                .filter(element -> element != null)
+                .filter(Objects::nonNull)
                 .findFirst()
                 .orElse(null);
 
@@ -136,33 +138,37 @@ public class DongaContentScraper implements ContentScraper {
         }
 
         try {
-            articleBody.select("div.photoAd").remove();
-            articleBody.select("div.subcont_ad01").remove();
-            articleBody.select("div.view_center").remove();
-            articleBody.select("p.copyright").remove();
+            String[] selectorsToRemove = {
+                    "div.photoAd",
+                    "div.subcont_ad01",
+                    "div.view_center",
+                    "p.copyright"
+            };
 
-            String html = articleBody.html();
-            html = html.replaceAll("<br\\s*/?\\s*>", "PARAGRAPH_BREAK");
-            articleBody = Jsoup.parse(html).body();
+            Arrays.stream(selectorsToRemove)
+                    .forEach(selector -> articleBody.select(selector).remove());
 
-            Element processedBody = HtmlScraperUtils.removeTags(articleBody, "img", "script", "style");
+            String fullText = processHtmlAndExtractText(
+                    articleBody, "img", "script", "style");
 
-            String fullText = processedBody.text();
-            String[] paragraphsArray = fullText.split("PARAGRAPH_BREAK");
-
-            List<String> paragraphs = Arrays.stream(paragraphsArray)
+            return Arrays.stream(fullText.split("PARAGRAPH_BREAK"))
                     .map(String::trim)
                     .filter(p -> !p.isEmpty())
                     .collect(Collectors.toList());
 
-            if (paragraphs.isEmpty() && !fullText.trim().isEmpty()) {
-                paragraphs.add(fullText.trim());
-            }
-
-            return paragraphs;
         } catch (Exception e) {
             throw new ArticleCollectorException(ArticleCollectorErrorCode.SCRAPER_PARSING_ERROR, e);
         }
+    }
+
+    private String processHtmlAndExtractText(Element element, String... tagsToRemove) {
+        String html = element.html();
+        html = html.replaceAll("<br\\s*/?\\s*>", "PARAGRAPH_BREAK");
+        Element parsedElement = Jsoup.parse(html).body();
+
+        Element processedElement = HtmlScraperUtils.removeTags(parsedElement, tagsToRemove);
+
+        return processedElement.text();
     }
 
     /**

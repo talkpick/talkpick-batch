@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * 경향신문 기사 본문 스크래퍼 구현체
@@ -52,27 +53,28 @@ public class KhanContentScraper implements ContentScraper {
      */
     private List<String> extractKhanContent(Document document) throws ArticleCollectorException {
         try {
-            Element artBody = HtmlScraperUtils.findElement(document, "article.art_body");
-
-            if (artBody == null) {
-                artBody = HtmlScraperUtils.findElement(document, "div.art_body");
-            }
-
-            if (artBody == null) {
-                artBody = HtmlScraperUtils.findElement(document, "div.article_view");
-            }
-
-            if (artBody == null) {
-                artBody = HtmlScraperUtils.findElement(document, "div.article-body");
-            }
-
+            List<String> selectors = List.of(
+                    "article.art_body",
+                    "div.art_body",
+                    "div.article_view",
+                    "div.article-body"
+            );
+            // 가장 먼저 매칭되는 Element 하나만 찾기
+            Element artBody = selectors.stream()
+                    .map(sel -> HtmlScraperUtils.findElement(document, sel))
+                    .filter(Objects::nonNull)
+                    .findFirst()
+                    .orElse(null);
+            // 못 찾았으면 빈 리스트 반환
             if (artBody == null) {
                 return new ArrayList<>();
             }
-
+            // 찾았으면 실제 파싱 로직 호출
             return extractKhanContentFromElement(artBody);
         } catch (Exception e) {
-            throw new ArticleCollectorException(ArticleCollectorErrorCode.SCRAPER_PARSING_ERROR, e);
+            throw new ArticleCollectorException(
+                    ArticleCollectorErrorCode.SCRAPER_PARSING_ERROR, e
+            );
         }
     }
 

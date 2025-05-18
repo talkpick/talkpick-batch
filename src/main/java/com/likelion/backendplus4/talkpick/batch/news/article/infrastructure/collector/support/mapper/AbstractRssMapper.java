@@ -98,7 +98,7 @@ public abstract class AbstractRssMapper {
      * @return 변환된 LocalDateTime 객체, date가 null이면 현재 시간 반환
      */
     protected LocalDateTime convertToLocalDateTime(Date date) {
-        return null != date
+        return (null != date)
                 ? date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime()
                 : LocalDateTime.now();
     }
@@ -183,14 +183,10 @@ public abstract class AbstractRssMapper {
      * @throws ArticleCollectorException 링크가 없거나 ID 추출 실패 시
      */
     protected final String extractGuid(SyndEntry entry, RssSource source) {
-        if (null == entry.getLink()|| entry.getLink().trim().isEmpty()) {
-            throw new ArticleCollectorException(ArticleCollectorErrorCode.ARTICLE_ID_EXTRACTION_ERROR);
-        }
+        validateEntryLink(entry.getLink());
 
         String uniqueId = extractUniqueIdFromLink(entry.getLink());
-        if (null == uniqueId|| uniqueId.trim().isEmpty()) {
-            throw new ArticleCollectorException(ArticleCollectorErrorCode.ARTICLE_ID_EXTRACTION_ERROR);
-        }
+        validateUniqueId(uniqueId);
 
         return source.getCodePrefix() + uniqueId;
     }
@@ -225,7 +221,7 @@ public abstract class AbstractRssMapper {
      * @return 정제된 문단 리스트
      */
     protected List<String> extractCleanParagraphs(String html) {
-        if (null == html|| html.isEmpty()) {
+        if (isNullOrEmpty(html)) {
             return new ArrayList<>();
         }
 
@@ -261,7 +257,7 @@ public abstract class AbstractRssMapper {
      * @return 태그가 제거된 문자열
      */
     protected String removeAllHtmlTags(String html) {
-        if (null == html|| html.isEmpty()) {
+        if (isNullOrEmpty(html)) {
             return "";
         }
 
@@ -278,7 +274,7 @@ public abstract class AbstractRssMapper {
      * @return 디코딩된 문자열
      */
     protected String decodeHtmlEntities(String text) {
-        if (null == text|| text.isEmpty()) {
+        if (isNullOrEmpty(text)) {
             return "";
         }
 
@@ -298,7 +294,7 @@ public abstract class AbstractRssMapper {
      * @return JSON 문자열
      */
     protected String serializeParagraphs(List<String> paragraphs) {
-        if (null == paragraphs|| paragraphs.isEmpty()) {
+        if (isNullOrEmptyList(paragraphs)) {
             return "";
         }
 
@@ -311,5 +307,49 @@ public abstract class AbstractRssMapper {
         }
 
         return sb.toString();
+    }
+
+    /**
+     * 링크가 null이거나 비어있는지 검증
+     *
+     * @param link 검증할 링크
+     * @throws ArticleCollectorException 링크가 유효하지 않을 경우
+     */
+    private void validateEntryLink(String link) {
+        if (isNullOrEmpty(link)) {
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.ARTICLE_ID_EXTRACTION_ERROR);
+        }
+    }
+
+    /**
+     * 고유 ID가 null이거나 비어있는지 검증
+     *
+     * @param uniqueId 검증할 고유 ID
+     * @throws ArticleCollectorException 고유 ID가 유효하지 않을 경우
+     */
+    private void validateUniqueId(String uniqueId) {
+        if (isNullOrEmpty(uniqueId)) {
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.ARTICLE_ID_EXTRACTION_ERROR);
+        }
+    }
+
+    /**
+     * 문자열이 null이거나 비어있는지 확인
+     *
+     * @param str 확인할 문자열
+     * @return null이거나 비어있으면 true, 그렇지 않으면 false
+     */
+    private boolean isNullOrEmpty(String str) {
+        return null == str || str.trim().isEmpty();
+    }
+
+    /**
+     * 리스트가 null이거나 비어있는지 확인
+     *
+     * @param list 확인할 리스트
+     * @return null이거나 비어있으면 true, 그렇지 않으면 false
+     */
+    private boolean isNullOrEmptyList(List<?> list) {
+        return null == list || list.isEmpty();
     }
 }

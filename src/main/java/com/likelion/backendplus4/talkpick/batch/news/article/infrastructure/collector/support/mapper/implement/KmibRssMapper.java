@@ -80,20 +80,29 @@ public class KmibRssMapper extends AbstractRssMapper {
         return new ScrapingResult(processedDescription, finalImageUrl);
     }
 
+    /**
+     * 엔트리의 description을 처리하여 문단으로 변환합니다.
+     *
+     * 1. 설명 존재 여부 검증
+     * 2. 원시 설명 텍스트 추출 및 검증
+     * 3. HTML 태그 제거 및 문단 분리
+     * 4. 문단 목록 검증
+     * 5. 문단을 PARAGRAPH_BREAK로 구분하여 직렬화
+     *
+     * @param entry 처리할 RSS 항목
+     * @return PARAGRAPH_BREAK로 구분된 문단 텍스트
+     * @throws ArticleCollectorException 설명이 없거나 빈 경우, 문단이 없는 경우 발생
+     * @since 2025-05-18
+     * @author 양병학
+     */
     private String processDescription(SyndEntry entry) {
-        if (null == entry.getDescription()) {
-            throw new ArticleCollectorException(ArticleCollectorErrorCode.RSS_CONTENT_EMPTY);
-        }
+        validateDescriptionExists(entry);
 
         String rawDescription = entry.getDescription().getValue();
-        if (null == rawDescription|| rawDescription.isEmpty()) {
-            throw new ArticleCollectorException(ArticleCollectorErrorCode.RSS_CONTENT_EMPTY);
-        }
+        validateRawDescription(rawDescription);
 
         List<String> paragraphs = extractCleanParagraphs(rawDescription);
-        if (paragraphs.isEmpty()) {
-            throw new ArticleCollectorException(ArticleCollectorErrorCode.RSS_CONTENT_EMPTY);
-        }
+        validateParagraphs(paragraphs);
 
         return serializeParagraphs(paragraphs);
     }
@@ -108,21 +117,24 @@ public class KmibRssMapper extends AbstractRssMapper {
      */
     @Override
     protected String extractUniqueIdFromLink(String link) {
-        if (null == link|| link.trim().isEmpty()) {
-            throw new ArticleCollectorException(ArticleCollectorErrorCode.ARTICLE_ID_EXTRACTION_ERROR);
-        }
+        validateLink(link);
 
-        Matcher matcher = ARCID_PATTERN.matcher(link);
-        if (!matcher.find()) {
-            throw new ArticleCollectorException(ArticleCollectorErrorCode.ARTICLE_ID_EXTRACTION_ERROR);
-        }
-
-        String arcId = matcher.group(1);
-        if (null == arcId|| arcId.trim().isEmpty()) {
-            throw new ArticleCollectorException(ArticleCollectorErrorCode.ARTICLE_ID_EXTRACTION_ERROR);
-        }
+        String arcId = extractArcIdFromLink(link);
+        validateArcId(arcId);
 
         return arcId;
+    }
+
+    private void validateLink(String link) {
+        if (null == link || link.trim().isEmpty()) {
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.ARTICLE_ID_EXTRACTION_ERROR);
+        }
+    }
+
+    private void validateArcId(String arcId) {
+        if (null == arcId || arcId.trim().isEmpty()) {
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.ARTICLE_ID_EXTRACTION_ERROR);
+        }
     }
 
     /**
@@ -143,51 +155,111 @@ public class KmibRssMapper extends AbstractRssMapper {
         return extractImageFromDescription(entry);
     }
 
-    /**
-     * Description 내용에서 이미지 URL을 추출
-     *
-     * @param entry RSS 항목
-     * @return 추출된 이미지 URL 또는 빈 문자열
-     * @since 2025-05-10
-     */
     private String extractImageFromDescription(SyndEntry entry) {
-        if (entry.getDescription() == null) {
+        if (isEntryDescriptionEmpty(entry)) {
             return "";
         }
 
         String description = entry.getDescription().getValue();
-        if (null == description|| description.isEmpty()) {
+        if (isNullOrEmpty(description)) {
             return "";
         }
 
-        Matcher matcher = IMG_SRC_PATTERN.matcher(description);
+        return extractImageUrlFromHtml(description);
+    }
+
+    /**
+     * HTML에서 이미지 URL을 추출합니다.
+     *
+     * @param html 이미지 URL을 추출할 HTML 문자열
+     * @return 추출된 이미지 URL 또는 빈 문자열
+     * @since 2025-05-18
+     * @author 양병학
+     */
+    private String extractImageUrlFromHtml(String html) {
+        Matcher matcher = IMG_SRC_PATTERN.matcher(html);
         return matcher.find() ? matcher.group(1) : "";
     }
 
     /**
      * RSS description에서 HTML 태그를 제거하고 문단을 추출하여 PARAGRAPH_BREAK로 구분
      *
+     * 1. 설명 컨텐츠 존재 여부 확인
+     * 2. HTML 태그 제거 및 문단 분리
+     * 3. 문단을 PARAGRAPH_BREAK로 구분하여 반환
+     *
      * @param entry RSS 항목
      * @return PARAGRAPH_BREAK로 구분된 문단 텍스트
+     * @throws ArticleCollectorException 설명이 비어있거나 파싱 중 오류 발생 시
      * @since 2025-05-10
+     * @author 양병학
      * @modified 2025-05-17 HTML 태그 제거 및 문단 구분 기능 추가
+     * @modified 2025-05-18 예외 처리 로직 개선
      */
     @Override
     protected String extractDescription(SyndEntry entry) {
-        if (null == entry.getDescription()) {
-            return "";
-        }
+        validateDescriptionExists(entry);
 
         String rawDescription = entry.getDescription().getValue();
-        if (null == rawDescription|| rawDescription.isEmpty()) {
-            return "";
-        }
+        validateRawDescription(rawDescription);
 
         try {
             List<String> paragraphs = extractCleanParagraphs(rawDescription);
+            validateParagraphs(paragraphs);
             return serializeParagraphs(paragraphs);
         } catch (Exception e) {
-            return removeAllHtmlTags(rawDescription);
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.RSS_PARSING_ERROR, e);
         }
     }
+
+    private void validateDescriptionExists(SyndEntry entry) {
+        if (null == entry.getDescription()) {
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.RSS_CONTENT_EMPTY);
+        }
+    }
+
+    private void validateRawDescription(String rawDescription) {
+        if (null == rawDescription || rawDescription.isEmpty()) {
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.RSS_CONTENT_EMPTY);
+        }
+    }
+
+    private void validateParagraphs(List<String> paragraphs) {
+        if (paragraphs.isEmpty()) {
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.RSS_CONTENT_EMPTY);
+        }
+    }
+
+    /**
+     * 링크에서 arcId를 추출합니다.
+     *
+     * @param link arcId를 추출할 링크
+     * @return 추출된 arcId
+     * @throws ArticleCollectorException arcId를 추출할 수 없는 경우 발생
+     * @since 2025-05-18
+     * @author 양병학
+     */
+    private String extractArcIdFromLink(String link) {
+        Matcher matcher = ARCID_PATTERN.matcher(link);
+        if (!matcher.find()) {
+            throw new ArticleCollectorException(ArticleCollectorErrorCode.ARTICLE_ID_EXTRACTION_ERROR);
+        }
+        return matcher.group(1);
+    }
+
+    private boolean isEntryDescriptionEmpty(SyndEntry entry) {
+        return entry.getDescription() == null;
+    }
+
+    /**
+     * 문자열이 null이거나 비어있는지 확인합니다.
+     *
+     * @param str 확인할 문자열
+     * @return null이거나 비어있으면 true, 그렇지 않으면 false
+     */
+    private boolean isNullOrEmpty(String str) {
+        return null == str || str.isEmpty();
+    }
+
+
 }

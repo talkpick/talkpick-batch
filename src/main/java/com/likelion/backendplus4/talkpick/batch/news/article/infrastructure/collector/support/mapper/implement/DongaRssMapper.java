@@ -105,15 +105,26 @@ public class DongaRssMapper extends AbstractRssMapper {
      * @since 2025-05-17
      */
     private String scrapeContent(String link) {
-        ContentScraper scraper = getScraperFactory().getScraper(getMapperType())
-                .orElseThrow(() -> new ArticleCollectorException(ArticleCollectorErrorCode.SCRAPER_NOT_FOUND));
+        ContentScraper scraper = getScraperOrThrow();
+        String scrapedContent = scrapeAndValidateContent(scraper, link);
+        return removeUnwantedPhrases(scrapedContent);
+    }
 
+    private ContentScraper getScraperOrThrow() {
+        return getScraperFactory().getScraper(getMapperType())
+                .orElseThrow(() -> new ArticleCollectorException(ArticleCollectorErrorCode.SCRAPER_NOT_FOUND));
+    }
+
+    private String scrapeAndValidateContent(ContentScraper scraper, String link) {
         String scrapedContent = scraper.scrapeContent(link);
-        if (scrapedContent == null || scrapedContent.isEmpty()) {
+        validateScrapedContent(scrapedContent);
+        return scrapedContent;
+    }
+
+    private void validateScrapedContent(String content) {
+        if (null == content || content.isEmpty()) {
             throw new ArticleCollectorException(ArticleCollectorErrorCode.EMPTY_ARTICLE_CONTENT);
         }
-
-        return removeUnwantedPhrases(scrapedContent);
     }
 
     /**
@@ -126,19 +137,30 @@ public class DongaRssMapper extends AbstractRssMapper {
      */
     @Override
     protected String extractUniqueIdFromLink(String link) {
-        if (link == null || link.trim().isEmpty()) {
+        validateLink(link);
+        return extractIdFromParts(link);
+    }
+
+    private void validateLink(String link) {
+        if (null == link || link.trim().isEmpty()) {
             throw new ArticleCollectorException(ArticleCollectorErrorCode.ARTICLE_ID_EXTRACTION_ERROR);
         }
+    }
 
+    private String extractIdFromParts(String link) {
         String[] parts = link.split("/");
         if (parts.length >= 2) {
             String id = parts[parts.length - 2];
-            if (id != null && !id.trim().isEmpty()) {
+            if (isValidId(id)) {
                 return id;
             }
         }
 
         throw new ArticleCollectorException(ArticleCollectorErrorCode.ARTICLE_ID_EXTRACTION_ERROR);
+    }
+
+    private boolean isValidId(String id) {
+        return id != null && !id.trim().isEmpty();
     }
 
     /**

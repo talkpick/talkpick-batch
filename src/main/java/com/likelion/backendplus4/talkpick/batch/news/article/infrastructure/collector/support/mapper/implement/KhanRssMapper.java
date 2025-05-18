@@ -97,11 +97,19 @@ public class KhanRssMapper extends AbstractRssMapper {
      * @since 2025-05-17
      */
     private String scrapeAndProcessContent(ContentScraper scraper, String link) {
-        String scrapedContent = scraper.scrapeContent(link);
-        if (scrapedContent == null || scrapedContent.isEmpty()) {
+        String scrapedContent = scrapeContent(scraper, link);
+        validateScrapedContent(scrapedContent);
+        return removeUnwantedPhrases(scrapedContent);
+    }
+
+    private String scrapeContent(ContentScraper scraper, String link) {
+        return scraper.scrapeContent(link);
+    }
+
+    private void validateScrapedContent(String content) {
+        if (null == content || content.isEmpty()) {
             throw new ArticleCollectorException(ArticleCollectorErrorCode.EMPTY_ARTICLE_CONTENT);
         }
-        return removeUnwantedPhrases(scrapedContent);
     }
 
     /**
@@ -115,10 +123,14 @@ public class KhanRssMapper extends AbstractRssMapper {
      */
     private String scrapeImageUrl(ContentScraper scraper, String link) {
         String imageUrl = scraper.scrapeImageUrl(link);
-        if (imageUrl == null || imageUrl.isEmpty()) {
+        validateImageUrl(imageUrl);
+        return imageUrl;
+    }
+
+    private void validateImageUrl(String imageUrl) {
+        if (null == imageUrl || imageUrl.isEmpty()) {
             throw new ArticleCollectorException(ArticleCollectorErrorCode.EMPTY_ARTICLE_IMAGE);
         }
-        return imageUrl;
     }
 
 

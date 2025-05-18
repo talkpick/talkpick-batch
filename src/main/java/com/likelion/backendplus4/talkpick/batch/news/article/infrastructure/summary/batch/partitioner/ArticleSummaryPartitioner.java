@@ -1,14 +1,23 @@
 package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.summary.batch.partitioner;
 
-import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.batch.core.partition.support.Partitioner;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.stereotype.Component;
 
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.embedding.batch.exception.EmbeddingException;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.embedding.batch.exception.error.EmbeddingErrorCode;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.summary.batch.exception.ArticleSummaryException;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.summary.batch.exception.error.ArticleSummaryErrorCode;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.support.partitioner.IdRangePartitionCalculator;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.support.partitioner.PartitionMapBuilder;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.support.partitioner.dto.ArticleIdRange;
+
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -22,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class ArticleSummaryPartitioner implements Partitioner {
 	private static final String QUERY_GET_MIN_ID = """
 		SELECT MIN(a.id) FROM ArticleEntity a WHERE a.summary IS NULL
@@ -30,6 +40,7 @@ public class ArticleSummaryPartitioner implements Partitioner {
 		SELECT MAX(a.id) FROM ArticleEntity a WHERE a.summary IS NULL
 		""";
 
+	private final IdRangePartitionCalculator calculator;
 	@PersistenceContext
 	private EntityManager entityManager;
 
@@ -45,12 +56,28 @@ public class ArticleSummaryPartitioner implements Partitioner {
 		Long minId = createQuery(QUERY_GET_MIN_ID);
 		Long maxId = createQuery(QUERY_GET_MAX_ID);
 
-		if (isInvalidIdRange(minId, maxId)) {
-			log.info("요약할 뉴스가 없습니다");
-			return new LinkedHashMap<>();
-		}
+		throwIfInvalidIdRange(minId, maxId);
+		List<ArticleIdRange> ranges = calculator.calculate(minId, maxId, gridSize);
+		return PartitionMapBuilder.build(ranges);
+	}
 
-		return partitionByIdRange(gridSize, maxId, minId);
+	/**
+	 * 주어진 ID 범위가 유효하지 않을 경우 예외를 발생시킨다.
+	 *
+	 * minId 또는 maxId가 null이거나, minId가 maxId보다 큰 경우
+	 * {@link ArticleSummaryException}을 {@link ArticleSummaryErrorCode#ITEM_NOT_FOUND}와 함께 발생시킨다.
+	 *
+	 * @param minId ID 범위의 최소값
+	 * @param maxId ID 범위의 최대값
+	 * @throws ArticleSummaryException 유효하지 않은 ID 범위일 경우
+	 *
+	 * @author 함예정
+	 * @since 2025-05-18
+	 */
+	private void throwIfInvalidIdRange(Long minId, Long maxId) {
+		if (minId == null || maxId == null || minId > maxId) {
+			throw new ArticleSummaryException(ArticleSummaryErrorCode.ITEM_NOT_FOUND);
+		}
 	}
 
 	/**
@@ -81,32 +108,4 @@ public class ArticleSummaryPartitioner implements Partitioner {
 		return minId == null || maxId == null || minId > maxId;
 	}
 
-	/**
-	 * ID 범위를 기준으로 파티션을 생성한다.
-	 *
-	 * @param gridSize 파티션 개수
-	 * @param maxId 최대 ID 값
-	 * @param minId 최소 ID 값
-	 * @return 파티션 이름과 ExecutionContext 매핑
-	 * @author 함예정
-	 * @since 2025-05-17
-	 */
-	private Map<String, ExecutionContext> partitionByIdRange(int gridSize, Long maxId, Long minId) {
-		Map<String, ExecutionContext> partitions = new LinkedHashMap<>();
-		long targetSize = ((maxId - minId) + 1) / gridSize;
-		long start = minId;
-		long end;
-
-		for (int i = 0; i < gridSize; i++) {
-			ExecutionContext context = new ExecutionContext();
-			end = (i == gridSize - 1) ? maxId : start + targetSize - 1;
-
-			context.putLong("minId", start);
-			context.putLong("maxId", end);
-
-			partitions.put("partition" + i, context);
-			start = end + 1;
-		}
-		return partitions;
-	}
 }

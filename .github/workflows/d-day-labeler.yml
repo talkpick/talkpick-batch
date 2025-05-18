@@ -1,0 +1,24 @@
+name: D-day-labeler
+
+on:
+  schedule:
+    - cron: '0 15 * * *'
+permissions:
+  issues: write
+
+jobs:
+  issue-d-day-labeler:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update D-n Labels
+        uses: yj-circle/issue-d-day-labeler@v1.0.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  pr-d-day-labeler:
+    runs-on: [ubuntu-latest]
+    steps:
+      - name: Update D-n Labels
+        uses: naver/d-day-labeler@latest
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}

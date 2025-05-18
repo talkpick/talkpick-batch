@@ -30,7 +30,6 @@ import java.time.LocalDateTime;
 public class KhanRssMapper extends AbstractRssMapper {
 
     private static final Logger log = LoggerFactory.getLogger(KhanRssMapper.class);
-    //    private static final Map<String, ArticleEntity> RESULT_CACHE = new ConcurrentHashMap<>();
     private final ScraperFactory scraperFactory;
 
     @Autowired

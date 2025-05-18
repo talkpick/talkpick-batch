@@ -120,10 +120,16 @@ public class DongaContentScraper implements ContentScraper {
      * @throws ArticleCollectorException 본문 파싱 중 오류 발생 시
      */
     private List<String> extractDongaSportsContent(Document document) throws ArticleCollectorException {
-        Element articleBody = HtmlScraperUtils.findElement(document, "div.article_word#article_body");
-        if (articleBody == null) {
-            articleBody = HtmlScraperUtils.findElement(document, "div.article_word");
-        }
+        String[] selectors = {
+                "div.article_word#article_body",
+                "div.article_word"
+        };
+
+        Element articleBody = Arrays.stream(selectors)
+                .map(selector -> HtmlScraperUtils.findElement(document, selector))
+                .filter(element -> element != null)
+                .findFirst()
+                .orElse(null);
 
         if (articleBody == null) {
             return new ArrayList<>();

@@ -42,7 +42,6 @@ public class KmibRssMapper extends AbstractRssMapper {
     public KmibRssMapper(ScraperFactory scraperFactory,
                          HtmlParser htmlParser,
                          ParagraphUtil paragraphUtil) {
-        // super() 호출은 없어도 됨 (기본 생성자 자동 호출)
         this.scraperFactory = scraperFactory;
         this.htmlParser = htmlParser;
         this.paragraphUtil = paragraphUtil;
@@ -78,10 +77,8 @@ public class KmibRssMapper extends AbstractRssMapper {
             String baseDescription,
             String baseImageUrl) {
 
-        // KmibRssMapper는 RSS 데이터만 사용하되, HTML 태그 제거 및 문단 처리
         String processedDescription = processDescription(entry);
 
-        // 이미지 URL이 없으면 description에서 추출 시도
         String finalImageUrl = baseImageUrl.isEmpty()
                 ? extractImageFromDescription(entry)
                 : baseImageUrl;

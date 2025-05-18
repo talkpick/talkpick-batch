@@ -6,6 +6,8 @@ import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.coll
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.mapper.AbstractRssMapper;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.result.ScrapingResult;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.scraper.factory.ScraperFactory;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.util.HtmlParser;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.util.ParagraphUtil;
 import com.rometools.rome.feed.synd.SyndEntry;
 
 import groovy.util.logging.Slf4j;
@@ -33,10 +35,17 @@ public class KmibRssMapper extends AbstractRssMapper {
     private static final Pattern IMG_SRC_PATTERN = Pattern.compile("<img\\s+src=[\"']([^\"']+)[\"']");
 
     private final ScraperFactory scraperFactory;
+    private final HtmlParser htmlParser;
+    private final ParagraphUtil paragraphUtil;
 
     @Autowired
-    public KmibRssMapper(ScraperFactory scraperFactory) {
+    public KmibRssMapper(ScraperFactory scraperFactory,
+                         HtmlParser htmlParser,
+                         ParagraphUtil paragraphUtil) {
+        // super() 호출은 없어도 됨 (기본 생성자 자동 호출)
         this.scraperFactory = scraperFactory;
+        this.htmlParser = htmlParser;
+        this.paragraphUtil = paragraphUtil;
     }
 
     /**
@@ -101,10 +110,10 @@ public class KmibRssMapper extends AbstractRssMapper {
         String rawDescription = entry.getDescription().getValue();
         validateRawDescription(rawDescription);
 
-        List<String> paragraphs = extractCleanParagraphs(rawDescription);
+        List<String> paragraphs = htmlParser.extractCleanParagraphs(rawDescription);
         validateParagraphs(paragraphs);
 
-        return serializeParagraphs(paragraphs);
+        return paragraphUtil.serializeParagraphs(paragraphs);
     }
 
     /**
@@ -204,9 +213,9 @@ public class KmibRssMapper extends AbstractRssMapper {
         validateRawDescription(rawDescription);
 
         try {
-            List<String> paragraphs = extractCleanParagraphs(rawDescription);
+            List<String> paragraphs = htmlParser.extractCleanParagraphs(rawDescription);
             validateParagraphs(paragraphs);
-            return serializeParagraphs(paragraphs);
+            return paragraphUtil.serializeParagraphs(paragraphs);
         } catch (Exception e) {
             throw new ArticleCollectorException(ArticleCollectorErrorCode.RSS_PARSING_ERROR, e);
         }

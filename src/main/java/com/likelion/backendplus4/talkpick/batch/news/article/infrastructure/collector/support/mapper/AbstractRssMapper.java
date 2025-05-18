@@ -8,6 +8,8 @@ import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.coll
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.result.ScrapingResult;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.scraper.ContentScraper;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.scraper.factory.ScraperFactory;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.util.HtmlParser;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.util.ParagraphUtil;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.entity.ArticleEntity;
 import com.rometools.rome.feed.synd.SyndContent;
 import com.rometools.rome.feed.synd.SyndEntry;
@@ -46,23 +48,16 @@ public abstract class AbstractRssMapper {
      * @return 변환된 ArticleEntity 엔티티
      */
     public final ArticleEntity mapToRssNews(SyndEntry entry, RssSource source) {
-        // 1. 메타데이터 추출
         String guid = extractGuid(entry, source);
         String title = extractTitle(entry);
         String link = extractLink(entry);
         LocalDateTime pubDate = extractPubDate(entry);
         String category = extractCategory(entry, source);
-
-        // 2. 기본 이미지 URL 추출 (RSS에서)
         String imageUrl = extractImageUrl(entry);
 
-        // 3. 기본 설명 추출 (RSS에서)
         String baseDescription = extractDescription(entry);
-
-        // 4. 매퍼 유형에 따른 처리 (자식 클래스에서 구현)
         ScrapingResult result = performSpecificMapping(entry, source, link, baseDescription, imageUrl);
 
-        // 5. ArticleEntity 생성 및 반환
         return ArticleEntity.builder()
                 .title(title)
                 .link(link)
@@ -212,101 +207,6 @@ public abstract class AbstractRssMapper {
                 .description(description)
                 .imageUrl(imageUrl)
                 .build();
-    }
-
-    /**
-     * HTML 문자열에서 모든 태그를 제거하고 문단을 추출하는 공통 메서드
-     *
-     * @param html HTML 문자열
-     * @return 정제된 문단 리스트
-     */
-    protected List<String> extractCleanParagraphs(String html) {
-        if (isNullOrEmpty(html)) {
-            return new ArrayList<>();
-        }
-
-        try {
-            String withBreaks = html.replaceAll("<br\\s*/?>", "PARAGRAPH_BREAK");
-            String noTags = withBreaks.replaceAll("<[^>]*>", "");
-            String decoded = noTags.replace("&nbsp;", " ")
-                    .replace("&#160;", " ")
-                    .replace("&lt;", "<")
-                    .replace("&gt;", ">")
-                    .replace("&amp;", "&")
-                    .replace("&quot;", "\"")
-                    .replace("&apos;", "'");
-
-            decoded = decoded.replaceAll("\\s+", " ").trim();
-            String[] paragraphs = decoded.split("PARAGRAPH_BREAK");
-
-            return Arrays.stream(paragraphs)
-                    .map(String::trim)
-                    .filter(p -> !p.isEmpty())
-                    .collect(Collectors.toList());
-        } catch (Exception e) {
-            List<String> fallback = new ArrayList<>();
-            fallback.add(removeAllHtmlTags(html));
-            return fallback;
-        }
-    }
-
-    /**
-     * 모든 HTML 태그 제거하는 공통 메서드
-     *
-     * @param html HTML 문자열
-     * @return 태그가 제거된 문자열
-     */
-    protected String removeAllHtmlTags(String html) {
-        if (isNullOrEmpty(html)) {
-            return "";
-        }
-
-        String noTags = html.replaceAll("<[^>]*>", "");
-        String decoded = decodeHtmlEntities(noTags);
-
-        return decoded.replaceAll("\\s+", " ").trim();
-    }
-
-    /**
-     * HTML 엔티티를 디코딩하는 유틸리티 메서드
-     *
-     * @param text HTML 엔티티가 포함된 문자열
-     * @return 디코딩된 문자열
-     */
-    protected String decodeHtmlEntities(String text) {
-        if (isNullOrEmpty(text)) {
-            return "";
-        }
-
-        return text.replace("&nbsp;", " ")
-                .replace("&#160;", " ")
-                .replace("&lt;", "<")
-                .replace("&gt;", ">")
-                .replace("&amp;", "&")
-                .replace("&quot;", "\"")
-                .replace("&apos;", "'");
-    }
-
-    /**
-     * 문단 리스트를 JSON으로 직렬화하는 공통 메서드
-     *
-     * @param paragraphs 문단 리스트
-     * @return JSON 문자열
-     */
-    protected String serializeParagraphs(List<String> paragraphs) {
-        if (isNullOrEmptyList(paragraphs)) {
-            return "";
-        }
-
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < paragraphs.size(); i++) {
-            if (i > 0) {
-                sb.append("PARAGRAPH_BREAK");
-            }
-            sb.append(paragraphs.get(i));
-        }
-
-        return sb.toString();
     }
 
     /**

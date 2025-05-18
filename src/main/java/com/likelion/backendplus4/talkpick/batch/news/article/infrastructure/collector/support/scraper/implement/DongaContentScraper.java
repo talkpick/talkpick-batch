@@ -3,7 +3,7 @@ package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.col
 import com.likelion.backendplus4.talkpick.batch.news.article.exception.ArticleCollectorException;
 import com.likelion.backendplus4.talkpick.batch.news.article.exception.error.ArticleCollectorErrorCode;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.scraper.ContentScraper;
-import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.scraper.util.HtmlScraperUtils;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.util.HtmlScraperUtils;
 
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;

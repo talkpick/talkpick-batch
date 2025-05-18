@@ -81,12 +81,12 @@ public class KmibRssMapper extends AbstractRssMapper {
     }
 
     private String processDescription(SyndEntry entry) {
-        if (entry.getDescription() == null) {
+        if (null == entry.getDescription()) {
             throw new ArticleCollectorException(ArticleCollectorErrorCode.RSS_CONTENT_EMPTY);
         }
 
         String rawDescription = entry.getDescription().getValue();
-        if (rawDescription == null || rawDescription.isEmpty()) {
+        if (null == rawDescription|| rawDescription.isEmpty()) {
             throw new ArticleCollectorException(ArticleCollectorErrorCode.RSS_CONTENT_EMPTY);
         }
 
@@ -108,7 +108,7 @@ public class KmibRssMapper extends AbstractRssMapper {
      */
     @Override
     protected String extractUniqueIdFromLink(String link) {
-        if (link == null || link.trim().isEmpty()) {
+        if (null == link|| link.trim().isEmpty()) {
             throw new ArticleCollectorException(ArticleCollectorErrorCode.ARTICLE_ID_EXTRACTION_ERROR);
         }
 
@@ -118,7 +118,7 @@ public class KmibRssMapper extends AbstractRssMapper {
         }
 
         String arcId = matcher.group(1);
-        if (arcId == null || arcId.trim().isEmpty()) {
+        if (null == arcId|| arcId.trim().isEmpty()) {
             throw new ArticleCollectorException(ArticleCollectorErrorCode.ARTICLE_ID_EXTRACTION_ERROR);
         }
 
@@ -156,7 +156,7 @@ public class KmibRssMapper extends AbstractRssMapper {
         }
 
         String description = entry.getDescription().getValue();
-        if (description == null || description.isEmpty()) {
+        if (null == description|| description.isEmpty()) {
             return "";
         }
 
@@ -174,12 +174,12 @@ public class KmibRssMapper extends AbstractRssMapper {
      */
     @Override
     protected String extractDescription(SyndEntry entry) {
-        if (entry.getDescription() == null) {
+        if (null == entry.getDescription()) {
             return "";
         }
 
         String rawDescription = entry.getDescription().getValue();
-        if (rawDescription == null || rawDescription.isEmpty()) {
+        if (null == rawDescription|| rawDescription.isEmpty()) {
             return "";
         }
 

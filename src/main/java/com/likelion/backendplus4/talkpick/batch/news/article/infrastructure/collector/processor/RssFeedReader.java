@@ -72,13 +72,11 @@ public class RssFeedReader {
      * @return 최신 발행일 또는 기본값
      */
     private LocalDateTime getLatestPubDate(String mapperType) {
-        String guidPrefix = mapperType.toUpperCase();
+        LocalDateTime latestPubDate = rssNewsRepository.findLatestPubDateByGuidPrefix(mapperType);
 
-        LocalDateTime latestPubDate = rssNewsRepository.findLatestPubDateByGuidPrefix(guidPrefix);
-
-        if (latestPubDate == null) {
-            latestPubDate = getDefaultPubDate();
-        }
+		if (null == latestPubDate) {
+			latestPubDate = getDefaultPubDate();
+		}
 
         lastProcessedDateMap.put(mapperType, latestPubDate);
         return latestPubDate;
@@ -97,7 +95,7 @@ public class RssFeedReader {
      * @return 최신 발행일 이후면 true
      */
     private boolean isAfterLatestPubDate(SyndEntry entry, LocalDateTime latestPubDate) {
-        if (entry.getPublishedDate() == null) {
+        if (null == entry.getPublishedDate()) {
             log.debug("발행일 없음 - 항목 제외: {}", entry.getTitle());
             return false;
         }

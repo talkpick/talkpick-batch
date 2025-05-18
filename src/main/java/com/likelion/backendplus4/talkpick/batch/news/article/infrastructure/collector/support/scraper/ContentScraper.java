@@ -16,7 +16,6 @@ import java.util.List;
  * @author 양병학
  * @since 2025-05-13 최초 작성
  */
-@Slf4j
 public interface ContentScraper {
     /**
      * 뉴스 URL에서 본문 내용을 문단 단위로 스크래핑

@@ -78,8 +78,6 @@ public class ArticleWriter implements ItemWriter<List<ArticleEntity>> {
 		String jsonDescription = serializeToJson(paragraphs);
 		item.setDescription(jsonDescription);
 
-		log.info("직렬화 완료: {}",
-				jsonDescription.substring(0, Math.min(jsonDescription.length(), 50)) + "...");
 	}
 
 	/**

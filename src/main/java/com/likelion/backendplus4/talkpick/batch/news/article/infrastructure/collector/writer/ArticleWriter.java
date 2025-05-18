@@ -26,8 +26,8 @@ import lombok.extern.slf4j.Slf4j;
  * - 출력: 로그 출력 (중복 제외)
  *
  * @since 2025-05-10
- * @modified 2025-05-25 직렬화 확인 로직 추가
- * @modified 2025-05-26 PARAGRAPH_BREAK 기반 문단 처리 추가
+ * @modified 2025-05-15 직렬화 확인 로직 추가
+ * @modified 2025-05-16 PARAGRAPH_BREAK 기반 문단 처리 추가
  */
 @Slf4j
 @Component

@@ -102,6 +102,7 @@ public class DongaRssMapper extends AbstractRssMapper {
      * 본문 스크래핑을 진행하는 메소드
      *
      * @return 스크래핑된 본문 String
+     * @author 양병학
      * @since 2025-05-17
      */
     private String scrapeContent(String link) {

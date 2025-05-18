@@ -5,6 +5,8 @@ on:
     - cron: '0 15 * * *'
 permissions:
   issues: write
+  pull-requests: write
+  contents: read
 
 jobs:
   issue-d-day-labeler:

@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
  * @author 양병학
  * @since 2025-05-18
  */
+@Component
 public class HtmlParser {
 
     /**

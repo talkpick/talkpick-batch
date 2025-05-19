@@ -86,6 +86,11 @@ public class ArticleEntity {
 	@Column(name = "created_at")
 	private LocalDateTime createdAt;
 
+    @Setter
+    @Column(name = "summary", columnDefinition = "TEXT")
+    @Size(max = 1000, message = "요약은 최대 1000자까지 허용됩니다")
+    private String summary;
+
 	@Convert(converter = FloatArrayToJsonConverter.class)
 	@Column(name = "summary_vector", columnDefinition = "JSON")
 	private float[] summaryVector;

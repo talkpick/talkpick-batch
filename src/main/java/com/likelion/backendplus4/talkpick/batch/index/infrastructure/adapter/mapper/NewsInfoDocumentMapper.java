@@ -27,7 +27,9 @@ public class NewsInfoDocumentMapper {
 			news.getContent(),
 			news.getPublishedAt(),
 			news.getImageUrl(),
-			news.getCategory()
+			news.getCategory(),
+			news.getSummary(),
+			news.getSummaryVector()
 		);
 	}
 }

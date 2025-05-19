@@ -27,6 +27,7 @@ import jakarta.annotation.PostConstruct;
  * Spring Data Elasticsearch를 이용해 뉴스 정보를 Bulk 색인하고 저장된 개수를 반환하는 어댑터
  *
  * @since 2025-05-15
+ * @modified 2025-05-15
  */
 @Component
 public class ElasticsearchNewsInfoAdapter implements NewsInfoIndexRepositoryPort {
@@ -98,27 +99,36 @@ public class ElasticsearchNewsInfoAdapter implements NewsInfoIndexRepositoryPort
 	 * @return 매핑 프로퍼티 맵
 	 * @author 정안식
 	 * @since 2025-05-15
+	 * @modified 2025-05-15
+	 * 25-05-15 - summary 및 summary_vector 필드 추가
 	 */
 	private Map<String, Object> mappingProperties() {
-		return Map.of(
-			NewsInfoDocument.FIELD_ID, Map.of("type", "keyword"),
-			NewsInfoDocument.FIELD_TITLE, Map.of(
+		return Map.ofEntries(
+			Map.entry(NewsInfoDocument.FIELD_ID, Map.of(
+				"type", "keyword")),
+			Map.entry(NewsInfoDocument.FIELD_TITLE, Map.of(
 				"type", "text",
 				"analyzer", NewsInfoDocument.ANALYZER_NORI,
-				"fields", Map.of(
-					NewsInfoDocument.FIELD_KEYWORD, Map.of("type", "keyword")
-				)
-			),
-			NewsInfoDocument.FIELD_CONTENT, Map.of(
+				"fields", Map.of(NewsInfoDocument.FIELD_KEYWORD, Map.of("type", "keyword")))),
+			Map.entry(NewsInfoDocument.FIELD_CONTENT, Map.of(
 				"type", "text",
 				"analyzer", NewsInfoDocument.ANALYZER_NORI,
-				"fields", Map.of(
-					NewsInfoDocument.FIELD_KEYWORD, Map.of("type", "keyword")
-				)
-			),
-			NewsInfoDocument.FIELD_PUBLISHED_AT, Map.of("type", "date"),
-			NewsInfoDocument.FIELD_IMAGE_URL, Map.of("type", "keyword"),
-			NewsInfoDocument.FIELD_CATEGORY, Map.of("type", "keyword")
+				"fields", Map.of(NewsInfoDocument.FIELD_KEYWORD, Map.of("type", "keyword")))),
+			Map.entry(NewsInfoDocument.FIELD_PUBLISHED_AT, Map.of(
+				"type", "date")),
+			Map.entry(NewsInfoDocument.FIELD_IMAGE_URL, Map.of(
+				"type", "keyword")),
+			Map.entry(NewsInfoDocument.FIELD_CATEGORY, Map.of(
+				"type", "keyword")),
+			Map.entry(NewsInfoDocument.FIELD_SUMMARY, Map.of(
+				"type", "text",
+				"analyzer", NewsInfoDocument.ANALYZER_NORI,
+				"fields", Map.of(NewsInfoDocument.FIELD_KEYWORD, Map.of("type", "keyword")))),
+			Map.entry(NewsInfoDocument.FIELD_SUMMARY_VECTOR, Map.of(
+				"type", "dense_vector",
+				"dims", 1536,
+				"index", true,
+				"similarity", "cosine"))
 		);
 	}
 

@@ -1,5 +1,7 @@
 package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.util;
 
+import org.springframework.stereotype.Component;
+
 import java.util.List;
 
 /**
@@ -8,6 +10,7 @@ import java.util.List;
  * @author 양병학
  * @since 2025-05-18
  */
+@Component
 public class ParagraphUtil {
 
     /**

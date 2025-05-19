@@ -3,6 +3,7 @@ package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.col
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +15,7 @@ import java.util.stream.Collectors;
  * @author 양병학
  * @since 2025-05-13 최초 작성
  */
+@Component
 public class HtmlScraperUtils {
 
     /**

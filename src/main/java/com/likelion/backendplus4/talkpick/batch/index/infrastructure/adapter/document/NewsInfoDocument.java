@@ -8,7 +8,9 @@ import lombok.Getter;
 /**
  * Elasticsearch에 저장될 뉴스 정보 문서 모델 클래스
  *
- * @since 2025-05-15
+ * @since 2025-05-19
+ * @modified 2025-05-19
+ * 25-05-19 - summary, summaryVector 필드 추가
  */
 @Getter
 @AllArgsConstructor

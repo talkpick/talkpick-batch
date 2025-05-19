@@ -27,7 +27,7 @@ import jakarta.annotation.PostConstruct;
  * Spring Data Elasticsearch를 이용해 뉴스 정보를 Bulk 색인하고 저장된 개수를 반환하는 어댑터
  *
  * @since 2025-05-15
- * @modified 2025-05-15
+ * @modified 2025-05-19
  */
 @Component
 public class ElasticsearchNewsInfoAdapter implements NewsInfoIndexRepositoryPort {
@@ -99,8 +99,8 @@ public class ElasticsearchNewsInfoAdapter implements NewsInfoIndexRepositoryPort
 	 * @return 매핑 프로퍼티 맵
 	 * @author 정안식
 	 * @since 2025-05-15
-	 * @modified 2025-05-15
-	 * 25-05-15 - summary 및 summary_vector 필드 추가
+	 * @modified 2025-05-19
+	 * 25-05-19 - summary 및 summary_vector 필드 추가
 	 */
 	private Map<String, Object> mappingProperties() {
 		return Map.ofEntries(

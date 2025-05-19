@@ -1,4 +1,4 @@
-package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.scraper.util;
+package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.util;
 
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;

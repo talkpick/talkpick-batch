@@ -9,5 +9,4 @@ public class TalkpickBatchApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(TalkpickBatchApplication.class, args);
 	}
-
 }

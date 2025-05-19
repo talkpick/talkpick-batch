@@ -22,9 +22,7 @@ import com.rometools.rome.feed.synd.SyndEntry;
 import com.rometools.rome.feed.synd.SyndFeed;
 import com.rometools.rome.io.SyndFeedInput;
 import com.rometools.rome.io.XmlReader;
-
 import lombok.extern.slf4j.Slf4j;
-
 /**
  * RSS 피드 URL을 통해 XML 피드를 읽고 파싱하여 {@link SyndEntry} 목록으로 반환하는 Reader 클래스.
  * Rome 라이브러리를 이용하여 RSS를 파싱하며, 유효하지 않은 URL 또는 파싱 오류에 대해 예외를 처리한다.
@@ -43,83 +41,81 @@ public class RssFeedReader {
 		this.rssNewsRepository = rssNewsRepository;
 	}
 
-	/**
-	 * 주어진 피드 URL로부터 RSS 피드를 파싱하고, 최신 발행일 이후의 {@link SyndEntry} 리스트를 반환한다.
-	 *
-	 * @param feedUrl    RSS 피드의 URL 문자열
-	 * @param mapperType 매퍼 타입 (언론사 코드)
-	 * @return 파싱 및 필터링된 SyndEntry 목록
-	 * @modified 2025-05-18 최신 발행일 이후 데이터만 필터링하는 기능 추가
-	 * @author 함예정
-	 * @since 2025-05-10
-	 */
-	public List<SyndEntry> getFeed(String feedUrl, String mapperType) {
-		URL url = getURL(feedUrl);
-		URLConnection connection = openConnectionWithTimeout(url);
-		List<SyndEntry> entries = parseRssEntries(connection);
+    /**
+     * 주어진 피드 URL로부터 RSS 피드를 파싱하고, 최신 발행일 이후의 {@link SyndEntry} 리스트를 반환한다.
+     *
+     * @param feedUrl    RSS 피드의 URL 문자열
+     * @param mapperType 매퍼 타입 (언론사 코드)
+     * @return 파싱 및 필터링된 SyndEntry 목록
+     * @modified 2025-05-18 최신 발행일 이후 데이터만 필터링하는 기능 추가
+     * @author 함예정
+     * @since 2025-05-10
+     */
+    public List<SyndEntry> getFeed(String feedUrl, String mapperType) {
+        URL url = getURL(feedUrl);
+        URLConnection connection = openConnectionWithTimeout(url);
+        List<SyndEntry> entries = parseRssEntries(connection);
 
-		LocalDateTime latestPubDate = getLatestPubDate(mapperType);
+        LocalDateTime latestPubDate = getLatestPubDate(mapperType);
 
-		List<SyndEntry> filteredEntries = entries.stream()
-			.filter(entry -> isAfterLatestPubDate(entry, latestPubDate))
-			.collect(Collectors.toList());
+        List<SyndEntry> filteredEntries = entries.stream()
+                .filter(entry -> isAfterLatestPubDate(entry, latestPubDate))
+                .collect(Collectors.toList());
 
-		return filteredEntries;
-	}
+        return filteredEntries;
+    }
 
-	/**
-	 * 언론사별 최신 발행일 조회 (캐싱 추가)
-	 *
-	 * @param mapperType 매퍼 타입 (언론사 코드)
-	 * @return 최신 발행일 또는 기본값
-	 */
-	private LocalDateTime getLatestPubDate(String mapperType) {
-		String guidPrefix = mapperType.toUpperCase();
+    /**
+     * 언론사별 최신 발행일 조회 (캐싱 추가)
+     *
+     * @param mapperType 매퍼 타입 (언론사 코드)
+     * @return 최신 발행일 또는 기본값
+     */
+    private LocalDateTime getLatestPubDate(String mapperType) {
+        LocalDateTime latestPubDate = rssNewsRepository.findLatestPubDateByGuidPrefix(mapperType);
 
-		LocalDateTime latestPubDate = rssNewsRepository.findLatestPubDateByGuidPrefix(guidPrefix);
-
-		if (latestPubDate == null) {
+		if (null == latestPubDate) {
 			latestPubDate = getDefaultPubDate();
 		}
 
-		lastProcessedDateMap.put(mapperType, latestPubDate);
-		return latestPubDate;
-	}
+        lastProcessedDateMap.put(mapperType, latestPubDate);
+        return latestPubDate;
+    }
 
-	private LocalDateTime getDefaultPubDate() {
-		LocalDateTime latestPubDate = LocalDateTime.now().minusDays(1);
-		return latestPubDate;
-	}
+    private LocalDateTime getDefaultPubDate() {
+        LocalDateTime latestPubDate = LocalDateTime.now().minusDays(1);
+        return latestPubDate;
+    }
 
-	/**
-	 * 항목의 발행일이 최신 발행일보다 이후인지 확인
-	 *
-	 * @param entry         RSS 항목
-	 * @param latestPubDate 최신 발행일
-	 * @return 최신 발행일 이후면 true
-	 */
-	private boolean isAfterLatestPubDate(SyndEntry entry, LocalDateTime latestPubDate) {
-		if (entry.getPublishedDate() == null) {
-			log.debug("발행일 없음 - 항목 제외: {}", entry.getTitle());
-			return false;
-		}
+    /**
+     * 항목의 발행일이 최신 발행일보다 이후인지 확인
+     *
+     * @param entry         RSS 항목
+     * @param latestPubDate 최신 발행일
+     * @return 최신 발행일 이후면 true
+     */
+    private boolean isAfterLatestPubDate(SyndEntry entry, LocalDateTime latestPubDate) {
+        if (null == entry.getPublishedDate()) {
+            log.debug("발행일 없음 - 항목 제외: {}", entry.getTitle());
+            return false;
+        }
 
-		LocalDateTime pubDate = convertToLocalDateTime(entry.getPublishedDate());
+        LocalDateTime pubDate = convertToLocalDateTime(entry.getPublishedDate());
 
-		boolean isAfter = pubDate.isAfter(latestPubDate);
+        boolean isAfter = pubDate.isAfter(latestPubDate);
 
-		return isAfter;
-	}
+        return isAfter;
+    }
 
-	/**
-	 * Date 객체를 LocalDateTime으로 변환
-	 *
-	 * @param date 변환할 Date 객체
-	 * @return 변환된 LocalDateTime
-	 */
-	private LocalDateTime convertToLocalDateTime(Date date) {
-		return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-	}
+    /**
+     * Date 객체를 LocalDateTime으로 변환
+     *
+     * @param date 변환할 Date 객체
+     * @return 변환된 LocalDateTime
+     */
+    private LocalDateTime convertToLocalDateTime(Date date) {
+        return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+    }
 
 	/**
 	 * 문자열 형태의 URL을 {@link URL} 객체로 변환한다.
@@ -127,8 +123,8 @@ public class RssFeedReader {
 	 * @param feedUrl 문자열 형태의 URL
 	 * @return URL 객체
 	 * @throws RuntimeException 유효하지 않은 URL 형식일 경우
-	 * @author 함예정
 	 * @since 2025-05-10
+	 * @author 함예정
 	 */
 	private URL getURL(String feedUrl) {
 		try {

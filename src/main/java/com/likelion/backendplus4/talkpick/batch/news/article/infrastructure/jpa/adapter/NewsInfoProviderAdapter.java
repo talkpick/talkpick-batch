@@ -24,7 +24,6 @@ import lombok.RequiredArgsConstructor;
  */
 @Component
 @RequiredArgsConstructor
-@Primary
 public class NewsInfoProviderAdapter implements NewsInfoProviderPort {
 	private static final int MAX_NEWS_COUNT = 100;
 	private final NewsInfoJpaRepository newsInfoJpaRepository;

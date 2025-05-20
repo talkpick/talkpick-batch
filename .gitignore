@@ -97,6 +97,7 @@ $RECYCLE.BIN/
 *.ear
 *.zip
 *.tar.gz
+*.gz
 *.rar
 *.hprof
 hs_err_pid*

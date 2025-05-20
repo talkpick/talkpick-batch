@@ -8,7 +8,8 @@ import com.likelion.backendplus4.talkpick.batch.index.infrastructure.adapter.doc
 /**
  * 도메인 모델 NewsInfo를 Elasticsearch 문서 모델로 변환하는 매퍼
  *
- * @since 2025-05-19
+ * @since 2025-05-15
+ * @modified 2025-05-19
  */
 @Component
 public class NewsInfoDocumentMapper {

@@ -1,7 +1,21 @@
 server:
-  port: ${WEB_PORT:8082}
+  port: ${BATCH_WEB_PORT:8082}
+  error:
+    whitelabel:
+      enabled: false
 
 spring:
+  elasticsearch:
+    uris: ${ELS_URI}
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      embedding-model: text-embedding-3-small
+      summary:
+        model: gpt-4.1-nano
+        maxCompletionTokens: 800
+        temperature: 0.5
+
   application:
     name: talkpick-batch
   datasource:
@@ -9,6 +23,12 @@ spring:
     username: ${MYSQL_USERNAME}
     password: ${MYSQL_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 10
+      idle-timeout: 30000
+      max-lifetime: 1800000
+      connection-timeout: 30000
   jpa:
     database-platform: org.hibernate.dialect.MySQL8Dialect
     hibernate:
@@ -17,7 +37,40 @@ spring:
       hibernate:
         format_sql: true
     open-in-view: false
+  web:
+    resources:
+      add-mappings: false
+  batch:
+    job:
+      enabled: false
+    jdbc:
+      initialize-schema: embedded
+  quartz:
+    job-store-type: jdbc
+    jdbc:
+      initialize-schema: embedded
+    article-collector:
+      cron: "0 */1 * * * ?"
+    article-embedding:
+      cron: "0 */5 * * * ?"
+
+log:
+  rolling:
+    directory: logs
+    file-name: talkpick-batch.log
+    pattern: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - [TraceId: %X{traceId:-no-trace}] - %msg%n"
+    max-history: 30
+    total-size-cap: 10MB
+
 logging:
-  pattern:
-    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%level] [%thread] [%logger{36}] - %msg%n"
-    console: "%cyan(%d{yyyy-MM-dd HH:mm:ss.SSS}) %highlight(%-5level) %yellow([%thread]) %green(%logger{36}) - %msg%n"
+  level:
+    org.quartz: DEBUG
+  file:
+    name: talkpick-batch.log
+decorator:
+  datasource:
+    p6spy:
+      enable-logging: false
+news:
+  index:
+    name: news_index

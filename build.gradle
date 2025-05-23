@@ -27,10 +27,12 @@ dependencies {
     // Spring-boot
 
     implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml'
+
+    implementation 'me.paulschwarz:spring-dotenv:3.0.0'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
 
     // Spring-batch
     implementation 'org.springframework.boot:spring-boot-starter-batch'
@@ -48,11 +50,19 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
     implementation 'org.elasticsearch.client:elasticsearch-rest-high-level-client:7.17.10'
 
-    // OpenAi
+    //OpenAi
     implementation 'org.springframework.ai:spring-ai-openai-spring-boot-starter:1.0.0-M5'
 
     //Swagger
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
+
+    //P6spy
+    implementation "com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.9.0"
+
+    //RSS
+    implementation 'org.springframework.boot:spring-boot-starter-quartz'
+    implementation 'com.rometools:rome:1.18.0'
+    implementation 'org.jsoup:jsoup:1.20.1'
 
 }
 

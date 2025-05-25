@@ -68,6 +68,19 @@ public class OldDataCleanupTasklet implements Tasklet {
 		}
 	}
 
+	/**
+	 * 데이터 정리 작업을 수행합니다.
+	 *
+	 * 1. 이전 Step 완료 확인
+	 * 2. Redis 키 목록 조회
+	 * 3. 정리 정책 적용하여 데이터 삭제
+	 *
+	 * @param contribution Step 실행 정보
+	 * @param chunkContext Chunk 실행 컨텍스트
+	 * @return 작업 완료 상태
+	 * @since 2025-05-25
+	 * @author 양병학
+	 */
 	private RepeatStatus performCleanup(StepContribution contribution, ChunkContext chunkContext) {
 		if (!isPreviousStepCompleted(chunkContext)) {
 			return RepeatStatus.FINISHED;

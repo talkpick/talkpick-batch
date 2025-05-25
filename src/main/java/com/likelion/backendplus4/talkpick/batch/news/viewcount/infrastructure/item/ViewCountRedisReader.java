@@ -64,16 +64,15 @@ public class ViewCountRedisReader implements ItemReader<ViewCountItem> {
 
     /**
      * Redis에서 다음 조회수 항목을 읽어옵니다.
-     * 모든 항목을 처리한 경우 null을 반환합니다.
      *
      * 1. 키 목록 초기화(필요한 경우)
      * 2. 다음 키 조회
      * 3. 키에서 조회수 항목 변환
      *
      * @return 조회수 항목 또는 null (처리 완료 시)
+     * @throws ArticleCollectorException Redis 처리 실패 시
      * @since 2025-05-20 최초 작성
-     * @author 양병학
-     *
+     * @author 양병학  // <- 이 부분 추가 필요
      */
     @Override
     public ViewCountItem read() {

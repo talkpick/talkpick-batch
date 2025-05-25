@@ -39,18 +39,17 @@ public class ViewCountBatchManager {
 
 	/**
 	 * 조회수 데이터를 일괄 업데이트합니다.
-	 * 조회수 항목을 받아 배치 단위로 처리하는 워크플로우를 조정합니다.
 	 *
 	 * 1. 항목 목록 유효성 검사
 	 * 2. 조회수 맵 생성
 	 * 3. GUID 목록 추출
-	 * 4. 배치 단위 업데이트 실행
+	 * 4. 배치 단위로 업데이트 실행
 	 *
 	 * @param items 업데이트할 조회수 항목 목록
 	 * @return 업데이트된 항목 수
+	 * @throws ArticleCollectorException 배치 업데이트 실패 시
 	 * @since 2025-05-23 최초 작성
 	 * @author 양병학
-	 *
 	 */
 	@Transactional
 	public int updateViewCounts(List<? extends ViewCountItem> items) {

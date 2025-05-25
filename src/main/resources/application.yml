@@ -74,3 +74,17 @@ decorator:
 news:
   index:
     name: news_index
+    
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  metrics:
+    tags:
+      application: talkpick-batch
+    distribution:
+      percentiles-histogram:
+        http:
+          server:
+            requests: 'true'

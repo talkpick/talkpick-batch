@@ -21,6 +21,10 @@ public class ViewCountSyncJobAdapter implements ViewCountSyncJobPort {
 
     @Override
     public void executeJob() {
+        executeJobInternal();
+    }
+
+    private void executeJobInternal() {
         try {
             JobParameters params = createJobParameters();
             jobLauncher.run(viewCountSyncJob, params);

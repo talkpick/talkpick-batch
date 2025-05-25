@@ -63,6 +63,13 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-quartz'
     implementation 'com.rometools:rome:1.18.0'
     implementation 'org.jsoup:jsoup:1.20.1'
+	
+	//monitor
+	//TODO: 차후 의존성 점검 필요
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+    implementation 'io.micrometer:micrometer-tracing-bridge-brave'
+    implementation 'io.zipkin.reporter2:zipkin-reporter-brave'
 
 }
 

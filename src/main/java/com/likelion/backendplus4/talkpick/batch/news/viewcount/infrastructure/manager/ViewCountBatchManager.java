@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -26,7 +27,9 @@ import lombok.extern.slf4j.Slf4j;
  * 배치 처리를 통해 효율적으로 데이터베이스 접근을 최적화합니다.
  *
  * @since 2025-05-23
+ * @author 양병학
  * @modified 2025-05-24 엔티티 변환 로직을 Mapper로 분리
+ * @modified 2025-05-25 예외 처리 로직을 구체적인 위치별로 분리
  */
 @Slf4j
 @Service
@@ -57,10 +60,14 @@ public class ViewCountBatchManager {
 			return 0;
 		}
 
-		Map<String, Long> viewCountMap = createViewCountMap(items);
-		List<String> allGuids = extractGuidsFromMap(viewCountMap);
-
-		return processBatchUpdates(allGuids, viewCountMap);
+		try {
+			Map<String, Long> viewCountMap = createViewCountMap(items);
+			List<String> allGuids = extractGuidsFromMap(viewCountMap);
+			return processBatchUpdates(allGuids, viewCountMap);
+		} catch (Exception e) {
+			log.error("조회수 데이터 처리 중 오류 발생: {}", e.getMessage(), e);
+			throw new ArticleCollectorException(ArticleCollectorErrorCode.VIEW_COUNT_DATA_VALIDATION_FAILED, e);
+		}
 	}
 
 	/**
@@ -81,11 +88,8 @@ public class ViewCountBatchManager {
 	 */
 	private Map<String, Long> createViewCountMap(List<? extends ViewCountItem> items) {
 		return items.stream()
-				.collect(Collectors.toMap(
-						ViewCountItem::getNewsId,
-						ViewCountItem::getViewCount,
-						(existing, replacement) -> replacement
-				));
+			.collect(Collectors.toMap(ViewCountItem::getNewsId, ViewCountItem::getViewCount,
+				(existing, replacement) -> replacement));
 	}
 
 	/**
@@ -139,8 +143,7 @@ public class ViewCountBatchManager {
 	 * @param updatedCount 업데이트된 항목 수
 	 */
 	private void logBatchUpdateResult(int startIndex, int batchSize, int updatedCount) {
-		log.debug("배치 업데이트 완료: {}-{}, {}건 성공",
-				startIndex, startIndex + batchSize - 1, updatedCount);
+		log.debug("배치 업데이트 완료: {}-{}, {}건 성공", startIndex, startIndex + batchSize - 1, updatedCount);
 	}
 
 	/**
@@ -160,9 +163,12 @@ public class ViewCountBatchManager {
 			logJdbcUpdateResult(totalUpdated, batchItems.size());
 
 			return totalUpdated;
+		} catch (DataAccessException e) {
+			log.error("데이터베이스 조회수 업데이트 실패 - GUID: {}: {}", batchGuids, e.getMessage(), e);
+			throw new ArticleCollectorException(ArticleCollectorErrorCode.VIEW_COUNT_DB_UPDATE_FAILED, e);
 		} catch (Exception e) {
-			handleBatchUpdateException(e);
-			return 0; // 예외 발생 시 0 반환 (실제로는 예외가 던져지므로 실행되지 않음)
+			log.error("배치 아이템 생성 실패 - GUID: {}: {}", batchGuids, e.getMessage(), e);
+			throw new ArticleCollectorException(ArticleCollectorErrorCode.VIEW_COUNT_BATCH_ITEM_CREATE_FAILED, e);
 		}
 	}
 
@@ -175,8 +181,8 @@ public class ViewCountBatchManager {
 	 */
 	private List<ViewCountItem> createBatchItems(List<String> batchGuids, Map<String, Long> viewCountMap) {
 		return batchGuids.stream()
-				.map(guid -> new ViewCountItem(guid, viewCountMap.get(guid)))
-				.collect(Collectors.toList());
+			.map(guid -> new ViewCountItem(guid, viewCountMap.get(guid)))
+			.collect(Collectors.toList());
 	}
 
 	/**
@@ -186,7 +192,8 @@ public class ViewCountBatchManager {
 	 * @return 업데이트 결과 배열
 	 */
 	private int[] performJdbcBatchUpdate(List<ViewCountItem> batchItems) {
-		return jdbcTemplate.batchUpdate(
+		try {
+			return jdbcTemplate.batchUpdate(
 				"UPDATE article SET view_count = ? WHERE guid = ?",
 				new BatchPreparedStatementSetter() {
 					@Override
@@ -200,8 +207,11 @@ public class ViewCountBatchManager {
 					public int getBatchSize() {
 						return batchItems.size();
 					}
-				}
-		);
+				});
+		} catch (DataAccessException e) {
+			log.error("JDBC 배치 업데이트 실행 실패: {}", e.getMessage(), e);
+			throw new ArticleCollectorException(ArticleCollectorErrorCode.VIEW_COUNT_JDBC_BATCH_FAILED, e);
+		}
 	}
 
 	/**
@@ -222,16 +232,5 @@ public class ViewCountBatchManager {
 	 */
 	private void logJdbcUpdateResult(int totalUpdated, int totalAttempted) {
 		log.debug("JDBC 배치 업데이트 완료: {}건 성공 / {}건 시도", totalUpdated, totalAttempted);
-	}
-
-	/**
-	 * 배치 업데이트 예외를 처리합니다.
-	 *
-	 * @param e 발생한 예외
-	 * @throws ArticleCollectorException 변환된 도메인 예외
-	 */
-	private void handleBatchUpdateException(Exception e) {
-		log.error("배치 처리 중 오류 발생: {}", e.getMessage());
-		throw new ArticleCollectorException(ArticleCollectorErrorCode.VIEW_COUNT_BATCH_UPDATE_FAILED, e);
 	}
 }

@@ -19,6 +19,7 @@ import com.likelion.backendplus4.talkpick.batch.news.viewcount.infrastructure.ta
  * 조회수 동기화를 위한 Reader, Processor, Writer 및 Tasklet을 설정합니다.
  *
  * @since 2025-05-20
+ * @author 양병학
  * @modified 2025-05-23 ViewCountUpdateService 추가
  */
 @Configuration

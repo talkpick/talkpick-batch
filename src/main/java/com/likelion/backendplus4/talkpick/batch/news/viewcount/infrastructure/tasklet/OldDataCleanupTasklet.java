@@ -20,6 +20,7 @@ import com.likelion.backendplus4.talkpick.batch.news.article.exception.error.Art
  * 정리 정책에 따라 Redis의 오래된 데이터를 삭제합니다.
  *
  * @since 2025-05-20
+ * @author 양병학
  */
 public class OldDataCleanupTasklet implements Tasklet {
 

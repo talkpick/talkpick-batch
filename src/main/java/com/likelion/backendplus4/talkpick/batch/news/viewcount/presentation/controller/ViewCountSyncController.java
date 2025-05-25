@@ -1,4 +1,4 @@
-package com.likelion.backendplus4.talkpick.batch.news.article.presentation.controller;
+package com.likelion.backendplus4.talkpick.batch.news.viewcount.presentation.controller;
 
 import static com.likelion.backendplus4.talkpick.batch.common.response.ApiResponse.*;
 
@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
  * Redis의 조회수 데이터를 DB에 동기화하는 배치 작업을 수동으로 실행할 수 있는 API를 제공합니다.
  *
  * @since 2025-05-25
+ * @author 양병학
  */
 @Slf4j
 @RestController

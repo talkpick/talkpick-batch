@@ -9,6 +9,7 @@ import lombok.Setter;
  * Spring Batch 처리 과정에서 Reader, Processor, Writer 간 데이터 전달을 위해 사용됩니다.
  *
  * @since 2025-05-20
+ * @author 양병학
  */
 @Getter
 @Setter

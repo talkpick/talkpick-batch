@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
  * 매 실행 시 고유한 JobParameters를 생성하여 중복 실행을 방지합니다.
  *
  * @since 2025-05-20
+ * @author 양병학
  */
 @Component
 @DisallowConcurrentExecution

@@ -23,6 +23,7 @@ import com.likelion.backendplus4.talkpick.batch.news.viewcount.infrastructure.ta
  * - cleanupOldDataStep: 오래된 조회수 데이터를 정리하는 태스크릿 기반 Step
  *
  * @since 2025-05-20
+ * @author 양병학
  */
 @Configuration
 public class ViewCountStepConfig {

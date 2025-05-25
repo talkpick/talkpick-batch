@@ -14,6 +14,7 @@ import lombok.Getter;
  * 매일 자정에 Redis에 저장된 조회수 데이터를 DB에 동기화하는 작업을 실행합니다.
  *
  * @since 2025-05-25
+ * @author 양병학
  */
 @Configuration
 public class ViewCountQuartzJobConfig {

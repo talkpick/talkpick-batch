@@ -14,6 +14,7 @@ import org.springframework.context.annotation.Configuration;
  * Cron 표현식을 사용하여 매일 자정에 동기화 작업이 실행되도록 설정합니다.
  *
  * @since 2025-05-25
+ * @author 양병학
  */
 @Configuration
 public class ViewCountQuartzTriggerConfig {

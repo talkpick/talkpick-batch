@@ -7,6 +7,7 @@ import org.springframework.batch.item.ItemProcessor;
  * 현재는 데이터를 그대로 전달하지만, 필요한 경우 추가 처리 로직을 구현할 수 있습니다.
  *
  * @since 2025-05-20
+ * @author 양병학
  */
 public class ViewCountProcessor implements ItemProcessor<ViewCountItem, ViewCountItem> {
 

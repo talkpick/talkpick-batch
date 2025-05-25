@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
  * 특정 패턴에 일치하는 모든 Redis 키를 대상으로 조회수 데이터를 가져옵니다.
  *
  * @since 2025-05-20
+ * @author 양병학
  * @modified 2025-05-24 코드 가독성 향상을 위한 리팩토링
  */
 @Slf4j

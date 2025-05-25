@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
  * 실제 업데이트 로직은 ViewCountUpdateService에 위임합니다.
  *
  * @since 2025-05-20
+ * @author 양병학
  * @modified 2025-05-23 서비스 레이어로 업데이트 로직 분리
  */
 @Slf4j

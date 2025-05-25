@@ -17,7 +17,7 @@ public class ViewCountSyncService implements ViewCountSyncUseCase {
     private final ViewCountSyncJobPort viewCountSyncJobPort;
 
     @Override
-    public void syncViewCounts(String requestor) {
-        viewCountSyncJobPort.executeJob(requestor);
+    public void syncViewCounts() { // String requestor 제거
+        viewCountSyncJobPort.executeJob();
     }
 }

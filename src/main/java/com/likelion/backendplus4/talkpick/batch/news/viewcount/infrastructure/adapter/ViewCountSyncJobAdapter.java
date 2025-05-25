@@ -20,19 +20,18 @@ public class ViewCountSyncJobAdapter implements ViewCountSyncJobPort {
     private final Job viewCountSyncJob;
 
     @Override
-    public void executeJob(String requestor) {
+    public void executeJob() {
         try {
-            JobParameters params = createJobParameters(requestor);
+            JobParameters params = createJobParameters();
             jobLauncher.run(viewCountSyncJob, params);
         } catch (Exception e) {
             throw new ArticleCollectorException(ArticleCollectorErrorCode.VIEW_COUNT_SYNC_FAILED, e);
         }
     }
 
-    private JobParameters createJobParameters(String requestor) {
+    private JobParameters createJobParameters() {
         return new JobParametersBuilder()
-                .addLong("timestamp", System.currentTimeMillis())
-                .addString("requestedBy", requestor)
-                .toJobParameters();
+            .addLong("timestamp", System.currentTimeMillis())
+            .toJobParameters();
     }
 }

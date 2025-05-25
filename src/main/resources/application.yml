@@ -81,5 +81,3 @@ decorator:
 news:
   index:
     name: news_index
-  viewcount:
-    valid-prefixes: KM,DA,KH

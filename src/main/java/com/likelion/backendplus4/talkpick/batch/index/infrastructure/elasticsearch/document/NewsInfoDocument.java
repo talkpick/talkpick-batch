@@ -1,4 +1,4 @@
-package com.likelion.backendplus4.talkpick.batch.index.infrastructure.adapter.document;
+package com.likelion.backendplus4.talkpick.batch.index.infrastructure.elasticsearch.document;
 
 import java.time.LocalDateTime;
 

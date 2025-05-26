@@ -1,4 +1,4 @@
-package com.likelion.backendplus4.talkpick.batch.index.infrastructure.adapter;
+package com.likelion.backendplus4.talkpick.batch.index.infrastructure.elasticsearch.adapter;
 
 import java.util.List;
 import java.util.Map;
@@ -18,8 +18,8 @@ import org.springframework.stereotype.Component;
 
 import com.likelion.backendplus4.talkpick.batch.index.application.port.out.NewsInfoIndexRepositoryPort;
 import com.likelion.backendplus4.talkpick.batch.index.domain.model.NewsInfo;
-import com.likelion.backendplus4.talkpick.batch.index.infrastructure.adapter.document.NewsInfoDocument;
-import com.likelion.backendplus4.talkpick.batch.index.infrastructure.adapter.mapper.NewsInfoDocumentMapper;
+import com.likelion.backendplus4.talkpick.batch.index.infrastructure.elasticsearch.document.NewsInfoDocument;
+import com.likelion.backendplus4.talkpick.batch.index.infrastructure.elasticsearch.mapper.NewsInfoDocumentMapper;
 
 import jakarta.annotation.PostConstruct;
 

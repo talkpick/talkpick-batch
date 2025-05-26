@@ -59,6 +59,9 @@ dependencies {
     //P6spy
     implementation "com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.9.0"
 
+    //Redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
     //RSS
     implementation 'org.springframework.boot:spring-boot-starter-quartz'
     implementation 'com.rometools:rome:1.18.0'

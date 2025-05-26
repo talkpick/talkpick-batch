@@ -53,6 +53,12 @@ spring:
       cron: "0 */1 * * * ?"
     article-embedding:
       cron: "0 */5 * * * ?"
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+
 
 log:
   rolling:
@@ -88,3 +94,7 @@ management:
         http:
           server:
             requests: 'true'
+
+chat:
+  flush:
+    delay: 30000

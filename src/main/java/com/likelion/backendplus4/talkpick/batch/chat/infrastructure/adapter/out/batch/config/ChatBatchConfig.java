@@ -7,6 +7,7 @@ import org.springframework.batch.core.configuration.annotation.EnableBatchProces
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
+import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.database.JpaItemWriter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,6 +15,8 @@ import org.springframework.data.redis.connection.stream.MapRecord;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.likelion.backendplus4.talkpick.batch.chat.exception.ChatBatchException;
+import com.likelion.backendplus4.talkpick.batch.chat.exception.error.ChatBatchErrorCode;
 import com.likelion.backendplus4.talkpick.batch.chat.infrastructure.adapter.out.batch.reader.RedisStreamItemReader;
 import com.likelion.backendplus4.talkpick.batch.chat.infrastructure.adapter.out.jpa.entity.ChatMessageEntity;
 import com.likelion.backendplus4.talkpick.batch.chat.model.ChatMessage;
@@ -21,6 +24,9 @@ import com.likelion.backendplus4.talkpick.batch.chat.support.mapper.ChatMessageM
 
 import jakarta.persistence.EntityManagerFactory;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.batch.core.listener.ChunkListenerSupport;
+import org.springframework.batch.core.SkipListener;
 
 @Configuration
 @EnableBatchProcessing
@@ -46,14 +52,11 @@ public class ChatBatchConfig {
 		return new StepBuilder("chatFlushStep", jobRepository)
 			.<MapRecord<String, String, String>, ChatMessageEntity>chunk(100, transactionManager)
 			.reader(reader)
-			.processor(record -> {
-				ChatMessage domain = objectMapper.readValue(
-					record.getValue().get("payload"),
-					ChatMessage.class
-				);
-				return ChatMessageMapper.toEntityFromDomain(domain);
-			})
+			.processor(processor())
 			.writer(writer())
+			.faultTolerant()
+				.retryLimit(3)
+				.retry(ChatBatchException.class)
 			.build();
 	}
 
@@ -63,5 +66,20 @@ public class ChatBatchConfig {
 			.incrementer(new RunIdIncrementer())
 			.start(chatFlushStep())
 			.build();
+	}
+
+	private ItemProcessor<MapRecord<String, String, String>, ChatMessageEntity> processor() {
+		return record -> {
+			try {
+				ChatMessage domain = objectMapper.readValue(
+					record.getValue().get("payload"),
+					ChatMessage.class
+				);
+				return ChatMessageMapper.toEntityFromDomain(domain);
+			} catch (Exception e) {
+				throw new ChatBatchException(
+					ChatBatchErrorCode.STREAM_READ_ERROR, e);
+			}
+		};
 	}
 }

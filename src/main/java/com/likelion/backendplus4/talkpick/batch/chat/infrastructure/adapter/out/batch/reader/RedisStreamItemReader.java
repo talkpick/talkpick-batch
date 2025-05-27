@@ -55,10 +55,13 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 
 
 	/**
-	 * Batch 실행 시 이전 실행 상태에 관계없이 reader를 초기화합니다.
+	 * Reader 상태를 초기화합니다.
+	 *
+	 * 1. 이전 배치 실행에서 남아 있을 수 있는 {@code buffer} iterator를 {@code null}로 설정합니다.
+	 * 2. 다음 {@code read()} 호출 시 새로 레코드를 조회하도록 강제합니다.
 	 *
 	 * @param executionContext 현재 스텝의 ExecutionContext
-	 * @throws ItemStreamException 초기화 실패 시 발생
+	 * @throws ItemStreamException 초기화 실패 시
 	 * @author 박찬병
 	 * @since 2025-05-27
 	 */
@@ -68,9 +71,14 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 	}
 
 	/**
-	 * Redis 스트림에서 배치 처리용 레코드를 한 개씩 읽어 반환합니다.
+	 * Redis 스트림에서 레코드를 순차적으로 읽어옵니다.
 	 *
-	 * @return 읽은 MapRecord 객체, 더 이상 읽을 레코드가 없으면 null
+	 * 1. {@code buffer}가 비어있거나 더 이상 요소가 없으면 {@link #fetchRecords()}를 호출하여 새 레코드 묶음을 가져옵니다.
+	 * 2. 가져온 레코드가 없으면 {@code null}을 반환하여 Step이 종료되도록 합니다.
+	 * 3. 레코드가 존재하면 {@code pendingToAck}에 추가하고 {@code buffer}를 새 iterator로 초기화합니다.
+	 * 4. {@code buffer.next()}를 호출해 다음 레코드를 반환합니다.
+	 *
+	 * @return 다음 MapRecord, 더 이상 없으면 {@code null}
 	 * @author 박찬병
 	 * @since 2025-05-27
 	 */
@@ -89,8 +97,13 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 	}
 
 	/**
-	 * 읽어들인 레코드를 ACK 하여 재처리를 방지합니다.
+	 * 읽어들인 레코드들을 일괄 ACK 처리합니다.
 	 *
+	 * 1. {@code pendingToAck}가 비어있으면 즉시 반환합니다.
+	 * 2. 스트림별로 레코드를 그룹화하여 동일 스트림에 대해 한 번의 호출로 ACK 합니다.
+	 * 3. ACK 후 {@code pendingToAck} 리스트를 비워 재처리를 방지합니다.
+	 *
+	 * @author 박찬병
 	 * @since 2025-05-26
 	 */
 	public void ackPending() {
@@ -108,7 +121,14 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 	}
 
 	/**
-	 * 스트림 키 목록에서 레코드를 조회하여 반환합니다.
+	 * 활성 스트림 키에서 새 레코드 묶음을 조회합니다.
+	 *
+	 * 1. {@link #streamKeys()}로 스트림 키 세트를 가져옵니다.
+	 * 2. 키가 없으면 빈 리스트를 반환합니다.
+	 * 3. 각 키에 대해 {@link #ensureGroup(String)}로 컨슈머 그룹을 보장합니다.
+	 * 4. 모든 키를 대상으로 마지막으로 소비한 이후 항목부터 읽도록 {@code offsets}를 구성합니다.
+	 * 5. {@code blockMillis}의 절반 동안 블로킹하며 최대 {@code batchSize * keys.size()} 만큼 읽습니다.
+	 * 6. 읽어온 레코드 리스트를 반환합니다.
 	 *
 	 * @return 조회된 MapRecord 리스트, 없으면 빈 리스트
 	 * @author 박찬병
@@ -160,7 +180,11 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 	}
 
 	/**
-	 * 스트림 키에 대해 컨슈머 그룹을 생성하거나 이미 존재하면 무시합니다.
+	 * 주어진 스트림 키에 대한 컨슈머 그룹을 보장합니다.
+	 *
+	 * 1. Redis SET({@code chat:known-groups})을 통해 이미 그룹을 생성한 스트림인지 확인합니다.
+	 * 2. 처음 보는 스트림이면 {@link #createGroupSafe(String)}를 호출해 그룹을 생성합니다.
+	 * 3. 이미 존재한다면 아무 작업도 수행하지 않습니다.
 	 *
 	 * @param streamKey 대상 스트림 키
 	 * @author 박찬병

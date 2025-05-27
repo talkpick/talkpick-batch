@@ -1,9 +1,9 @@
-package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.converter;
+package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.adapter.jpa.converter;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.converter.exception.JpaConvertorException;
-import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.converter.exception.error.JpaConvertorErrorCode;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.adapter.jpa.converter.exception.JpaConvertorException;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.adapter.jpa.converter.exception.error.JpaConvertorErrorCode;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;

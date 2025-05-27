@@ -1,7 +1,7 @@
-package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.mapper;
+package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.adapter.jpa.mapper;
 
 import com.likelion.backendplus4.talkpick.batch.news.article.domain.model.NewsInfo;
-import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.entity.ArticleEntity;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.adapter.jpa.entity.ArticleEntity;
 
 public class ArticleEntityMapper {
 	public static NewsInfo toDomainFromEntity(ArticleEntity articleEntity) {

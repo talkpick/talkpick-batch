@@ -14,8 +14,8 @@ import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.embe
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.embedding.batch.processor.ArticleEmbeddingProcessor;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.embedding.batch.reader.ArticleEmbeddingPageReader;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.embedding.batch.writer.ArticleEmbeddingWriter;
-import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.converter.exception.JpaConvertorException;
-import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.entity.ArticleEntity;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.adapter.jpa.converter.exception.JpaConvertorException;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.adapter.jpa.entity.ArticleEntity;
 
 /**
  * 뉴스 기사 임베딩 작업을 위한 Spring Batch Step 설정 클래스.

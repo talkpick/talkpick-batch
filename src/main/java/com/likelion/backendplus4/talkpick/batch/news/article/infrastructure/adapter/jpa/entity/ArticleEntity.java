@@ -1,8 +1,8 @@
-package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.entity;
+package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.adapter.jpa.entity;
 
 import java.time.LocalDateTime;
 
-import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.converter.FloatArrayToJsonConverter;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.adapter.jpa.converter.FloatArrayToJsonConverter;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;

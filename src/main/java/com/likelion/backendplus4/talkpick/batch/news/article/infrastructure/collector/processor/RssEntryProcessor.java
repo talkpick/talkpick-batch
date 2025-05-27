@@ -1,6 +1,5 @@
 package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.processor;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.batch.core.configuration.annotation.StepScope;
@@ -10,7 +9,7 @@ import org.springframework.stereotype.Component;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.mapper.factory.RssMappingFactory;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.config.batch.RssSource;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.mapper.AbstractRssMapper;
-import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.entity.ArticleEntity;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.adapter.jpa.entity.ArticleEntity;
 import com.rometools.rome.feed.synd.SyndEntry;
 
 /**

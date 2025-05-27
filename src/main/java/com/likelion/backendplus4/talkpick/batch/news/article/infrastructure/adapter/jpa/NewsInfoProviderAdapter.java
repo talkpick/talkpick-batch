@@ -1,4 +1,4 @@
-package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.adapter;
+package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.adapter.jpa;
 
 import java.util.List;
 
@@ -9,8 +9,8 @@ import org.springframework.stereotype.Component;
 
 import com.likelion.backendplus4.talkpick.batch.news.article.application.port.out.NewsInfoProviderPort;
 import com.likelion.backendplus4.talkpick.batch.news.article.domain.model.NewsInfo;
-import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.mapper.ArticleEntityMapper;
-import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.repository.NewsInfoJpaRepository;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.adapter.jpa.mapper.ArticleEntityMapper;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.adapter.jpa.repository.NewsInfoJpaRepository;
 
 import lombok.RequiredArgsConstructor;
 

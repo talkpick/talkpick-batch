@@ -1,4 +1,4 @@
-package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.repository;
+package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.adapter.jpa.repository;
 
 import java.time.LocalDateTime;
 
@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.entity.ArticleEntity;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.adapter.jpa.entity.ArticleEntity;
 
 @Repository
 public interface NewsInfoJpaRepository extends JpaRepository<ArticleEntity, Long> {

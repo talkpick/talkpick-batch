@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.embedding.batch.exception.EmbeddingException;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.embedding.batch.exception.error.EmbeddingErrorCode;
-import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.entity.ArticleEntity;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.adapter.jpa.entity.ArticleEntity;
 
 import lombok.extern.slf4j.Slf4j;
 

@@ -1,4 +1,4 @@
-package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.converter.exception;
+package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.adapter.jpa.converter.exception;
 
 import com.likelion.backendplus4.talkpick.batch.common.exception.CustomException;
 import com.likelion.backendplus4.talkpick.batch.common.exception.error.ErrorCode;

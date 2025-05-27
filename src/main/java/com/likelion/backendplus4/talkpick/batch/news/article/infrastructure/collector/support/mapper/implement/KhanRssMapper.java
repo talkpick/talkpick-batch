@@ -7,7 +7,6 @@ import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.coll
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.result.ScrapingResult;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.scraper.ContentScraper;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.scraper.factory.ScraperFactory;
-import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.entity.ArticleEntity;
 import com.rometools.rome.feed.synd.SyndEntry;
 
 import org.slf4j.Logger;

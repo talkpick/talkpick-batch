@@ -1,24 +1,16 @@
 package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.mapper;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.likelion.backendplus4.talkpick.batch.news.article.exception.ArticleCollectorException;
 import com.likelion.backendplus4.talkpick.batch.news.article.exception.error.ArticleCollectorErrorCode;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.config.batch.RssSource;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.result.ScrapingResult;
-import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.scraper.ContentScraper;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.scraper.factory.ScraperFactory;
-import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.util.HtmlParser;
-import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.collector.support.util.ParagraphUtil;
-import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.entity.ArticleEntity;
-import com.rometools.rome.feed.synd.SyndContent;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.adapter.jpa.entity.ArticleEntity;
 import com.rometools.rome.feed.synd.SyndEntry;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * RSS를 ArticleEntity로 변환하는 추상 클래스

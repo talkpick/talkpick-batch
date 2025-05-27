@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 import org.springframework.batch.item.ExecutionContext;
@@ -18,7 +19,6 @@ import org.springframework.data.redis.connection.stream.StreamOffset;
 import org.springframework.data.redis.connection.stream.StreamReadOptions;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SetOperations;
-import org.springframework.data.redis.core.StreamOperations;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
@@ -46,14 +46,11 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 	private static final int BATCH_SIZE = 100;
 
 	private Iterator<MapRecord<String, String, String>> buffer;
-	private final List<MapRecord<String, String, String>> pendingToAck = new java.util.ArrayList<>();
-	private final java.util.Set<String> initializedKeys = new java.util.HashSet<>();
+	private final List<MapRecord<String, String, String>> pendingToAck = new ArrayList<>();
 
 	@Override
 	public void open(ExecutionContext executionContext) throws ItemStreamException {
-		// 리더 초기화: 버퍼 및 키 초기화
 		this.buffer = null;
-		this.initializedKeys.clear();
 	}
 
 	@Override
@@ -70,103 +67,14 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 		return buffer.next();
 	}
 
-	private List<MapRecord<String, String, String>> fetchRecords() {
-		Set<String> keys = streamKeys();
-		if (keys.isEmpty()) {
-			return List.of();
-		}
-
-		// 새로 발견된 스트림마다 그룹 보장
-		keys.forEach(this::ensureGroup);
-
-		// 키별로 첫 호출이면 backlog(0)부터, 이후 호출이면 신규만
-		return keys.stream()
-			.flatMap(key -> {
-				if (initializedKeys.contains(key)) {
-					return fetchNewRecordsForKey(key).stream();
-				} else {
-					initializedKeys.add(key);
-					return fetchBacklogForKey(key).stream();
-				}
-			})
-			.toList();
-	}
-
-	private Set<String> streamKeys() {
-		return redisTemplate.keys(STREAM_KEY_PREFIX + "*");
-	}
-
-	private List<MapRecord<String, String, String>> fetchBacklogForKey(String key) {
-		log.debug("fetchBacklogForKey(): key={}, batchSize={}", key, BATCH_SIZE);
-		StreamOperations<String, String, String> ops = redisTemplate.opsForStream();
-		List<MapRecord<String, String, String>> result = ops.read(
-			Consumer.from(GROUP, CONSUMER),
-			StreamReadOptions.empty().count(BATCH_SIZE),
-			StreamOffset.create(key, ReadOffset.from(">"))
-		);
-		log.debug("fetchBacklogForKey(): key={}, fetched pending size={}", key, result != null ? result.size() : 0);
-		return result == null ? List.of() : result;
-	}
-
-	private List<MapRecord<String, String, String>> fetchNewRecordsForKey(String key) {
-		StreamOperations<String, String, String> ops = redisTemplate.opsForStream();
-
-		// 항상 마지막으로 소비된 이후 메시지부터 읽습니다.
-		ReadOffset offset = ReadOffset.lastConsumed();
-		log.debug("fetchNewRecordsForKey(): key={}, offset={}, batchSize={}, blockMillis={}",
-			key, offset, BATCH_SIZE, blockMillis);
-
-		List<MapRecord<String, String, String>> result = ops.read(
-			Consumer.from(GROUP, CONSUMER),
-			StreamReadOptions.empty()
-				.count(BATCH_SIZE)
-				.block(Duration.ofMillis(blockMillis / 2)),
-			StreamOffset.create(key, offset)
-		);
-		log.debug("fetchNewRecordsForKey(): key={}, fetched new size={}", key, result != null ? result.size() : 0);
-		return result == null ? List.of() : result;
-	}
-
-	private void ensureGroup(String streamKey) {
-		SetOperations<String, String> setOps = redisTemplate.opsForSet();
-		Long added = setOps.add(GROUP_SET_KEY, streamKey);
-
-		// 이미 기록된 경우에도 실제 그룹 존재 여부 확인
-		if (added != null && added == 0L && groupExists(streamKey)) {
-			return;
-		}
-		if (groupExists(streamKey)) {
-			return;
-		}
-
-		try {
-			redisTemplate.opsForStream()
-				.createGroup(streamKey, ReadOffset.from("0"), GROUP);
-			log.debug("Created consumer-group '{}' for stream '{}'", GROUP, streamKey);
-		} catch (Exception ex) {
-			if (!String.valueOf(ex.getMessage()).contains("BUSYGROUP")) {
-				log.error("Failed to create consumer group for stream {}", streamKey, ex);
-			}
-		}
-	}
-
-	private boolean groupExists(String streamKey) {
-		try {
-			List<org.springframework.data.redis.connection.stream.StreamInfo.XInfoGroup> groups = redisTemplate.opsForStream().groups(streamKey).toList();
-			return groups.stream().anyMatch(g -> GROUP.equals(g.groupName()));
-		} catch (Exception e) {
-			log.info(e.getLocalizedMessage());
-			return false;
-		}
-	}
-
 	/**
 	 * 읽어들인 레코드를 ACK 하여 재처리를 방지한다.
 	 *
 	 * @since 2025-05-26
 	 */
 	public void ackPending() {
-		if (pendingToAck.isEmpty()) return;
+		if (pendingToAck.isEmpty())
+			return;
 		pendingToAck.stream()
 			.collect(Collectors.groupingBy(MapRecord::getStream))
 			.forEach((streamKey, recList) -> {
@@ -176,5 +84,60 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 				redisTemplate.opsForStream().acknowledge(streamKey, GROUP, ids);
 			});
 		pendingToAck.clear();
+	}
+
+	private List<MapRecord<String, String, String>> fetchRecords() {
+		Set<String> keys = streamKeys();
+		if (keys.isEmpty()) {
+			return List.of();
+		}
+		keys.forEach(this::ensureGroup);
+
+		List<StreamOffset<String>> offsets = new ArrayList<>(keys.size());
+		keys.forEach(k -> offsets.add(StreamOffset.create(k, ReadOffset.lastConsumed())));
+
+		StreamReadOptions opts = StreamReadOptions.empty()
+			.count((long)BATCH_SIZE * keys.size())
+			.block(Duration.ofMillis(blockMillis / 2));
+
+		List<MapRecord<String, String, String>> result = getMapRecords(opts, offsets);
+		return result == null ? List.of() : result;
+	}
+
+	private List<MapRecord<String, String, String>> getMapRecords(StreamReadOptions opts,
+		List<StreamOffset<String>> offsets) {
+		return redisTemplate.opsForStream().read(Consumer.from(GROUP, CONSUMER),
+			opts,
+			offsets.toArray(new StreamOffset[0])
+		);
+	}
+
+	private Set<String> streamKeys() {
+		return redisTemplate.keys(STREAM_KEY_PREFIX + "*");
+	}
+
+	private void ensureGroup(String streamKey) {
+		SetOperations<String, String> setOps = redisTemplate.opsForSet();
+		Long added = setOps.add(GROUP_SET_KEY, streamKey);
+
+		if (added != null && added == 0L) {
+			return;
+		}
+
+		createGroupSafe(streamKey);
+	}
+
+	/**
+	 * 스트림 키에 대해 컨슈머 그룹을 생성합니다. BUSYGROUP 예외는 무시합니다.
+	 */
+	private void createGroupSafe(String streamKey) {
+		try {
+			redisTemplate.opsForStream()
+				.createGroup(streamKey, ReadOffset.from("0"), GROUP);
+		} catch (Exception ex) {
+			if (!String.valueOf(ex.getMessage()).contains("BUSYGROUP")) {
+				log.error("Failed to create consumer group for stream {}", streamKey, ex);
+			}
+		}
 	}
 }

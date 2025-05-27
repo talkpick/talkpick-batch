@@ -10,13 +10,13 @@ import lombok.RequiredArgsConstructor;
 import com.likelion.backendplus4.talkpick.batch.chat.exception.ChatBatchException;
 import com.likelion.backendplus4.talkpick.batch.chat.exception.error.ChatBatchErrorCode;
 
-@Component
-@RequiredArgsConstructor
 /**
  * Quartz 스케줄러의 실행 시점에 Spring Batch의 chatFlushJob을 호출하는 Job 구현체입니다.
  *
  * @since 2025-05-27
  */
+@Component
+@RequiredArgsConstructor
 public class ChatBatchQuartzLauncher implements org.quartz.Job {
 
 	private final JobLauncher jobLauncher;

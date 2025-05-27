@@ -13,10 +13,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.stream.MapRecord;
 import org.springframework.transaction.PlatformTransactionManager;
-
+//
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.likelion.backendplus4.talkpick.batch.chat.exception.ChatBatchException;
 import com.likelion.backendplus4.talkpick.batch.chat.exception.error.ChatBatchErrorCode;
+import com.likelion.backendplus4.talkpick.batch.chat.infrastructure.adapter.out.batch.listener.RedisAckListener;
 import com.likelion.backendplus4.talkpick.batch.chat.infrastructure.adapter.out.batch.reader.RedisStreamItemReader;
 import com.likelion.backendplus4.talkpick.batch.chat.infrastructure.adapter.out.jpa.entity.ChatMessageEntity;
 import com.likelion.backendplus4.talkpick.batch.chat.model.ChatMessage;
@@ -25,8 +26,6 @@ import com.likelion.backendplus4.talkpick.batch.chat.support.mapper.ChatMessageM
 import jakarta.persistence.EntityManagerFactory;
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.batch.core.listener.ChunkListenerSupport;
-import org.springframework.batch.core.SkipListener;
 
 @Configuration
 @EnableBatchProcessing
@@ -34,18 +33,11 @@ import org.springframework.batch.core.SkipListener;
 public class ChatBatchConfig {
 
 	private final RedisStreamItemReader reader;
+	private final RedisAckListener redisAckListener;
 	private final ObjectMapper objectMapper;
 	private final EntityManagerFactory emf;
 	private final JobRepository jobRepository;
 	private final PlatformTransactionManager transactionManager;
-
-	@Bean
-	public JpaItemWriter<ChatMessageEntity> writer() {
-		JpaItemWriter<ChatMessageEntity> writer = new JpaItemWriter<>();
-		writer.setEntityManagerFactory(emf);
-		writer.setUsePersist(true);
-		return writer;
-	}
 
 	@Bean
 	public Step chatFlushStep() {
@@ -54,6 +46,7 @@ public class ChatBatchConfig {
 			.reader(reader)
 			.processor(processor())
 			.writer(writer())
+			.listener(redisAckListener)
 			.faultTolerant()
 				.retryLimit(3)
 				.retry(ChatBatchException.class)
@@ -66,6 +59,14 @@ public class ChatBatchConfig {
 			.incrementer(new RunIdIncrementer())
 			.start(chatFlushStep())
 			.build();
+	}
+
+	@Bean
+	public JpaItemWriter<ChatMessageEntity> writer() {
+		JpaItemWriter<ChatMessageEntity> writer = new JpaItemWriter<>();
+		writer.setEntityManagerFactory(emf);
+		writer.setUsePersist(true);
+		return writer;
 	}
 
 	private ItemProcessor<MapRecord<String, String, String>, ChatMessageEntity> processor() {

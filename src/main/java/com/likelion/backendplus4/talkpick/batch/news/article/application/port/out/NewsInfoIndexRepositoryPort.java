@@ -1,8 +1,8 @@
-package com.likelion.backendplus4.talkpick.batch.index.application.port.out;
+package com.likelion.backendplus4.talkpick.batch.news.article.application.port.out;
 
 import java.util.List;
 
-import com.likelion.backendplus4.talkpick.batch.index.domain.model.NewsInfo;
+import com.likelion.backendplus4.talkpick.batch.news.article.domain.model.NewsInfo;
 
 /**
  * 뉴스 정보를 색인 저장소에 저장하는 포트 인터페이스

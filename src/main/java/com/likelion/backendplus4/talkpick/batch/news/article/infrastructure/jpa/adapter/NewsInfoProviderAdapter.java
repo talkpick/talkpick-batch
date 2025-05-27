@@ -2,14 +2,13 @@ package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa
 
 import java.util.List;
 
-import org.springframework.context.annotation.Primary;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
-import com.likelion.backendplus4.talkpick.batch.index.application.port.out.NewsInfoProviderPort;
-import com.likelion.backendplus4.talkpick.batch.index.domain.model.NewsInfo;
+import com.likelion.backendplus4.talkpick.batch.news.article.application.port.out.NewsInfoProviderPort;
+import com.likelion.backendplus4.talkpick.batch.news.article.domain.model.NewsInfo;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.mapper.ArticleEntityMapper;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.repository.NewsInfoJpaRepository;
 

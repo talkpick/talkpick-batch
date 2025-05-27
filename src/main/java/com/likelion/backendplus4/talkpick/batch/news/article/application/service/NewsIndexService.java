@@ -1,16 +1,14 @@
-package com.likelion.backendplus4.talkpick.batch.index.application.service;
+package com.likelion.backendplus4.talkpick.batch.news.article.application.service;
 
 import java.util.List;
 
-import org.elasticsearch.index.IndexService;
 import org.springframework.stereotype.Service;
 
 import com.likelion.backendplus4.talkpick.batch.common.annotation.logging.EntryExitLog;
-import com.likelion.backendplus4.talkpick.batch.common.annotation.logging.TimeTracker;
-import com.likelion.backendplus4.talkpick.batch.index.application.port.in.NewsIndexUseCase;
-import com.likelion.backendplus4.talkpick.batch.index.application.port.out.NewsInfoIndexRepositoryPort;
-import com.likelion.backendplus4.talkpick.batch.index.application.port.out.NewsInfoProviderPort;
-import com.likelion.backendplus4.talkpick.batch.index.domain.model.NewsInfo;
+import com.likelion.backendplus4.talkpick.batch.news.article.application.port.in.NewsIndexUseCase;
+import com.likelion.backendplus4.talkpick.batch.news.article.application.port.out.NewsInfoIndexRepositoryPort;
+import com.likelion.backendplus4.talkpick.batch.news.article.application.port.out.NewsInfoProviderPort;
+import com.likelion.backendplus4.talkpick.batch.news.article.domain.model.NewsInfo;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

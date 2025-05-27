@@ -1,9 +1,9 @@
-package com.likelion.backendplus4.talkpick.batch.index.infrastructure.elasticsearch.mapper;
+package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.elasticsearch.mapper;
 
 import org.springframework.stereotype.Component;
 
-import com.likelion.backendplus4.talkpick.batch.index.domain.model.NewsInfo;
-import com.likelion.backendplus4.talkpick.batch.index.infrastructure.elasticsearch.document.NewsInfoDocument;
+import com.likelion.backendplus4.talkpick.batch.news.article.domain.model.NewsInfo;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.elasticsearch.document.NewsInfoDocument;
 
 /**
  * 도메인 모델 NewsInfo를 Elasticsearch 문서 모델로 변환하는 매퍼

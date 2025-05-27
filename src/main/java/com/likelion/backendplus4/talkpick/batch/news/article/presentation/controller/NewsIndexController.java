@@ -1,4 +1,4 @@
-package com.likelion.backendplus4.talkpick.batch.index.presentation.controller;
+package com.likelion.backendplus4.talkpick.batch.news.article.presentation.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.likelion.backendplus4.talkpick.batch.common.annotation.logging.EntryExitLog;
 import com.likelion.backendplus4.talkpick.batch.common.annotation.logging.TimeTracker;
 import com.likelion.backendplus4.talkpick.batch.common.response.ApiResponse;
-import com.likelion.backendplus4.talkpick.batch.index.application.port.in.NewsIndexUseCase;
+import com.likelion.backendplus4.talkpick.batch.news.article.application.port.in.NewsIndexUseCase;
 
 import lombok.RequiredArgsConstructor;
 

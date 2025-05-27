@@ -1,4 +1,4 @@
-package com.likelion.backendplus4.talkpick.batch.index.domain.model;
+package com.likelion.backendplus4.talkpick.batch.news.article.domain.model;
 
 import java.time.LocalDateTime;
 

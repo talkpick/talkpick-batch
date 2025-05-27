@@ -21,7 +21,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SetOperations;
 import org.springframework.stereotype.Component;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -31,31 +30,53 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String, String, String>> {
 
-	private final RedisTemplate<String, String> redisTemplate;
-
-	@Value("${chat.flush.delay}")
-	private long blockMillis;
-
-	private static final String STREAM_KEY_PREFIX = "chat:stream:";
+	private static final String STREAM_KEY_PREFIX = "chat:stream:*";
 	private static final String GROUP_SET_KEY = "chat:known-groups";
 	private static final String GROUP = "chatGroup";
 	private static final String CONSUMER = "batch-reader";
-	private static final int BATCH_SIZE = 100;
+
+	private final int batchSize;
+	private final long blockMillis;
 
 	private Iterator<MapRecord<String, String, String>> buffer;
+	private final RedisTemplate<String, String> redisTemplate;
 	private final List<MapRecord<String, String, String>> pendingToAck = new ArrayList<>();
 
+	public RedisStreamItemReader(
+		RedisTemplate<String, String> redisTemplate,
+		@Value("${chat.flush.delay}") long blockMillis,
+		@Value("${chat.flush.batch-size}") int batchSize) {
+		this.redisTemplate = redisTemplate;
+		this.blockMillis = blockMillis;
+		this.batchSize = batchSize;
+	}
+
+
+	/**
+	 * Batch 실행 시 이전 실행 상태에 관계없이 reader를 초기화합니다.
+	 *
+	 * @param executionContext 현재 스텝의 ExecutionContext
+	 * @throws ItemStreamException 초기화 실패 시 발생
+	 * @author 박찬병
+	 * @since 2025-05-27
+	 */
 	@Override
 	public void open(ExecutionContext executionContext) throws ItemStreamException {
 		this.buffer = null;
 	}
 
+	/**
+	 * Redis 스트림에서 배치 처리용 레코드를 한 개씩 읽어 반환합니다.
+	 *
+	 * @return 읽은 MapRecord 객체, 더 이상 읽을 레코드가 없으면 null
+	 * @author 박찬병
+	 * @since 2025-05-27
+	 */
 	@Override
 	public MapRecord<String, String, String> read() {
-		if (buffer == null || !buffer.hasNext()) {
+		if (null == buffer || !buffer.hasNext()) {
 			List<MapRecord<String, String, String>> recs = fetchRecords();
 			log.info("읽어온 recs = {}", recs.size());
 			if (recs.isEmpty()) {
@@ -68,7 +89,7 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 	}
 
 	/**
-	 * 읽어들인 레코드를 ACK 하여 재처리를 방지한다.
+	 * 읽어들인 레코드를 ACK 하여 재처리를 방지합니다.
 	 *
 	 * @since 2025-05-26
 	 */
@@ -86,6 +107,13 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 		pendingToAck.clear();
 	}
 
+	/**
+	 * 스트림 키 목록에서 레코드를 조회하여 반환합니다.
+	 *
+	 * @return 조회된 MapRecord 리스트, 없으면 빈 리스트
+	 * @author 박찬병
+	 * @since 2025-05-27
+	 */
 	private List<MapRecord<String, String, String>> fetchRecords() {
 		Set<String> keys = streamKeys();
 		if (keys.isEmpty()) {
@@ -97,13 +125,21 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 		keys.forEach(k -> offsets.add(StreamOffset.create(k, ReadOffset.lastConsumed())));
 
 		StreamReadOptions opts = StreamReadOptions.empty()
-			.count((long)BATCH_SIZE * keys.size())
+			.count((long) batchSize * keys.size())
 			.block(Duration.ofMillis(blockMillis / 2));
 
-		List<MapRecord<String, String, String>> result = getMapRecords(opts, offsets);
-		return result == null ? List.of() : result;
+		return getMapRecords(opts, offsets);
 	}
 
+	/**
+	 * 주어진 StreamReadOptions와 offsets로부터 MapRecord를 읽어 반환합니다.
+	 *
+	 * @param opts    스트림 읽기 옵션
+	 * @param offsets 읽기를 수행할 StreamOffset 리스트
+	 * @return 읽어온 MapRecord 리스트
+	 * @author 박찬병
+	 * @since 2025-05-27
+	 */
 	private List<MapRecord<String, String, String>> getMapRecords(StreamReadOptions opts,
 		List<StreamOffset<String>> offsets) {
 		return redisTemplate.opsForStream().read(Consumer.from(GROUP, CONSUMER),
@@ -112,15 +148,29 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 		);
 	}
 
+	/**
+	 * 사용 가능한 Redis 스트림 키들을 조회합니다.
+	 *
+	 * @return 스트림 키 세트
+	 * @author 박찬병
+	 * @since 2025-05-27
+	 */
 	private Set<String> streamKeys() {
-		return redisTemplate.keys(STREAM_KEY_PREFIX + "*");
+		return redisTemplate.keys(STREAM_KEY_PREFIX);
 	}
 
+	/**
+	 * 스트림 키에 대해 컨슈머 그룹을 생성하거나 이미 존재하면 무시합니다.
+	 *
+	 * @param streamKey 대상 스트림 키
+	 * @author 박찬병
+	 * @since 2025-05-27
+	 */
 	private void ensureGroup(String streamKey) {
 		SetOperations<String, String> setOps = redisTemplate.opsForSet();
 		Long added = setOps.add(GROUP_SET_KEY, streamKey);
 
-		if (added != null && added == 0L) {
+		if (null != added && 0L == added) {
 			return;
 		}
 
@@ -129,6 +179,10 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 
 	/**
 	 * 스트림 키에 대해 컨슈머 그룹을 생성합니다. BUSYGROUP 예외는 무시합니다.
+	 *
+	 * @param streamKey 대상 스트림 키
+	 * @author 박찬병
+	 * @since 2025-05-27
 	 */
 	private void createGroupSafe(String streamKey) {
 		try {

@@ -7,60 +7,84 @@ import org.springframework.batch.core.configuration.annotation.EnableBatchProces
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
-import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.database.JpaItemWriter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.stream.MapRecord;
 import org.springframework.transaction.PlatformTransactionManager;
-//
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.likelion.backendplus4.talkpick.batch.chat.exception.ChatBatchException;
-import com.likelion.backendplus4.talkpick.batch.chat.exception.error.ChatBatchErrorCode;
 import com.likelion.backendplus4.talkpick.batch.chat.infrastructure.adapter.out.batch.listener.RedisAckListener;
+import com.likelion.backendplus4.talkpick.batch.chat.infrastructure.adapter.out.batch.processor.ChatMessageItemProcessor;
 import com.likelion.backendplus4.talkpick.batch.chat.infrastructure.adapter.out.batch.reader.RedisStreamItemReader;
 import com.likelion.backendplus4.talkpick.batch.chat.infrastructure.adapter.out.jpa.entity.ChatMessageEntity;
-import com.likelion.backendplus4.talkpick.batch.chat.model.ChatMessage;
-import com.likelion.backendplus4.talkpick.batch.chat.support.mapper.ChatMessageMapper;
 
 import jakarta.persistence.EntityManagerFactory;
 import lombok.RequiredArgsConstructor;
 
-
+/**
+ * Redis 스트림으로부터 채팅 메시지를 읽어와 JPA로 영속화하는 배치 잡을 설정하는 구성 클래스입니다.
+ *
+ * @since 2025-05-27
+ */
 @Configuration
 @EnableBatchProcessing
 @RequiredArgsConstructor
 public class ChatBatchConfig {
 
+    private static final String STEP_NAME = "chatFlushStep";
+    private static final String JOB_NAME = "chatFlushJob";
+
 	private final RedisStreamItemReader reader;
 	private final RedisAckListener redisAckListener;
-	private final ObjectMapper objectMapper;
 	private final EntityManagerFactory emf;
 	private final JobRepository jobRepository;
+	private final ChatMessageItemProcessor processor;
 	private final PlatformTransactionManager transactionManager;
 
+	/**
+	 * Redis 스트림에서 읽은 메시지를 처리하여 DB에 저장하는 Step을 생성합니다.
+	 *
+	 * @return 채팅 플러시를 수행하는 Step 객체
+	 * @author 박찬병
+	 * @since 2025-05-27
+	 */
 	@Bean
 	public Step chatFlushStep() {
-		return new StepBuilder("chatFlushStep", jobRepository)
+		return new StepBuilder(STEP_NAME, jobRepository)
 			.<MapRecord<String, String, String>, ChatMessageEntity>chunk(100, transactionManager)
 			.reader(reader)
-			.processor(processor())
+			.processor(processor)
 			.writer(writer())
 			.listener(redisAckListener)
 			.faultTolerant()
-				.retryLimit(3)
-				.retry(ChatBatchException.class)
+			.retryLimit(3)
+			.retry(ChatBatchException.class)
 			.build();
 	}
 
+	/**
+	 * chatFlushStep을 실행하는 배치 Job을 생성합니다.
+	 *
+	 * @return 채팅 플러시 배치 Job 객체
+	 * @author 박찬병
+	 * @since 2025-05-27
+	 */
 	@Bean
 	public Job chatFlushJob() {
-		return new JobBuilder("chatFlushJob", jobRepository)
+		return new JobBuilder(JOB_NAME, jobRepository)
 			.incrementer(new RunIdIncrementer())
 			.start(chatFlushStep())
 			.build();
 	}
 
+	/**
+	 * ChatMessageEntity를 저장하기 위한 JpaItemWriter 빈을 정의합니다.
+	 *
+	 * @return JpaItemWriter<ChatMessageEntity> 객체
+	 * @author 박찬병
+	 * @since 2025-05-27
+	 */
 	@Bean
 	public JpaItemWriter<ChatMessageEntity> writer() {
 		JpaItemWriter<ChatMessageEntity> writer = new JpaItemWriter<>();
@@ -69,18 +93,4 @@ public class ChatBatchConfig {
 		return writer;
 	}
 
-	private ItemProcessor<MapRecord<String, String, String>, ChatMessageEntity> processor() {
-		return record -> {
-			try {
-				ChatMessage domain = objectMapper.readValue(
-					record.getValue().get("payload"),
-					ChatMessage.class
-				);
-				return ChatMessageMapper.toEntityFromDomain(domain);
-			} catch (Exception e) {
-				throw new ChatBatchException(
-					ChatBatchErrorCode.STREAM_READ_ERROR, e);
-			}
-		};
-	}
 }

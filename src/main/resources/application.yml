@@ -98,3 +98,4 @@ management:
 chat:
   flush:
     delay: 30000
+    batch-size: 100

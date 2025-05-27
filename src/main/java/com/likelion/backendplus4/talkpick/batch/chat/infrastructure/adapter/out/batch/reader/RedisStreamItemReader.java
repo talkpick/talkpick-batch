@@ -190,7 +190,7 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 				.createGroup(streamKey, ReadOffset.from("0"), GROUP);
 		} catch (Exception ex) {
 			if (!String.valueOf(ex.getMessage()).contains("BUSYGROUP")) {
-				log.error("Failed to create consumer group for stream {}", streamKey, ex);
+				log.error("스트림 {}에 대한 컨슈머 그룹 생성에 실패했습니다.", streamKey, ex);
 			}
 		}
 	}

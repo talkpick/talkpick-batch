@@ -2,6 +2,7 @@ package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.ada
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.time.LocalDateTime;
@@ -131,10 +132,12 @@ public class RssFeedReader {
 	 * @throws RuntimeException 유효하지 않은 URL 형식일 경우
 	 * @author 양병학
 	 * @since 2025-05-10
+	 * @modified 2025-05-29
+	 * 2025-05-29 - deprecated 된 생성자 삭제 (Java21부터 변경)
 	 */
 	private URL getURL(String feedUrl) {
 		try {
-			return new URL(feedUrl);
+			return URI.create(feedUrl).toURL();
 		} catch (MalformedURLException e) {
 			throw new RuntimeException(e);
 		}

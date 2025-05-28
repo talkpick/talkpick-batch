@@ -95,6 +95,10 @@ public class ArticleEntity {
 	@Column(name = "summary_vector", columnDefinition = "JSON")
 	private float[] summaryVector;
 
+	@Setter
+	@Column(name = "view_count", nullable = false)
+	private Long viewCount;
+
 	public ArticleEntity changeSummaryVector(float[] vector) {
 		summaryVector = vector;
 		return this;

@@ -2,16 +2,13 @@ package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.ada
 
 import org.quartz.CronScheduleBuilder;
 import org.quartz.JobDetail;
-import org.quartz.Scheduler;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.quartz.SchedulerFactoryBeanCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
-import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 
 import lombok.extern.slf4j.Slf4j;
 

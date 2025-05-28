@@ -5,8 +5,6 @@ import org.quartz.JobDetail;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import lombok.RequiredArgsConstructor;
-
 @Configuration
 public class IndexScheduleJobDetail {
 	private final String indexJobDetailName = "indexJobDetail";

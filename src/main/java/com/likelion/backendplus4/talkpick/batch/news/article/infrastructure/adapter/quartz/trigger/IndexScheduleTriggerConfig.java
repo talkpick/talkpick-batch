@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 
-import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.adapter.quartz.adapter.job.IndexScheduleJobDetail;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.adapter.quartz.job.IndexQuartzJobDetail;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,7 +29,7 @@ public class IndexScheduleTriggerConfig {
 	public IndexScheduleTriggerConfig(
 		@Value("${spring.quartz.article-indexer.cron}")
 		String cronExpression,
-		@Qualifier(IndexScheduleJobDetail.indexJobDetailName)
+		@Qualifier(IndexQuartzJobDetail.indexJobDetailName)
 		JobDetail indexJobDetail) {
 		log.info("Index - Quartz Trigger 등록: cron =  {}", cronExpression);
 
@@ -48,11 +48,11 @@ public class IndexScheduleTriggerConfig {
 	 * @since 2025-05-29
 	 */
 	@Bean
-	@DependsOn(IndexScheduleJobDetail.indexJobDetailName)
+	@DependsOn(IndexQuartzJobDetail.indexJobDetailName)
 	public Trigger indexJobTrigger() {
 		return TriggerBuilder.newTrigger()
 			.forJob(indexJobDetail)
-			.withIdentity(IndexScheduleJobDetail.indexJobDetailName + "trigger")
+			.withIdentity(IndexQuartzJobDetail.indexJobDetailName + "trigger")
 			.withSchedule(CronScheduleBuilder.cronSchedule(cronExpression))
 			.build();
 

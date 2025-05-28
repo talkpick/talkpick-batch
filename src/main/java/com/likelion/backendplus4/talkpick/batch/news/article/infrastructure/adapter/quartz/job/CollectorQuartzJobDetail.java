@@ -20,7 +20,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 public class CollectorQuartzJobDetail {
-	private final String articleCollectorJobDetailName = "articleCollectorJobDetail";
+	public final String articleCollectorJobDetailName = "articleCollectorJobDetail";
 
 
 	/**

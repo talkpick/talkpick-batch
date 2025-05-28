@@ -16,7 +16,6 @@ import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
 import org.springframework.stereotype.Component;
 
-import com.likelion.backendplus4.talkpick.batch.news.article.application.port.out.NewsInfoIndexRepositoryPort;
 import com.likelion.backendplus4.talkpick.batch.news.article.domain.model.NewsInfo;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.adapter.elasticsearch.document.NewsInfoDocument;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.adapter.elasticsearch.mapper.NewsInfoDocumentMapper;
@@ -32,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Component
-public class ElasticsearchNewsInfoAdapter implements NewsInfoIndexRepositoryPort {
+public class ElasticsearchNewsInfoAdapter {
 	private static final int MAX_ITEM_COUNT = 100;
 	private final ElasticsearchOperations esOperations;
 	private final NewsInfoDocumentMapper mapper;
@@ -67,7 +66,6 @@ public class ElasticsearchNewsInfoAdapter implements NewsInfoIndexRepositoryPort
 	 * @author 정안식
 	 * @since 2025-05-15
 	 */
-	@Override
 	public int saveAll(List<NewsInfo> newsList) {
 		int totalIndexed = 0;
 

@@ -16,11 +16,12 @@ import lombok.RequiredArgsConstructor;
  * 뉴스 데이터 일괄 색인을 위한 REST 컨트롤러
  *
  * @since 2025-05-15
+ * @modified 2025-05-29
  */
 @RestController
 @RequestMapping("/news")
 @RequiredArgsConstructor
-public class NewsIndexController {
+public class ArticleIndexController {
 
 	private final NewsIndexUseCase indexUseCase;
 
@@ -30,12 +31,14 @@ public class NewsIndexController {
 	 * @return ApiResponse에 래핑된 색인된 뉴스 건수
 	 * @author 정안식
 	 * @since 2025-05-15
+	 * @modified 2025-05-29 함예정
+	 * 25-05-29 - 쿼츠 전환으로 저장된 개수 반환 불가에 따른 반환 타입 수정 (int -> void)
 	 */
 	@EntryExitLog
 	@TimeTracker
 	@PostMapping("/index")
-	public ResponseEntity<ApiResponse<Integer>> indexAllNews() {
-		int count = indexUseCase.indexAllNewsInfo();
-		return ApiResponse.success(count);
+	public ResponseEntity<ApiResponse<Void>> indexAllNews() {
+		indexUseCase.indexAllNewsInfo();
+		return ApiResponse.success();
 	}
 }

@@ -22,7 +22,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Service
 public class NewsIndexService implements NewsIndexUseCase {
-	private final NewsInfoProviderPort newsInfoProviderPort;
 	private final NewsInfoIndexRepositoryPort newsInfoIndexRepositoryPort;
 
 	/**
@@ -31,11 +30,12 @@ public class NewsIndexService implements NewsIndexUseCase {
 	 * @return 색인된 뉴스 정보 건수
 	 * @author 정안식
 	 * @since 2025-05-15
+	 * @modified 2025-05-29 함예정
+	 * 25-05-29 - 쿼츠 전환으로 저장된 개수 반환 불가에 따른 반환 타입 수정 (int -> void)
 	 */
 	@EntryExitLog()
 	@Override
-	public int indexAllNewsInfo() {
-		List<NewsInfo> newsInfoList = newsInfoProviderPort.fetchAll();
-		return newsInfoIndexRepositoryPort.saveAll(newsInfoList);
+	public void indexAllNewsInfo() {
+		newsInfoIndexRepositoryPort.saveAll();
 	}
 }

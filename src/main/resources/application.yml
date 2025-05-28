@@ -29,6 +29,11 @@ spring:
       idle-timeout: 30000
       max-lifetime: 1800000
       connection-timeout: 30000
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
   jpa:
     database-platform: org.hibernate.dialect.MySQL8Dialect
     hibernate:
@@ -55,6 +60,22 @@ spring:
       cron: "0 */3 * * * ?"
     article-indexer:
       cron: "0 */5 * * * ?"
+    view-count-sync:
+      cron: "0 0 0 * * ?"
+
+log:
+  rolling:
+    directory: logs
+    file-name: talkpick-batch.log
+    pattern: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - [TraceId: %X{traceId:-no-trace}] - %msg%n"
+    max-history: 30
+    total-size-cap: 10MB
+
+logging:
+  level:
+    org.quartz: DEBUG
+  file:
+    name: talkpick-batch.log
 decorator:
   datasource:
     p6spy:
@@ -62,6 +83,9 @@ decorator:
 news:
   index:
     name: news_index
+    
+  viewcount:
+    valid-prefixes: KM,DA,KH
     
 management:
   endpoints:
@@ -76,7 +100,3 @@ management:
         http:
           server:
             requests: 'true'
-logging:
-  level:
-    root: INFO
-    org.quartz: DEBUG

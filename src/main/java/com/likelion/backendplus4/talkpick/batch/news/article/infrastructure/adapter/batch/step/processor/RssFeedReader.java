@@ -48,7 +48,7 @@ public class RssFeedReader {
      * @param mapperType 매퍼 타입 (언론사 코드)
      * @return 파싱 및 필터링된 SyndEntry 목록
      * @modified 2025-05-18 최신 발행일 이후 데이터만 필터링하는 기능 추가
-     * @author 함예정
+     * @author 양병학
      * @since 2025-05-10
      */
     public List<SyndEntry> getFeed(String feedUrl, String mapperType) {
@@ -70,6 +70,8 @@ public class RssFeedReader {
      *
      * @param mapperType 매퍼 타입 (언론사 코드)
      * @return 최신 발행일 또는 기본값
+	 * @author 양병학
+	 * @since 2025-05-10
      */
     private LocalDateTime getLatestPubDate(String mapperType) {
         LocalDateTime latestPubDate = rssNewsRepository.findLatestPubDateByGuidPrefix(mapperType);
@@ -93,6 +95,8 @@ public class RssFeedReader {
      * @param entry         RSS 항목
      * @param latestPubDate 최신 발행일
      * @return 최신 발행일 이후면 true
+	 * @author 양병학
+	 * @since 2025-05-10
      */
     private boolean isAfterLatestPubDate(SyndEntry entry, LocalDateTime latestPubDate) {
         if (null == entry.getPublishedDate()) {
@@ -112,6 +116,8 @@ public class RssFeedReader {
      *
      * @param date 변환할 Date 객체
      * @return 변환된 LocalDateTime
+	 * @author 양병학
+	 * @since 2025-05-10
      */
     private LocalDateTime convertToLocalDateTime(Date date) {
         return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
@@ -123,8 +129,8 @@ public class RssFeedReader {
 	 * @param feedUrl 문자열 형태의 URL
 	 * @return URL 객체
 	 * @throws RuntimeException 유효하지 않은 URL 형식일 경우
+	 * @author 양병학
 	 * @since 2025-05-10
-	 * @author 함예정
 	 */
 	private URL getURL(String feedUrl) {
 		try {
@@ -140,8 +146,8 @@ public class RssFeedReader {
 	 * @param url 연결할 URL 객체
 	 * @return 설정된 타임아웃을 가진 URLConnection 객체
 	 * @throws RuntimeException 연결 중 IOException이 발생할 경우 런타임 예외로 래핑하여 던짐
-	 * @author 함예정
-	 * @since 2025-05-12
+	 * @author 양병학
+	 * @since 2025-05-10
 	 */
 	private URLConnection openConnectionWithTimeout(URL url) {
 		try {
@@ -160,8 +166,8 @@ public class RssFeedReader {
 	 * @param connection RSS 피드를 제공하는 URLConnection 객체
 	 * @return 파싱된 SyndEntry 객체 리스트
 	 * @throws ArticleCollectorException RSS 피드 파싱 중 오류가 발생한 경우 사용자 정의 예외로 래핑하여 던짐
-	 * @author 함예정
-	 * @since 2025-05-12
+	 * @author 양병학
+	 * @since 2025-05-10
 	 */
 	private List<SyndEntry> parseRssEntries(URLConnection connection) {
 		try (XmlReader reader = new XmlReader(connection)) {

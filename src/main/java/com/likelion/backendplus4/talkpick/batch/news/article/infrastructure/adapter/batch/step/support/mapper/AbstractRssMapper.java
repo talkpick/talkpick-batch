@@ -57,6 +57,7 @@ public abstract class AbstractRssMapper {
                 .guid(guid)
                 .description(result.getDescription())
                 .imageUrl(result.getImageUrl())
+                .viewCount(0L)
                 .build();
     }
 

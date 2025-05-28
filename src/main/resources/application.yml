@@ -52,9 +52,9 @@ spring:
     article-collector:
       cron: "0 */1 * * * ?"
     article-embedding:
-      cron: "0 */5 * * * ?"
+      cron: "0 */3 * * * ?"
     article-indexer:
-      cron: "0 */1 * * * ?"
+      cron: "0 */5 * * * ?"
 decorator:
   datasource:
     p6spy:

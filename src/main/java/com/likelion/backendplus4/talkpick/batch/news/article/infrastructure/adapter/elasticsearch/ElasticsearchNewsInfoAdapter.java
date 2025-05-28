@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
  * Spring Data Elasticsearch를 이용해 뉴스 정보를 Bulk 색인하고 저장된 개수를 반환하는 어댑터
  *
  * @since 2025-05-15
- * @modified 2025-05-19
+ * @modified 2025-05-29
  */
 @Slf4j
 @Component

@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.elasticsearch.BulkFailureException;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.IndexedObjectInformation;
@@ -22,6 +23,7 @@ import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.adap
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.adapter.elasticsearch.mapper.NewsInfoDocumentMapper;
 
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Spring Data Elasticsearch를 이용해 뉴스 정보를 Bulk 색인하고 저장된 개수를 반환하는 어댑터
@@ -29,6 +31,7 @@ import jakarta.annotation.PostConstruct;
  * @since 2025-05-15
  * @modified 2025-05-19
  */
+@Slf4j
 @Component
 public class ElasticsearchNewsInfoAdapter implements NewsInfoIndexRepositoryPort {
 	private static final int MAX_ITEM_COUNT = 100;
@@ -122,10 +125,22 @@ public class ElasticsearchNewsInfoAdapter implements NewsInfoIndexRepositoryPort
 				"type", "text",
 				"analyzer", NewsInfoDocument.ANALYZER_NORI,
 				"fields", Map.of(NewsInfoDocument.FIELD_KEYWORD, Map.of("type", "keyword")))),
+			//YJ 수정
 			Map.entry(NewsInfoDocument.FIELD_CONTENT, Map.of(
 				"type", "text",
 				"analyzer", NewsInfoDocument.ANALYZER_NORI,
-				"fields", Map.of(NewsInfoDocument.FIELD_KEYWORD, Map.of("type", "keyword", "ignore_above", 32766)))),
+				"term_vector", "with_positions_offsets"
+				/*
+				"fields", Map.of(
+					"ngram", Map.of(
+						"type", "text",
+						"analyzer", "nori_ngram_analyzer"
+					)
+				)
+
+				*/
+			)),
+			//YJ 수정끝
 			Map.entry(NewsInfoDocument.FIELD_PUBLISHED_AT, Map.of(
 				"type", "date")),
 			Map.entry(NewsInfoDocument.FIELD_IMAGE_URL, Map.of(
@@ -183,7 +198,22 @@ public class ElasticsearchNewsInfoAdapter implements NewsInfoIndexRepositoryPort
 				bulkOptions,
 				indexOperations.getIndexCoordinates()
 			);
-		} catch (Exception e) {
+		}
+		catch (BulkFailureException bfe) {
+			// 여기서 실패한 문서별 정보를 찍어 봅니다
+			bfe.getFailedDocuments().forEach((id, failure) -> {
+				log.error("▶ failed to index id={} status={} error=\"{}\" rejectedValue={}",
+					id,
+					failure.status(),
+					failure.errorMessage(),
+					"리젝트");
+			});
+			// 원래 예외를 다시 던져서 Quartz job이 실패하도록 하거나,
+			// 필요한 경우 재시도 로직을 넣으셔도 좋습니다.
+			throw bfe;
+		}
+
+		catch (Exception e) {
 			throw new RuntimeException("Failed to bulk index documents into [" + indexName + "]", e);
 		}
 	}

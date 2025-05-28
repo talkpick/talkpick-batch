@@ -32,20 +32,23 @@ public class IndexScheduleJob implements Job {
 	public void execute(JobExecutionContext jobExecutionContext) {
 		try {
 			log.info("IndexScheduleJob 시작");
-			if(jobExecutionContext != null) {
-				JobDataMap jobDataMap = jobExecutionContext.getJobDetail().getJobDataMap();
-				long lastIndex = getLastIndexItemId(jobDataMap);
-				log.info("|- lastIndex = {}", lastIndex);
-			}
+			JobDataMap jobDataMap = jobExecutionContext.getJobDetail().getJobDataMap();
+			long lastIndex = getLastIndexItemId(jobDataMap);
 
-			List<ArticleEntity> articleEntities = getArticleEntities(1103);
+			log.info(" - lastIndex = {}", lastIndex);
+
+			List<ArticleEntity> articleEntities = getArticleEntities(lastIndex);
+
+			if(articleEntities == null || articleEntities.isEmpty()) {
+				return;
+			}
 
 			List<NewsInfo> newsInfos = articleEntities.stream()
 				.map(ArticleEntityMapper::toDomainFromEntity)
 				.toList();
 			elasticsearchAdapter.saveAll(newsInfos);
 
-			// saveLastIndex(articleEntities.getLast().getId(), jobDataMap);
+			saveLastIndex(articleEntities.getLast().getId(), jobDataMap);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -54,17 +57,24 @@ public class IndexScheduleJob implements Job {
 
 	private void saveLastIndex(long lastId, JobDataMap jobDataMap){
 		jobDataMap.put(LAST_INDEX_ITEM_ID, lastId);
-		log.info("|- savelastId = {}", lastId);
+		log.info(" - savelastId = {}", lastId);
 
 	}
 	private List<ArticleEntity> getArticleEntities(long lastIndex) {
-		return newsInfoJpaRepository.findAllByIdGreaterThanOrderById(lastIndex);
+		return newsInfoJpaRepository.findAllBySummaryVectorIsNotNullAndIdGreaterThanOrderById(lastIndex);
 	}
 
 	private long getLastIndexItemId(JobDataMap jobDataMap) {
-		return jobDataMap.containsKey(LAST_INDEX_ITEM_ID) ?
-			jobDataMap.getLong("lastIndexItemId") :
-			newsInfoJpaRepository.findMinIdBySummaryIsNotNull();
+		if(jobDataMap.containsKey(LAST_INDEX_ITEM_ID)){
+			return jobDataMap.getLong("lastIndexItemId");
+		}
+		Long firstExecuteIndex = newsInfoJpaRepository.findMinIdBySummaryVectorIsNotNull();
+
+		if(firstExecuteIndex != null) {
+			return firstExecuteIndex;
+		}
+
+		return 1L;
 	}
 
 

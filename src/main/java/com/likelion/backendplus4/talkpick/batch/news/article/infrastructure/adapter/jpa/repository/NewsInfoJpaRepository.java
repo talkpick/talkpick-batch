@@ -27,7 +27,7 @@ public interface NewsInfoJpaRepository extends JpaRepository<ArticleEntity, Long
 	LocalDateTime findLatestPubDateByGuidPrefix(@Param("guidPrefix") String guidPrefix);
 
 	@Query(value = "SELECT MIN(id) FROM article WHERE summary_vector IS NOT NULL", nativeQuery = true)
-	Long findMinIdBySummaryIsNotNull();
+	Long findMinIdBySummaryVectorIsNotNull();
 
-	List<ArticleEntity> findAllByIdGreaterThanOrderById(long id);
+	List<ArticleEntity> findAllBySummaryVectorIsNotNullAndIdGreaterThanOrderById(long id);
 }

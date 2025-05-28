@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.elasticsearch.BulkFailureException;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.IndexedObjectInformation;
@@ -114,7 +113,8 @@ public class ElasticsearchNewsInfoAdapter implements NewsInfoIndexRepositoryPort
 	 * @return 매핑 프로퍼티 맵
 	 * @author 정안식
 	 * @since 2025-05-15
-	 * @modified 2025-05-19
+	 * @modified 2025-05-29
+	 * 25-05-29 - FIELD_CONTENT 타입 변경 (keyword > text)
 	 * 25-05-19 - summary 및 summary_vector 필드 추가
 	 */
 	private Map<String, Object> mappingProperties() {
@@ -125,22 +125,23 @@ public class ElasticsearchNewsInfoAdapter implements NewsInfoIndexRepositoryPort
 				"type", "text",
 				"analyzer", NewsInfoDocument.ANALYZER_NORI,
 				"fields", Map.of(NewsInfoDocument.FIELD_KEYWORD, Map.of("type", "keyword")))),
-			//YJ 수정
+
+			/* TODO: Merge전에 삭제해야할 주석입니다.
+			예정 수정
+			FIELD_CONTENT를 KEYWORD 타입을 쓰면 계속 오류가 발생해서
+			Text 타입으로 바꾸고, nori 분석기를 붙혔습니다.
+			검색에 오류가 있는지 확인 부탁드립니다.
+
+			제가 테스트한 것은 색인까지 잘 진행되는지까지 테스트하였습니다.
+
+			타이틀처럼 TEXT로 하고,
+			필드에 keyword를 넣는 방식으로 해도 되는지도 같이 점검해주시면 좋겠습니다.
+			*/
 			Map.entry(NewsInfoDocument.FIELD_CONTENT, Map.of(
 				"type", "text",
 				"analyzer", NewsInfoDocument.ANALYZER_NORI,
 				"term_vector", "with_positions_offsets"
-				/*
-				"fields", Map.of(
-					"ngram", Map.of(
-						"type", "text",
-						"analyzer", "nori_ngram_analyzer"
-					)
-				)
-
-				*/
 			)),
-			//YJ 수정끝
 			Map.entry(NewsInfoDocument.FIELD_PUBLISHED_AT, Map.of(
 				"type", "date")),
 			Map.entry(NewsInfoDocument.FIELD_IMAGE_URL, Map.of(
@@ -185,36 +186,16 @@ public class ElasticsearchNewsInfoAdapter implements NewsInfoIndexRepositoryPort
 	 * @author 정안식
 	 * @since 2025-05-15
 	 */
-	private List<IndexedObjectInformation> bulkIndex(IndexOperations indexOperations,
-		List<IndexQuery> queries) {
+	private List<IndexedObjectInformation> bulkIndex(IndexOperations indexOperations, List<IndexQuery> queries) {
+		BulkOptions bulkOptions = BulkOptions.builder()
+			.withRefreshPolicy(RefreshPolicy.NONE)
+			.build();
 
-		try {
-			BulkOptions bulkOptions = BulkOptions.builder()
-				.withRefreshPolicy(RefreshPolicy.NONE)
-				.build();
-
-			return esOperations.bulkIndex(
-				queries,
-				bulkOptions,
-				indexOperations.getIndexCoordinates()
-			);
-		}
-		catch (BulkFailureException bfe) {
-			// 여기서 실패한 문서별 정보를 찍어 봅니다
-			bfe.getFailedDocuments().forEach((id, failure) -> {
-				log.error("▶ failed to index id={} status={} error=\"{}\" rejectedValue={}",
-					id,
-					failure.status(),
-					failure.errorMessage(),
-					"리젝트");
-			});
-			// 원래 예외를 다시 던져서 Quartz job이 실패하도록 하거나,
-			// 필요한 경우 재시도 로직을 넣으셔도 좋습니다.
-			throw bfe;
-		}
-
-		catch (Exception e) {
-			throw new RuntimeException("Failed to bulk index documents into [" + indexName + "]", e);
-		}
+		return esOperations.bulkIndex(
+			queries,
+			bulkOptions,
+			indexOperations.getIndexCoordinates()
+		);
 	}
+}
 }

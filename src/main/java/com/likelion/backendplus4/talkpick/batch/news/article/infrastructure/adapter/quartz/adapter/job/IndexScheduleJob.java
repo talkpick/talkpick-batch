@@ -48,7 +48,7 @@ public class IndexScheduleJob implements Job {
 	 */
 	@Override
 	public void execute(JobExecutionContext jobExecutionContext) {
-		JobDataManager jobData = JobDataManagerBuilder.getInstance(jobExecutionContext);
+		JobDataManager jobData = JobDataManagerBuilder.buildJobManager(jobExecutionContext);
 		long lastIndex = getLastIndexItemId(jobData);
 
 		List<ArticleEntity> articleEntities = getArticleEntities(lastIndex);

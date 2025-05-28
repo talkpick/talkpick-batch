@@ -7,9 +7,9 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class IndexScheduleJobDetail {
-	private final String indexJobDetailName = "indexJobDetail";
+	public static final String indexJobDetailName = "indexJobDetail";
 
-	@Bean("indexJobDetail")
+	@Bean(indexJobDetailName)
 	public JobDetail indexJobDetail() {
 		return JobBuilder.newJob(IndexScheduleJob.class)
 			.withIdentity(indexJobDetailName)

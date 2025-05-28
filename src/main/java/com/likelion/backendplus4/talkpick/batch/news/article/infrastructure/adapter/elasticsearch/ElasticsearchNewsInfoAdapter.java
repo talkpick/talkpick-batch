@@ -31,7 +31,7 @@ import jakarta.annotation.PostConstruct;
  */
 @Component
 public class ElasticsearchNewsInfoAdapter implements NewsInfoIndexRepositoryPort {
-
+	private static final int MAX_ITEM_COUNT = 100;
 	private final ElasticsearchOperations esOperations;
 	private final NewsInfoDocumentMapper mapper;
 	private final String indexName;
@@ -67,10 +67,22 @@ public class ElasticsearchNewsInfoAdapter implements NewsInfoIndexRepositoryPort
 	 */
 	@Override
 	public int saveAll(List<NewsInfo> newsList) {
-		List<IndexQuery> queries = toIndexQueries(newsList);
-		List<IndexedObjectInformation> result = bulkIndex(indexOperations, queries);
+		int totalIndexed = 0;
 
-		return result.size();
+		if (newsList.isEmpty()) {
+			return 0;
+		}
+
+		for (int start = 0; start < newsList.size(); start += MAX_ITEM_COUNT) {
+			int end = Math.min(start + MAX_ITEM_COUNT, newsList.size());
+			List<NewsInfo> chunk = newsList.subList(start, end);
+
+			List<IndexQuery> queries = toIndexQueries(chunk);
+			List<IndexedObjectInformation> result = bulkIndex(indexOperations, queries);
+			totalIndexed += result.size();
+		}
+
+		return totalIndexed;
 	}
 
 	/**
@@ -113,7 +125,7 @@ public class ElasticsearchNewsInfoAdapter implements NewsInfoIndexRepositoryPort
 			Map.entry(NewsInfoDocument.FIELD_CONTENT, Map.of(
 				"type", "text",
 				"analyzer", NewsInfoDocument.ANALYZER_NORI,
-				"fields", Map.of(NewsInfoDocument.FIELD_KEYWORD, Map.of("type", "keyword")))),
+				"fields", Map.of(NewsInfoDocument.FIELD_KEYWORD, Map.of("type", "keyword", "ignore_above", 32766)))),
 			Map.entry(NewsInfoDocument.FIELD_PUBLISHED_AT, Map.of(
 				"type", "date")),
 			Map.entry(NewsInfoDocument.FIELD_IMAGE_URL, Map.of(

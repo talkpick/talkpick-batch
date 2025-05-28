@@ -1,6 +1,7 @@
 package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.adapter.jpa.repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -19,7 +20,14 @@ public interface NewsInfoJpaRepository extends JpaRepository<ArticleEntity, Long
 	 *
 	 * @param guidPrefix 언론사 GUID 접두어 (예: "KM", "DA", "KH")
 	 * @return 가장 최신 발행일
+	 * @author 함예정
+	 * @since 2025-05-16
 	 */
 	@Query("SELECT MAX(a.pubDate) FROM ArticleEntity a WHERE a.guid LIKE CONCAT(:guidPrefix, '%')")
 	LocalDateTime findLatestPubDateByGuidPrefix(@Param("guidPrefix") String guidPrefix);
+
+	@Query(value = "SELECT MIN(id) FROM article WHERE summary_vector IS NOT NULL", nativeQuery = true)
+	Long findMinIdBySummaryIsNotNull();
+
+	List<ArticleEntity> findAllByIdGreaterThanOrderById(long id);
 }

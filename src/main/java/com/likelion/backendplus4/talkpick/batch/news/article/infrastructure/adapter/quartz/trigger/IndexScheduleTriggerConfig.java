@@ -43,11 +43,4 @@ public class IndexScheduleTriggerConfig {
 			.build();
 
 	}
-
-	@Bean
-	public SchedulerFactoryBeanCustomizer schedulerFactoryBean() {
-		return (SchedulerFactoryBeanCustomizer) schedulerFactoryBean -> {
-			schedulerFactoryBean.setGlobalJobListeners(new GlobalJobListener());
-		};
-	}
 }

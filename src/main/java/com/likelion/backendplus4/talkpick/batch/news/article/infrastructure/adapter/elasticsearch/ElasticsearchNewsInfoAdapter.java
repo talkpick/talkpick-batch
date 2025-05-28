@@ -114,7 +114,7 @@ public class ElasticsearchNewsInfoAdapter implements NewsInfoIndexRepositoryPort
 	 * @author 정안식
 	 * @since 2025-05-15
 	 * @modified 2025-05-29
-	 * 25-05-29 - FIELD_CONTENT 타입 변경 (keyword > text)
+	 * 25-05-29 - FIELD_CONTENT 타입 변경 (keyword > text) - 함예정
 	 * 25-05-19 - summary 및 summary_vector 필드 추가
 	 */
 	private Map<String, Object> mappingProperties() {
@@ -127,7 +127,7 @@ public class ElasticsearchNewsInfoAdapter implements NewsInfoIndexRepositoryPort
 				"fields", Map.of(NewsInfoDocument.FIELD_KEYWORD, Map.of("type", "keyword")))),
 
 			/* TODO: Merge전에 삭제해야할 주석입니다.
-			예정 수정
+			== 예정 수정 안내 ==
 			FIELD_CONTENT를 KEYWORD 타입을 쓰면 계속 오류가 발생해서
 			Text 타입으로 바꾸고, nori 분석기를 붙혔습니다.
 			검색에 오류가 있는지 확인 부탁드립니다.
@@ -197,5 +197,4 @@ public class ElasticsearchNewsInfoAdapter implements NewsInfoIndexRepositoryPort
 			indexOperations.getIndexCoordinates()
 		);
 	}
-}
 }

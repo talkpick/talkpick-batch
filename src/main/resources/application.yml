@@ -48,7 +48,7 @@ spring:
   quartz:
     job-store-type: jdbc
     jdbc:
-      initialize-schema: always
+      initialize-schema: embedded
     article-collector:
       cron: "0 */1 * * * ?"
     article-embedding:

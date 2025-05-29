@@ -10,9 +10,10 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum ChatBatchErrorCode implements ErrorCode {
+
+	REDIS_GROUP_CREATE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, 430001, "Redis 스트림 컨슈머 그룹 생성에 실패했습니다."),
 	STREAM_READ_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, 460001, "Redis Stream 읽기 실패"),
 	BATCH_LAUNCH_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, 460002, "Batch 실행 실패");
-
 	private final HttpStatus status;
 	private final int code;
 	private final String message;

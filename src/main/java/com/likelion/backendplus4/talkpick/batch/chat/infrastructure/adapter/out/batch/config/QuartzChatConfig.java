@@ -28,7 +28,7 @@ public class QuartzChatConfig {
     private static final String TRIGGER_NAME = "chatFlushQuartzTrigger";
     private static final String GROUP_NAME = "chatGroup";
 
-	@Value("${chat.flush.delay}")
+	@Value("${chat.flush.interval}")
 	private Long flushDelayMillis;
 
 	/**

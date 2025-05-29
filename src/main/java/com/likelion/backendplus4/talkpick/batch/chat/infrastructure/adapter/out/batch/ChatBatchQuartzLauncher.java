@@ -1,5 +1,6 @@
 package com.likelion.backendplus4.talkpick.batch.chat.infrastructure.adapter.out.batch;
 
+import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParametersBuilder;
@@ -16,6 +17,7 @@ import com.likelion.backendplus4.talkpick.batch.chat.exception.error.ChatBatchEr
  * @since 2025-05-27
  */
 @Component
+@DisallowConcurrentExecution
 @RequiredArgsConstructor
 public class ChatBatchQuartzLauncher implements org.quartz.Job {
 

@@ -34,6 +34,8 @@ public class ChatBatchConfig {
 
     private static final String STEP_NAME = "chatFlushStep";
     private static final String JOB_NAME = "chatFlushJob";
+	private static final int RETRY_COUNT = 3;
+	private static final int SKIP_COUNT = 10;
 
 	private final RedisStreamItemReader reader;
 	private final RedisAckListener redisAckListener;
@@ -58,8 +60,10 @@ public class ChatBatchConfig {
 			.writer(writer())
 			.listener(redisAckListener)
 			.faultTolerant()
-			.retryLimit(3)
+			.retryLimit(RETRY_COUNT)
 			.retry(ChatBatchException.class)
+			.skipLimit(SKIP_COUNT)
+			.skip(ChatBatchException.class)
 			.build();
 	}
 

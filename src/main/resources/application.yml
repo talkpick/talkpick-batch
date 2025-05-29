@@ -97,5 +97,5 @@ management:
 
 chat:
   flush:
-    delay: ${CHAT_BATCH_DELAY:30000}
+    interval: ${CHAT_BATCH_INTERVAL:30000}
     batch-size: ${CHAT_BATCH_SIZE:100}

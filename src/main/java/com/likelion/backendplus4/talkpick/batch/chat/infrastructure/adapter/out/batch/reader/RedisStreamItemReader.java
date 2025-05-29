@@ -21,6 +21,9 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SetOperations;
 import org.springframework.stereotype.Component;
 
+import com.likelion.backendplus4.talkpick.batch.chat.exception.ChatBatchException;
+import com.likelion.backendplus4.talkpick.batch.chat.exception.error.ChatBatchErrorCode;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -46,7 +49,7 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 
 	public RedisStreamItemReader(
 		RedisTemplate<String, String> redisTemplate,
-		@Value("${chat.flush.delay}") long blockMillis,
+		@Value("${chat.flush.interval}") long blockMillis,
 		@Value("${chat.flush.batch-size}") int batchSize) {
 		this.redisTemplate = redisTemplate;
 		this.blockMillis = blockMillis;
@@ -68,6 +71,18 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 	@Override
 	public void open(ExecutionContext executionContext) throws ItemStreamException {
 		this.buffer = null;
+	}
+
+	/**
+	 * Reader가 종료될 때 호출되어 내부 상태를 정리합니다.
+	 *
+	 * @throws ItemStreamException 종료 처리 중 예외 발생 시
+	 * @author 박찬병
+	 * @since 2025-05-27
+	 */
+	@Override
+	public void close() throws ItemStreamException {
+		pendingToAck.clear();
 	}
 
 	/**
@@ -107,8 +122,9 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 	 * @since 2025-05-26
 	 */
 	public void ackPending() {
-		if (pendingToAck.isEmpty())
+		if (pendingToAck.isEmpty()) {
 			return;
+		}
 		pendingToAck.stream()
 			.collect(Collectors.groupingBy(MapRecord::getStream))
 			.forEach((streamKey, recList) -> {
@@ -117,7 +133,6 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 					.toArray(RecordId[]::new);
 				redisTemplate.opsForStream().acknowledge(streamKey, GROUP, ids);
 			});
-		pendingToAck.clear();
 	}
 
 	/**
@@ -213,9 +228,12 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 			redisTemplate.opsForStream()
 				.createGroup(streamKey, ReadOffset.from("0"), GROUP);
 		} catch (Exception ex) {
-			if (!String.valueOf(ex.getMessage()).contains("BUSYGROUP")) {
-				log.error("스트림 {}에 대한 컨슈머 그룹 생성에 실패했습니다.", streamKey, ex);
+			if (String.valueOf(ex.getMessage()).contains("BUSYGROUP")) {
+				return;
 			}
+			log.error("스트림 {}에 대한 컨슈머 그룹 생성에 실패했습니다.", streamKey, ex);
+			throw new ChatBatchException(ChatBatchErrorCode.REDIS_GROUP_CREATE_FAILED, ex);
 		}
 	}
+
 }

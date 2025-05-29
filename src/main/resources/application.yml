@@ -53,6 +53,8 @@ spring:
       cron: "0 */1 * * * ?"
     article-embedding:
       cron: "0 */5 * * * ?"
+    view-count-sync:
+      cron: "0 0 0 * * ?"
   data:
     redis:
       host: ${REDIS_HOST:localhost}
@@ -81,6 +83,9 @@ news:
   index:
     name: news_index
     
+  viewcount:
+    valid-prefixes: KM,DA,KH
+
 management:
   endpoints:
     web:

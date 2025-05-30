@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.likelion.backendplus4.talkpick.batch.news.article.exception.ArticleCollectorException;
 import com.likelion.backendplus4.talkpick.batch.news.article.exception.error.ArticleCollectorErrorCode;
-import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.jpa.repository.NewsInfoJpaRepository;
+import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.adapter.jpa.repository.NewsInfoJpaRepository;
 import com.likelion.backendplus4.talkpick.batch.news.viewcount.infrastructure.item.ViewCountItem;
 
 import lombok.RequiredArgsConstructor;

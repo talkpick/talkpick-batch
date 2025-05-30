@@ -7,6 +7,8 @@ import com.likelion.backendplus4.talkpick.batch.common.exception.error.ErrorCode
 import com.likelion.backendplus4.talkpick.batch.common.response.ApiResponse;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.data.elasticsearch.BulkFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
@@ -131,6 +133,35 @@ public class GlobalExceptionHandler {
         );
     }
 
+    /**
+     * Elasticsearch Bulk 저장 실패 처리 핸들러
+     *
+     * 대량 색인(Bulk Index) 작업 중 발생한 오류에 대해,
+     * 실패한 각 문서의 ID와 상태, 에러 메시지를 로그로 출력한다.
+     *
+     * Elasticsearch 오류는 디버깅을 위해 내부 에러 내용을 상세히 보여줄 필요가 있기 때문에,
+     * 개별 실패 항목들을 모두 로그에 남기도록 구현하였다.
+     *
+     * @param ex Bulk 저장 도중 발생한 예외
+     * @return 내부 서버 오류에 해당하는 API 응답
+     * @author 함예정
+     * @since 2025-05-29
+     */
+    @ExceptionHandler(BulkFailureException.class)
+    public ResponseEntity<ApiResponse<Void>> handleElasticsearchBulkSaveException(BulkFailureException ex) {
+        ex.getFailedDocuments().forEach((id, failure) -> {
+            log.error("Failed to index id={} status={} \n == ERROR == \n {}",
+                id,
+                failure.status(),
+                failure.errorMessage());
+        });
+        return buildErrorResponse(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            INTERNAL_SERVER_ERROR_CODE.getCode(),
+            "Elastic Search Bulk Save 오류입니다.",
+            ex
+        );
+    }
 
     /**
      * 기타 모든 예외 처리

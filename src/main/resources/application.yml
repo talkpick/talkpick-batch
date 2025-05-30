@@ -29,11 +29,6 @@ spring:
       idle-timeout: 30000
       max-lifetime: 1800000
       connection-timeout: 30000
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:}
   jpa:
     database-platform: org.hibernate.dialect.MySQL8Dialect
     hibernate:
@@ -60,6 +55,12 @@ spring:
       cron: "0 */5 * * * ?"
     view-count-sync:
       cron: "0 0 0 * * ?"
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+
 
 log:
   rolling:
@@ -84,7 +85,7 @@ news:
     
   viewcount:
     valid-prefixes: KM,DA,KH
-    
+
 management:
   endpoints:
     web:
@@ -98,3 +99,8 @@ management:
         http:
           server:
             requests: 'true'
+
+chat:
+  flush:
+    interval: ${CHAT_BATCH_INTERVAL:30000}
+    batch-size: ${CHAT_BATCH_SIZE:100}

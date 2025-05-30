@@ -26,7 +26,7 @@ import jakarta.annotation.PostConstruct;
  *
  * @since 2025-05-10
  */
-//@Configuration
+@Configuration
 public class LogbackConfig {
 	@Value("${log.rolling.directory}")
 	private String LOG_DIRECTORY;

@@ -52,6 +52,8 @@ spring:
     article-collector:
       cron: "0 */1 * * * ?"
     article-embedding:
+      cron: "0 */3 * * * ?"
+    article-indexer:
       cron: "0 */5 * * * ?"
     view-count-sync:
       cron: "0 0 0 * * ?"

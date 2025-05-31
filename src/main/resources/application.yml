@@ -92,7 +92,10 @@ management:
     tags:
       application: talkpick-batch
     distribution:
+      percentiles:
+        spring.batch.job.execution: 0.50, 0.75, 0.95, 0.99
       percentiles-histogram:
+        spring.batch.job.execution: true
         http:
           server:
             requests: 'true'

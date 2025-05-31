@@ -11,18 +11,23 @@ import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.item.ItemStreamException;
 import org.springframework.batch.item.ItemStreamReader;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Range;
 import org.springframework.data.redis.connection.stream.Consumer;
 import org.springframework.data.redis.connection.stream.MapRecord;
+import org.springframework.data.redis.connection.stream.PendingMessage;
+import org.springframework.data.redis.connection.stream.PendingMessages;
 import org.springframework.data.redis.connection.stream.ReadOffset;
 import org.springframework.data.redis.connection.stream.RecordId;
 import org.springframework.data.redis.connection.stream.StreamOffset;
 import org.springframework.data.redis.connection.stream.StreamReadOptions;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SetOperations;
+import org.springframework.data.redis.core.StreamOperations;
 import org.springframework.stereotype.Component;
 
 import com.likelion.backendplus4.talkpick.batch.chat.exception.ChatBatchException;
 import com.likelion.backendplus4.talkpick.batch.chat.exception.error.ChatBatchErrorCode;
+import com.likelion.backendplus4.talkpick.batch.common.annotation.logging.EntryExitLog;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -45,6 +50,7 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 
 	private Iterator<MapRecord<String, String, String>> buffer;
 	private final RedisTemplate<String, String> redisTemplate;
+	private final StreamOperations<String, String, String> streamOperations;
 	private final List<MapRecord<String, String, String>> pendingToAck = new ArrayList<>();
 
 	public RedisStreamItemReader(
@@ -52,6 +58,7 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 		@Value("${chat.flush.interval}") long blockMillis,
 		@Value("${chat.flush.batch-size}") int batchSize) {
 		this.redisTemplate = redisTemplate;
+		this.streamOperations = redisTemplate.opsForStream();
 		this.blockMillis = blockMillis;
 		this.batchSize = batchSize;
 	}
@@ -71,6 +78,8 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 	@Override
 	public void open(ExecutionContext executionContext) throws ItemStreamException {
 		this.buffer = null;
+		claimOldPendingMessages();
+
 	}
 
 	/**
@@ -131,7 +140,7 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 				RecordId[] ids = recList.stream()
 					.map(MapRecord::getId)
 					.toArray(RecordId[]::new);
-				redisTemplate.opsForStream().acknowledge(streamKey, GROUP, ids);
+				streamOperations.acknowledge(streamKey, GROUP, ids);
 			});
 	}
 
@@ -177,7 +186,7 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 	 */
 	private List<MapRecord<String, String, String>> getMapRecords(StreamReadOptions opts,
 		List<StreamOffset<String>> offsets) {
-		return redisTemplate.opsForStream().read(Consumer.from(GROUP, CONSUMER),
+		return streamOperations.read(Consumer.from(GROUP, CONSUMER),
 			opts,
 			offsets.toArray(new StreamOffset[0])
 		);
@@ -225,14 +234,40 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 	 */
 	private void createGroupSafe(String streamKey) {
 		try {
-			redisTemplate.opsForStream()
-				.createGroup(streamKey, ReadOffset.from("0"), GROUP);
+			streamOperations.createGroup(streamKey, ReadOffset.from("0"), GROUP);
 		} catch (Exception ex) {
 			if (String.valueOf(ex.getMessage()).contains("BUSYGROUP")) {
 				return;
 			}
 			log.error("스트림 {}에 대한 컨슈머 그룹 생성에 실패했습니다.", streamKey, ex);
 			throw new ChatBatchException(ChatBatchErrorCode.REDIS_GROUP_CREATE_FAILED, ex);
+		}
+	}
+
+	@EntryExitLog
+	private void claimOldPendingMessages() {
+		Set<String> keys = streamKeys();
+		if (keys.isEmpty()) return;
+
+		for (String streamKey : keys) {
+			try {
+				PendingMessages pending = streamOperations
+					.pending(streamKey, Consumer.from(GROUP, CONSUMER), Range.unbounded(), 100L);
+
+				List<RecordId> idsList = new ArrayList<>();
+				for (PendingMessage pm : pending) {
+					idsList.add(pm.getId());
+				}
+				RecordId[] ids = idsList.toArray(new RecordId[0]);
+
+				if (ids.length > 0) {
+					List<MapRecord<String, String, String>> claimedRaw = streamOperations
+						.claim(streamKey, GROUP, CONSUMER, Duration.ofMillis(0), ids);
+					pendingToAck.addAll(claimedRaw);
+				}
+			} catch (Exception e) {
+				log.warn("Pending 메시지 클레임 실패: streamKey={}, error={}", streamKey, e.getMessage());
+			}
 		}
 	}
 

@@ -97,6 +97,7 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 	@Override
 	public void close() throws ItemStreamException {
 		pendingToAck.clear();
+		pendingReadIndex = 0;
 	}
 
 	/**
@@ -113,14 +114,6 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 	 */
 	@Override
 	public MapRecord<String, String, String> read() {
-		if (pendingReadIndex < pendingToAck.size()) {
-			MapRecord<String, String, String> record = pendingToAck.get(pendingReadIndex);
-			log.info("read(): pendingToAck에서 인덱스 {}로 조회, 전체 개수 = {}", pendingReadIndex, pendingToAck.size());
-			pendingReadIndex++;
-			return record;
-		}
-
-		pendingReadIndex = 0;
 		if (buffer == null || !buffer.hasNext()) {
 			List<MapRecord<String, String, String>> recs = fetchRecords(currentStreamKeys);
 			log.info("읽어온 recs = {}", recs.size());
@@ -157,7 +150,6 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 			});
 		// After acknowledging all pendingToAck entries, clear the list and reset index
 		pendingToAck.clear();
-		pendingReadIndex = 0;
 	}
 
 	/**
@@ -194,6 +186,7 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 						.claim(streamKey, GROUP, CONSUMER, Duration.ZERO, ids);
 					if (!claimedRaw.isEmpty()) {
 						pendingToAck.addAll(claimedRaw);
+						buffer = claimedRaw.iterator();
 					}
 				}
 			} catch (Exception e) {

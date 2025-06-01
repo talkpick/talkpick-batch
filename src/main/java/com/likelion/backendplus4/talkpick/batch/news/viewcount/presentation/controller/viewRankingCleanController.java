@@ -10,11 +10,9 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * Redis 정리 작업을 수동으로 실행할 수 있는 관리자용 컨트롤러입니다.
  *
- * @author 양병학
  * @since 2025-05-29 최초 작성
- * @modify 2025-06-01 양병학
- *  - 현재 news.info 패키지 구조에 맞게 이동
- *  - ViewRankingCleanupUseCase와 연결
+ * @modified 2025-06-01 현재 news.info 패키지 구조에 맞게 이동
+ *                      ViewRankingCleanupUseCase와 연결
  */
 @RestController
 @RequestMapping("/api/admin/news")
@@ -28,7 +26,7 @@ public class viewRankingCleanController {
      *
      * @return 실행 결과 메시지
      * @author 양병학
-     * @since 2025-05-29 최초 작성
+     * @since 2025-05-29
      */
     @PostMapping("/ranking/cleanup")
     public ResponseEntity<String> executeManualCleanup() {

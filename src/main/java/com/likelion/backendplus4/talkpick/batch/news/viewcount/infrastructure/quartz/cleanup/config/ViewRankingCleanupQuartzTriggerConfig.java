@@ -11,20 +11,20 @@ import org.springframework.context.annotation.Configuration;
 /**
  * Redis 정리 작업을 위한 Quartz Trigger 설정 클래스입니다.
  *
- * @since 2025-05-29 최초 작성
+ * @since 2025-05-29
  */
 @Configuration
 public class ViewRankingCleanupQuartzTriggerConfig {
 
     /**
      * Redis 정리 작업을 위한 Trigger를 생성합니다.
-     *
+     * <p>
      * 매일 새벽 2시에 실행됩니다.
      *
      * @param redisCleanupJobDetail Redis 정리 JobDetail
      * @return Redis 정리 Trigger
      * @author 양병학
-     * @since 2025-05-29 최초 작성
+     * @since 2025-05-29
      */
     @Bean
     public Trigger redisCleanupTrigger(@Qualifier("redisCleanupJobDetail") JobDetail redisCleanupJobDetail) {

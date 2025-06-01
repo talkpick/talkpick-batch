@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 /**
  * Redis 정리 작업을 위한 Quartz Job 설정 클래스입니다.
  *
- * @since 2025-05-29 최초 작성
+ * @since 2025-05-29
  */
 @Configuration
 public class ViewRankingCleanupQuartzJobConfig {
@@ -19,13 +19,16 @@ public class ViewRankingCleanupQuartzJobConfig {
      *
      * @return Redis 정리 JobDetail
      * @author 양병학
-     * @since 2025-05-29 최초 작성
+     * @modified 2025-06-01 양병학
+     * @since 2025-05-29
      */
     @Bean
     public JobDetail redisCleanupJobDetail() {
         return JobBuilder.newJob(ViewRankingCleanupJobExecutor.class)
                 .withIdentity("redisCleanupJob", "cleanup")
                 .withDescription("Redis 오래된 랭킹 데이터 정리 작업")
+                .usingJobData("manualEndpoint", "/api/admin/news/ranking/cleanup")
+                .usingJobData("jobDescription", "Redis 랭킹 데이터 정리")
                 .storeDurably()
                 .build();
     }

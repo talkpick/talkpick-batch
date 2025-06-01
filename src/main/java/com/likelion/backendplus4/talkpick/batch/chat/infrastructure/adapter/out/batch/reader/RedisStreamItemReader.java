@@ -12,6 +12,7 @@ import org.springframework.batch.item.ItemStreamException;
 import org.springframework.batch.item.ItemStreamReader;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Range;
+import org.springframework.data.redis.connection.RedisStreamCommands;
 import org.springframework.data.redis.connection.stream.Consumer;
 import org.springframework.data.redis.connection.stream.MapRecord;
 import org.springframework.data.redis.connection.stream.PendingMessage;
@@ -20,6 +21,7 @@ import org.springframework.data.redis.connection.stream.ReadOffset;
 import org.springframework.data.redis.connection.stream.RecordId;
 import org.springframework.data.redis.connection.stream.StreamOffset;
 import org.springframework.data.redis.connection.stream.StreamReadOptions;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SetOperations;
 import org.springframework.data.redis.core.StreamOperations;
@@ -50,6 +52,7 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 	private final RedisTemplate<String, String> redisTemplate;
 	private final StreamOperations<String, String, String> streamOperations;
 	private final List<MapRecord<String, String, String>> pendingToAck = new ArrayList<>();
+	private int pendingReadIndex = 0;
 
 	private Iterator<MapRecord<String, String, String>> buffer;;
 	private Set<String> currentStreamKeys;
@@ -110,7 +113,15 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 	 */
 	@Override
 	public MapRecord<String, String, String> read() {
-		if (null == buffer || !buffer.hasNext()) {
+		if (pendingReadIndex < pendingToAck.size()) {
+			MapRecord<String, String, String> record = pendingToAck.get(pendingReadIndex);
+			log.info("read(): pendingToAck에서 인덱스 {}로 조회, 전체 개수 = {}", pendingReadIndex, pendingToAck.size());
+			pendingReadIndex++;
+			return record;
+		}
+
+		pendingReadIndex = 0;
+		if (buffer == null || !buffer.hasNext()) {
 			List<MapRecord<String, String, String>> recs = fetchRecords(currentStreamKeys);
 			log.info("읽어온 recs = {}", recs.size());
 			if (recs.isEmpty()) {
@@ -144,6 +155,9 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 					.toArray(RecordId[]::new);
 				streamOperations.acknowledge(streamKey, GROUP, ids);
 			});
+		// After acknowledging all pendingToAck entries, clear the list and reset index
+		pendingToAck.clear();
+		pendingReadIndex = 0;
 	}
 
 	/**
@@ -160,7 +174,9 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 
 	@EntryExitLog
 	private void claimOldPendingMessages(Set<String> keys) {
-		if (keys.isEmpty()) return;
+		if (keys.isEmpty()) {
+			return;
+		}
 
 		for (String streamKey : keys) {
 			try {
@@ -175,8 +191,10 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 
 				if (ids.length > 0) {
 					List<MapRecord<String, String, String>> claimedRaw = streamOperations
-						.claim(streamKey, GROUP, CONSUMER, Duration.ofMillis(0), ids);
-					pendingToAck.addAll(claimedRaw);
+						.claim(streamKey, GROUP, CONSUMER, Duration.ZERO, ids);
+					if (!claimedRaw.isEmpty()) {
+						pendingToAck.addAll(claimedRaw);
+					}
 				}
 			} catch (Exception e) {
 				log.warn("Pending 메시지 클레임 실패: streamKey={}, error={}", streamKey, e.getMessage());

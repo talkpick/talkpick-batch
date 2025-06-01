@@ -47,11 +47,12 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 
 	private final int batchSize;
 	private final long blockMillis;
-
-	private Iterator<MapRecord<String, String, String>> buffer;
 	private final RedisTemplate<String, String> redisTemplate;
 	private final StreamOperations<String, String, String> streamOperations;
 	private final List<MapRecord<String, String, String>> pendingToAck = new ArrayList<>();
+
+	private Iterator<MapRecord<String, String, String>> buffer;;
+	private Set<String> currentStreamKeys;
 
 	public RedisStreamItemReader(
 		RedisTemplate<String, String> redisTemplate,
@@ -78,7 +79,8 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 	@Override
 	public void open(ExecutionContext executionContext) throws ItemStreamException {
 		this.buffer = null;
-		claimOldPendingMessages();
+		this.currentStreamKeys = streamKeys();
+		claimOldPendingMessages(this.currentStreamKeys);
 
 	}
 
@@ -97,7 +99,7 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 	/**
 	 * Redis 스트림에서 레코드를 순차적으로 읽어옵니다.
 	 *
-	 * 1. {@code buffer}가 비어있거나 더 이상 요소가 없으면 {@link #fetchRecords()}를 호출하여 새 레코드 묶음을 가져옵니다.
+	 * 1. {@code buffer}가 비어있거나 더 이상 요소가 없으면 {@link #fetchRecords(Set)}를 호출하여 새 레코드 묶음을 가져옵니다.
 	 * 2. 가져온 레코드가 없으면 {@code null}을 반환하여 Step이 종료되도록 합니다.
 	 * 3. 레코드가 존재하면 {@code pendingToAck}에 추가하고 {@code buffer}를 새 iterator로 초기화합니다.
 	 * 4. {@code buffer.next()}를 호출해 다음 레코드를 반환합니다.
@@ -109,7 +111,7 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 	@Override
 	public MapRecord<String, String, String> read() {
 		if (null == buffer || !buffer.hasNext()) {
-			List<MapRecord<String, String, String>> recs = fetchRecords();
+			List<MapRecord<String, String, String>> recs = fetchRecords(currentStreamKeys);
 			log.info("읽어온 recs = {}", recs.size());
 			if (recs.isEmpty()) {
 				return null;
@@ -145,6 +147,44 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 	}
 
 	/**
+	 * 사용 가능한 Redis 스트림 키들을 조회합니다.
+	 *
+	 * @return 스트림 키 세트
+	 * @author 박찬병
+	 * @since 2025-05-27
+	 */
+	private Set<String> streamKeys() {
+		return redisTemplate.keys(STREAM_KEY_PREFIX);
+	}
+
+
+	@EntryExitLog
+	private void claimOldPendingMessages(Set<String> keys) {
+		if (keys.isEmpty()) return;
+
+		for (String streamKey : keys) {
+			try {
+				PendingMessages pending = streamOperations
+					.pending(streamKey, Consumer.from(GROUP, CONSUMER), Range.unbounded(), 100L);
+
+				List<RecordId> idsList = new ArrayList<>();
+				for (PendingMessage pm : pending) {
+					idsList.add(pm.getId());
+				}
+				RecordId[] ids = idsList.toArray(new RecordId[0]);
+
+				if (ids.length > 0) {
+					List<MapRecord<String, String, String>> claimedRaw = streamOperations
+						.claim(streamKey, GROUP, CONSUMER, Duration.ofMillis(0), ids);
+					pendingToAck.addAll(claimedRaw);
+				}
+			} catch (Exception e) {
+				log.warn("Pending 메시지 클레임 실패: streamKey={}, error={}", streamKey, e.getMessage());
+			}
+		}
+	}
+
+	/**
 	 * 활성 스트림 키에서 새 레코드 묶음을 조회합니다.
 	 *
 	 * 1. {@link #streamKeys()}로 스트림 키 세트를 가져옵니다.
@@ -158,8 +198,7 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 	 * @author 박찬병
 	 * @since 2025-05-27
 	 */
-	private List<MapRecord<String, String, String>> fetchRecords() {
-		Set<String> keys = streamKeys();
+	private List<MapRecord<String, String, String>> fetchRecords(Set<String> keys) {
 		if (keys.isEmpty()) {
 			return List.of();
 		}
@@ -190,17 +229,6 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 			opts,
 			offsets.toArray(new StreamOffset[0])
 		);
-	}
-
-	/**
-	 * 사용 가능한 Redis 스트림 키들을 조회합니다.
-	 *
-	 * @return 스트림 키 세트
-	 * @author 박찬병
-	 * @since 2025-05-27
-	 */
-	private Set<String> streamKeys() {
-		return redisTemplate.keys(STREAM_KEY_PREFIX);
 	}
 
 	/**
@@ -244,31 +272,5 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 		}
 	}
 
-	@EntryExitLog
-	private void claimOldPendingMessages() {
-		Set<String> keys = streamKeys();
-		if (keys.isEmpty()) return;
-
-		for (String streamKey : keys) {
-			try {
-				PendingMessages pending = streamOperations
-					.pending(streamKey, Consumer.from(GROUP, CONSUMER), Range.unbounded(), 100L);
-
-				List<RecordId> idsList = new ArrayList<>();
-				for (PendingMessage pm : pending) {
-					idsList.add(pm.getId());
-				}
-				RecordId[] ids = idsList.toArray(new RecordId[0]);
-
-				if (ids.length > 0) {
-					List<MapRecord<String, String, String>> claimedRaw = streamOperations
-						.claim(streamKey, GROUP, CONSUMER, Duration.ofMillis(0), ids);
-					pendingToAck.addAll(claimedRaw);
-				}
-			} catch (Exception e) {
-				log.warn("Pending 메시지 클레임 실패: streamKey={}, error={}", streamKey, e.getMessage());
-			}
-		}
-	}
 
 }

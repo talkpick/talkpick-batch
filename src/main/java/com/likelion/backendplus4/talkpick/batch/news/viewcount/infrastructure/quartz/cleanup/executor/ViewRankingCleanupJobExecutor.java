@@ -53,27 +53,11 @@ public class ViewRankingCleanupJobExecutor implements Job {
      * @since 2025-06-01 최초 작성
      */
     private void executeJobWithErrorHandling() {
-        LocalDateTime startTime = recordJobStartTime();
-
         try {
             executeCleanupProcess();
-            recordJobSuccessCompletion(startTime);
         } catch (Exception e) {
-            handleJobExecutionFailure(startTime, e);
+            handleJobExecutionFailure(e);
         }
-    }
-
-    /**
-     * 작업 시작 시간을 기록하고 로그를 출력합니다.
-     *
-     * @return 작업 시작 시간
-     * @author 양병학
-     * @since 2025-06-01 최초 작성
-     */
-    private LocalDateTime recordJobStartTime() {
-        LocalDateTime startTime = LocalDateTime.now();
-        log.info("Redis 랭킹 정리 배치 작업을 시작합니다. 시작 시간: {}", startTime);
-        return startTime;
     }
 
     /**
@@ -86,21 +70,7 @@ public class ViewRankingCleanupJobExecutor implements Job {
      * @since 2025-06-01 최초 작성
      */
     private void executeCleanupProcess() {
-        log.debug("ViewRankingCleanupService를 통해 랭킹 정리 작업을 실행합니다.");
         viewRankingCleanupService.cleanupOldRankingKeys();
-    }
-
-    /**
-     * 작업 성공 완료를 기록하고 로그를 출력합니다.
-     *
-     * @param startTime 작업 시작 시간
-     * @author 양병학
-     * @since 2025-06-01 최초 작성
-     */
-    private void recordJobSuccessCompletion(LocalDateTime startTime) {
-        LocalDateTime endTime = LocalDateTime.now();
-        log.info("Redis 랭킹 정리 배치 작업이 성공적으로 완료되었습니다. " +
-                "시작 시간: {}, 종료 시간: {}", startTime, endTime);
     }
 
     /**
@@ -109,17 +79,13 @@ public class ViewRankingCleanupJobExecutor implements Job {
      * Quartz의 자동 재시도를 방지하기 위해 JobExecutionException을 발생시키지 않습니다.
      * 대신 수동 실행을 안내하는 로그를 출력합니다.
      *
-     * @param startTime 작업 시작 시간
      * @param exception 발생한 예외
      * @author 양병학
      * @since 2025-06-01 최초 작성
      */
-    private void handleJobExecutionFailure(LocalDateTime startTime, Exception exception) {
-        LocalDateTime failureTime = LocalDateTime.now();
-        log.error("Redis 랭킹 정리 배치 작업이 실패했습니다. " +
-                        "시작 시간: {}, 실패 시간: {}. " +
-                        "관리자 API 엔드포인트를 통한 수동 실행이 필요합니다.",
-                startTime, failureTime, exception);
+    private void handleJobExecutionFailure(Exception exception) {
+        log.error("Redis 랭킹 정리 작업이 실패했습니다. " +
+                "관리자 API 엔드포인트를 통한 수동 실행이 필요합니다.", exception);
 
         log.error("수동 실행 방법: POST /api/admin/news/ranking/cleanup");
     }

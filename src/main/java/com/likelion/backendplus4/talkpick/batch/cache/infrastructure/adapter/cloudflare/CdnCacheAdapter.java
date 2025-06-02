@@ -15,7 +15,7 @@ public class CdnCacheAdapter implements CacheResetPort {
 	private final CloudFlareRequester cloudFlareRequester;
 
 	@Override
-	public boolean purgePrefix(String prefix) {
+	public boolean purgePrefix(List<String> prefix) {
 		Map<String, Object> body = cloudFlareRequester.getBody("prefixes", prefix);
 		return cloudFlareRequester.sendResetRequest(body);
 	}

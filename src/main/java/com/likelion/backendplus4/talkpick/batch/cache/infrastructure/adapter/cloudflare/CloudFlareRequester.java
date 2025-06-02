@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -37,15 +38,12 @@ public class CloudFlareRequester {
 		return body;
 	}
 
-	public boolean sendResetRequest(Map<String, Object> body) {
+	public int sendResetRequest(Map<String, Object> body) {
 		String url = getUrl();
 		HttpHeaders headers = getHeaders();
 		HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
-		String result = (String) restTemplate.exchange(url, HttpMethod.POST, request, Map.class)
-			.getBody()
-			.get("success");
-
-		return result=="true" ? true : false;
+		HttpStatusCode statusCode = restTemplate.exchange(url, HttpMethod.POST, request, Map.class).getStatusCode();
+		return statusCode.value();
 	}
 
 

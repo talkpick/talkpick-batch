@@ -17,18 +17,23 @@ public class CdnCacheAdapter implements CacheResetPort {
 	@Override
 	public boolean purgePrefix(List<String> prefix) {
 		Map<String, Object> body = cloudFlareRequester.getBody("prefixes", prefix);
-		return cloudFlareRequester.sendResetRequest(body);
+		return responseBySendRequest(body);
 	}
+
+
 
 	@Override
 	public boolean purgeFile(List<String> fileUrls) {
 		Map<String, Object> body = cloudFlareRequester.getBody("files", fileUrls);
-		return cloudFlareRequester.sendResetRequest(body);
+		return responseBySendRequest(body);
 	}
 
 	@Override
 	public boolean purgeEverything() {
 		Map<String, Object> body = cloudFlareRequester.getBody("purge_everything", true);
-		return cloudFlareRequester.sendResetRequest(body);
+		return responseBySendRequest(body);
+	}
+	private boolean responseBySendRequest(Map<String, Object> body) {
+		return cloudFlareRequester.sendResetRequest(body) == 200 ? true : false;
 	}
 }

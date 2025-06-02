@@ -11,18 +11,25 @@ import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.item.ItemStreamException;
 import org.springframework.batch.item.ItemStreamReader;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Range;
+import org.springframework.data.redis.connection.RedisStreamCommands;
 import org.springframework.data.redis.connection.stream.Consumer;
 import org.springframework.data.redis.connection.stream.MapRecord;
+import org.springframework.data.redis.connection.stream.PendingMessage;
+import org.springframework.data.redis.connection.stream.PendingMessages;
 import org.springframework.data.redis.connection.stream.ReadOffset;
 import org.springframework.data.redis.connection.stream.RecordId;
 import org.springframework.data.redis.connection.stream.StreamOffset;
 import org.springframework.data.redis.connection.stream.StreamReadOptions;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SetOperations;
+import org.springframework.data.redis.core.StreamOperations;
 import org.springframework.stereotype.Component;
 
 import com.likelion.backendplus4.talkpick.batch.chat.exception.ChatBatchException;
 import com.likelion.backendplus4.talkpick.batch.chat.exception.error.ChatBatchErrorCode;
+import com.likelion.backendplus4.talkpick.batch.common.annotation.logging.EntryExitLog;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -42,16 +49,19 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 
 	private final int batchSize;
 	private final long blockMillis;
+	private final RedisTemplate<String, String> redisTemplate;
+	private final StreamOperations<String, String, String> streamOperations;
+	private final List<MapRecord<String, String, String>> pendingToAck = new ArrayList<>();
 
 	private Iterator<MapRecord<String, String, String>> buffer;
-	private final RedisTemplate<String, String> redisTemplate;
-	private final List<MapRecord<String, String, String>> pendingToAck = new ArrayList<>();
+	private Set<String> currentStreamKeys;
 
 	public RedisStreamItemReader(
 		RedisTemplate<String, String> redisTemplate,
 		@Value("${chat.flush.interval}") long blockMillis,
 		@Value("${chat.flush.batch-size}") int batchSize) {
 		this.redisTemplate = redisTemplate;
+		this.streamOperations = redisTemplate.opsForStream();
 		this.blockMillis = blockMillis;
 		this.batchSize = batchSize;
 	}
@@ -71,6 +81,8 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 	@Override
 	public void open(ExecutionContext executionContext) throws ItemStreamException {
 		this.buffer = null;
+		this.currentStreamKeys = streamKeys();
+		claimOldPendingMessages();
 	}
 
 	/**
@@ -99,7 +111,7 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 	 */
 	@Override
 	public MapRecord<String, String, String> read() {
-		if (null == buffer || !buffer.hasNext()) {
+		if (null == buffer|| !buffer.hasNext()) {
 			List<MapRecord<String, String, String>> recs = fetchRecords();
 			log.info("읽어온 recs = {}", recs.size());
 			if (recs.isEmpty()) {
@@ -131,9 +143,46 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 				RecordId[] ids = recList.stream()
 					.map(MapRecord::getId)
 					.toArray(RecordId[]::new);
-				redisTemplate.opsForStream().acknowledge(streamKey, GROUP, ids);
+				streamOperations.acknowledge(streamKey, GROUP, ids);
 			});
+		pendingToAck.clear();
 	}
+
+	/**
+	 * 사용 가능한 Redis 스트림 키들을 조회합니다.
+	 *
+	 * @return 스트림 키 세트
+	 * @author 박찬병
+	 * @since 2025-05-27
+	 */
+	private Set<String> streamKeys() {
+		return redisTemplate.keys(STREAM_KEY_PREFIX);
+	}
+
+	/**
+	 * 활성 스트림 키들에 대해 기존에 PENDING 상태로 남아 있는 메시지를 클레임하여 처리합니다.
+	 *
+	 * @author 박찬병
+	 * @since 2025-06-02
+	 */
+	@EntryExitLog
+	private void claimOldPendingMessages() {
+		if (null == currentStreamKeys || currentStreamKeys.isEmpty()) {
+			return;
+		}
+		for (String streamKey : currentStreamKeys) {
+			try {
+				RecordId[] ids = fetchPendingRecordIds(streamKey);
+				if (ids.length > 0) {
+					List<MapRecord<String, String, String>> claimedRaw = claimRecords(streamKey, ids);
+					processClaimedRecords(claimedRaw);
+				}
+			} catch (Exception e) {
+				log.warn("Pending 메시지 클레임 실패: streamKey={}, error={}", streamKey, e.getMessage());
+			}
+		}
+	}
+
 
 	/**
 	 * 활성 스트림 키에서 새 레코드 묶음을 조회합니다.
@@ -150,48 +199,65 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 	 * @since 2025-05-27
 	 */
 	private List<MapRecord<String, String, String>> fetchRecords() {
-		Set<String> keys = streamKeys();
-		if (keys.isEmpty()) {
+		if (currentStreamKeys.isEmpty()) {
 			return List.of();
 		}
-		keys.forEach(this::ensureGroup);
+		currentStreamKeys.forEach(this::ensureGroup);
 
-		List<StreamOffset<String>> offsets = new ArrayList<>(keys.size());
-		keys.forEach(k -> offsets.add(StreamOffset.create(k, ReadOffset.lastConsumed())));
+		List<StreamOffset<String>> offsets = new ArrayList<>(currentStreamKeys.size());
+		currentStreamKeys.forEach(k -> offsets.add(StreamOffset.create(k, ReadOffset.lastConsumed())));
 
 		StreamReadOptions opts = StreamReadOptions.empty()
-			.count((long) batchSize * keys.size())
+			.count((long) batchSize * currentStreamKeys.size())
 			.block(Duration.ofMillis(blockMillis / 2));
 
 		return getMapRecords(opts, offsets);
 	}
 
+
 	/**
-	 * 주어진 StreamReadOptions와 offsets로부터 MapRecord를 읽어 반환합니다.
+	 * 주어진 스트림 키에 대해 PENDING 메시지의 RecordId 배열을 조회하여 반환합니다.
 	 *
-	 * @param opts    스트림 읽기 옵션
-	 * @param offsets 읽기를 수행할 StreamOffset 리스트
-	 * @return 읽어온 MapRecord 리스트
+	 * @param streamKey 스트림 키
+	 * @return PENDING 메시지의 RecordId 배열
 	 * @author 박찬병
-	 * @since 2025-05-27
+	 * @since 2025-06-02
 	 */
-	private List<MapRecord<String, String, String>> getMapRecords(StreamReadOptions opts,
-		List<StreamOffset<String>> offsets) {
-		return redisTemplate.opsForStream().read(Consumer.from(GROUP, CONSUMER),
-			opts,
-			offsets.toArray(new StreamOffset[0])
-		);
+	private RecordId[] fetchPendingRecordIds(String streamKey) {
+		PendingMessages pending = streamOperations
+			.pending(streamKey, Consumer.from(GROUP, CONSUMER), Range.unbounded(), 100L);
+		List<RecordId> idsList = new ArrayList<>();
+		for (PendingMessage pm : pending) {
+			idsList.add(pm.getId());
+		}
+		return idsList.toArray(new RecordId[0]);
 	}
 
 	/**
-	 * 사용 가능한 Redis 스트림 키들을 조회합니다.
+	 * 주어진 스트림 키와 RecordId 배열을 사용하여 메시지를 클레임하고 반환합니다.
 	 *
-	 * @return 스트림 키 세트
+	 * @param streamKey 스트림 키
+	 * @param ids RecordId 배열
+	 * @return 클레임된 MapRecord 리스트
 	 * @author 박찬병
-	 * @since 2025-05-27
+	 * @since 2025-06-02
 	 */
-	private Set<String> streamKeys() {
-		return redisTemplate.keys(STREAM_KEY_PREFIX);
+	private List<MapRecord<String, String, String>> claimRecords(String streamKey, RecordId[] ids) {
+		return streamOperations.claim(streamKey, GROUP, CONSUMER, Duration.ZERO, ids);
+	}
+
+	/**
+	 * 클레임된 레코드를 pendingToAck에 추가하고 buffer를 설정합니다.
+	 *
+	 * @param claimedRaw 클레임된 MapRecord 리스트
+	 * @author 박찬병
+	 * @since 2025-06-02
+	 */
+	private void processClaimedRecords(List<MapRecord<String, String, String>> claimedRaw) {
+		if (!claimedRaw.isEmpty()) {
+			pendingToAck.addAll(claimedRaw);
+			buffer = claimedRaw.iterator();
+		}
 	}
 
 	/**
@@ -217,6 +283,23 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 	}
 
 	/**
+	 * 주어진 StreamReadOptions와 offsets로부터 MapRecord를 읽어 반환합니다.
+	 *
+	 * @param opts    스트림 읽기 옵션
+	 * @param offsets 읽기를 수행할 StreamOffset 리스트
+	 * @return 읽어온 MapRecord 리스트
+	 * @author 박찬병
+	 * @since 2025-05-27
+	 */
+	private List<MapRecord<String, String, String>> getMapRecords(StreamReadOptions opts,
+		List<StreamOffset<String>> offsets) {
+		return streamOperations.read(Consumer.from(GROUP, CONSUMER),
+			opts,
+			offsets.toArray(new StreamOffset[0])
+		);
+	}
+
+	/**
 	 * 스트림 키에 대해 컨슈머 그룹을 생성합니다. BUSYGROUP 예외는 무시합니다.
 	 *
 	 * @param streamKey 대상 스트림 키
@@ -225,8 +308,7 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 	 */
 	private void createGroupSafe(String streamKey) {
 		try {
-			redisTemplate.opsForStream()
-				.createGroup(streamKey, ReadOffset.from("0"), GROUP);
+			streamOperations.createGroup(streamKey, ReadOffset.from("0"), GROUP);
 		} catch (Exception ex) {
 			if (String.valueOf(ex.getMessage()).contains("BUSYGROUP")) {
 				return;
@@ -235,5 +317,6 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 			throw new ChatBatchException(ChatBatchErrorCode.REDIS_GROUP_CREATE_FAILED, ex);
 		}
 	}
+
 
 }

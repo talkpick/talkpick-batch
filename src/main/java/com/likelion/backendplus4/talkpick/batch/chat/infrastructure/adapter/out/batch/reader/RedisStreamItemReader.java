@@ -111,7 +111,7 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 	 */
 	@Override
 	public MapRecord<String, String, String> read() {
-		if (buffer == null || !buffer.hasNext()) {
+		if (null == buffer|| !buffer.hasNext()) {
 			List<MapRecord<String, String, String>> recs = fetchRecords();
 			log.info("읽어온 recs = {}", recs.size());
 			if (recs.isEmpty()) {
@@ -167,7 +167,7 @@ public class RedisStreamItemReader implements ItemStreamReader<MapRecord<String,
 	 */
 	@EntryExitLog
 	private void claimOldPendingMessages() {
-		if (currentStreamKeys == null || currentStreamKeys.isEmpty()) {
+		if (null == currentStreamKeys || currentStreamKeys.isEmpty()) {
 			return;
 		}
 		for (String streamKey : currentStreamKeys) {

@@ -1,4 +1,4 @@
-package com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.adapter.cloudflare;
+package com.likelion.backendplus4.talkpick.batch.cache.infrastructure.adapter.cloudflare;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -37,13 +37,15 @@ public class CloudFlareRequester {
 		return body;
 	}
 
-	public ResponseEntity<Map> sendRequest(Map<String, Object> body) {
+	public boolean sendResetRequest(Map<String, Object> body) {
 		String url = getUrl();
 		HttpHeaders headers = getHeaders();
 		HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
-		ResponseEntity<Map> response =
-			restTemplate.exchange(url, HttpMethod.POST, request, Map.class);
-		return response;
+		String result = (String) restTemplate.exchange(url, HttpMethod.POST, request, Map.class)
+			.getBody()
+			.get("success");
+
+		return result=="true" ? true : false;
 	}
 
 

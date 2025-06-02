@@ -101,3 +101,7 @@ chat:
   flush:
     interval: ${CHAT_BATCH_INTERVAL:30000}
     batch-size: ${CHAT_BATCH_SIZE:100}
+
+cloudflare:
+  api-token: ${API_TOKEN:token}
+  zone-id: ${ZONE_ID:zone}

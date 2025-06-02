@@ -12,6 +12,9 @@ import org.springframework.batch.item.ItemWriter;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 
+import com.likelion.backendplus4.talkpick.batch.cache.application.port.in.CacheUseCase;
+import com.likelion.backendplus4.talkpick.batch.cache.application.port.out.CacheResetPort;
+import com.likelion.backendplus4.talkpick.batch.cache.infrastructure.adapter.cloudflare.CdnCacheAdapter;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.adapter.jpa.entity.ArticleEntity;
 import com.likelion.backendplus4.talkpick.batch.news.article.infrastructure.adapter.jpa.repository.NewsInfoJpaRepository;
 
@@ -39,6 +42,7 @@ import static java.util.Map.entry;
 public class ArticleListWriter implements ItemWriter<List<ArticleEntity>> {
 
 	private final NewsInfoJpaRepository newsInfoJpaRepository;
+	private final CacheUseCase cacheUseCase;
 	private static final String PARAGRAPH_BREAK = "PARAGRAPH_BREAK";
 
 	/**
@@ -57,6 +61,11 @@ public class ArticleListWriter implements ItemWriter<List<ArticleEntity>> {
 			.peek(this::processAndSerializeDescription)
 			.filter(item -> !newsInfoJpaRepository.existsByLink(item.getLink()))
 			.forEach(item -> {saveItem(item, savedCount);});
+
+		int saved = savedCount.get();
+		if(saved > 0 ){
+			cacheUseCase.clearCacheByLatestNews();
+		}
 
 		log.info("새로 저장된 뉴스 개수: {}", savedCount.get());
 	}

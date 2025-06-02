@@ -1,5 +1,7 @@
 package com.likelion.backendplus4.talkpick.batch.cache.application.service;
 
+import java.util.ArrayList;
+
 import org.springframework.stereotype.Service;
 
 import com.likelion.backendplus4.talkpick.batch.cache.application.port.in.CacheUseCase;
@@ -15,6 +17,9 @@ public class CacheService implements CacheUseCase {
 
 	@Override
 	public boolean clearCacheByLatestNews(){
-		return cacheResetPort.purgePrefix(LATEST_NEWS_PREFIX);
+		ArrayList<String> prefix = new ArrayList<>();
+		prefix.add(LATEST_NEWS_PREFIX);
+
+		return cacheResetPort.purgePrefix(prefix);
 	}
 }

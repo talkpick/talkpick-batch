@@ -12,14 +12,13 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class CacheService implements CacheUseCase {
-	private static final String LATEST_NEWS_PREFIX = "https://talkpick.techlog.dev/api/public/news/latest";
+	private static final String LATEST_NEWS_PREFIX = "https://talkpick.techlog.dev/api/public/news/latest?size=5";
 	private final CacheResetPort cacheResetPort;
 
 	@Override
 	public boolean clearCacheByLatestNews(){
 		ArrayList<String> prefix = new ArrayList<>();
 		prefix.add(LATEST_NEWS_PREFIX);
-
-		return cacheResetPort.purgePrefix(prefix);
+		return cacheResetPort.purgeFile(prefix);
 	}
 }

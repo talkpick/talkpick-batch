@@ -19,7 +19,6 @@ public class CacheService implements CacheUseCase {
 	public boolean clearCacheByLatestNews(){
 		ArrayList<String> prefix = new ArrayList<>();
 		prefix.add(LATEST_NEWS_PREFIX);
-
 		return cacheResetPort.purgeFile(prefix);
 	}
 }

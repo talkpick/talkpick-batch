@@ -4,13 +4,11 @@ import com.likelion.backendplus4.talkpick.batch.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 @Tag(
 	name = "View Count Sync",
 	description = "Redis 조회수 데이터를 DB에 동기화하는 API"
 )
-@RequestMapping("/news/viewcount")
 public interface ViewCountSyncControllerDocs {
 
 	@Operation(

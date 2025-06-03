@@ -5,13 +5,11 @@ import com.likelion.backendplus4.talkpick.batch.news.article.application.service
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 @Tag(
 	name = "Article Collector",
 	description = "뉴스 RSS 수집 스케줄러 시작/정지 API"
 )
-@RequestMapping("/news/collector")
 public interface ArticleCollectorControllerDocs {
 
 	@Operation(

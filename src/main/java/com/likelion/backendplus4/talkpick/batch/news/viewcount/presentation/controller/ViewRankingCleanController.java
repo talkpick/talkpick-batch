@@ -1,6 +1,8 @@
 package com.likelion.backendplus4.talkpick.batch.news.viewcount.presentation.controller;
 
 import com.likelion.backendplus4.talkpick.batch.news.viewcount.application.port.in.ViewRankingCleanupUseCase;
+import com.likelion.backendplus4.talkpick.batch.news.viewcount.presentation.controller.docs.ViewRankingCleanControllerDocs;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/admin/news")
 @RequiredArgsConstructor
-public class viewRankingCleanController {
+public class ViewRankingCleanController implements ViewRankingCleanControllerDocs {
 
     private final ViewRankingCleanupUseCase viewRankingCleanupUseCase;
 
@@ -28,6 +30,7 @@ public class viewRankingCleanController {
      * @author 양병학
      * @since 2025-05-29
      */
+    @Override
     @PostMapping("/ranking/cleanup")
     public ResponseEntity<String> executeManualCleanup() {
         viewRankingCleanupUseCase.cleanupOldRankingKeys();

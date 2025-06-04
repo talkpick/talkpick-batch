@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.likelion.backendplus4.talkpick.batch.common.response.ApiResponse;
 import com.likelion.backendplus4.talkpick.batch.news.viewcount.application.port.in.ViewCountSyncUseCase;
+import com.likelion.backendplus4.talkpick.batch.news.viewcount.presentation.controller.docs.ViewCountSyncControllerDocs;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/news/viewcount")
-public class ViewCountSyncController {
+public class ViewCountSyncController implements ViewCountSyncControllerDocs {
 
     private final ViewCountSyncUseCase viewCountSyncUseCase;
 
@@ -35,6 +36,7 @@ public class ViewCountSyncController {
      * @return 성공 응답
      * @since 2025-05-25
      */
+    @Override
     @PostMapping("/sync")
     public ResponseEntity<ApiResponse<String>> syncViewCount() {
 

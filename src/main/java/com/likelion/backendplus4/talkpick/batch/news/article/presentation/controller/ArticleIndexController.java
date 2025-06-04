@@ -9,6 +9,7 @@ import com.likelion.backendplus4.talkpick.batch.common.annotation.logging.EntryE
 import com.likelion.backendplus4.talkpick.batch.common.annotation.logging.TimeTracker;
 import com.likelion.backendplus4.talkpick.batch.common.response.ApiResponse;
 import com.likelion.backendplus4.talkpick.batch.news.article.application.port.in.NewsIndexUseCase;
+import com.likelion.backendplus4.talkpick.batch.news.article.presentation.controller.docs.ArticleIndexControllerDocs;
 
 import lombok.RequiredArgsConstructor;
 
@@ -21,7 +22,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/news")
 @RequiredArgsConstructor
-public class ArticleIndexController {
+public class ArticleIndexController implements ArticleIndexControllerDocs {
 
 	private final NewsIndexUseCase indexUseCase;
 
@@ -36,6 +37,7 @@ public class ArticleIndexController {
 	 */
 	@EntryExitLog
 	@TimeTracker
+	@Override
 	@PostMapping("/index")
 	public ResponseEntity<ApiResponse<Void>> indexAllNews() {
 		indexUseCase.indexAllNewsInfo();

@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.likelion.backendplus4.talkpick.batch.common.response.ApiResponse;
 import com.likelion.backendplus4.talkpick.batch.news.article.application.port.in.ArticleCollectorUseCase;
 import com.likelion.backendplus4.talkpick.batch.news.article.application.service.dto.ArticleCollectorStatusResponse;
+import com.likelion.backendplus4.talkpick.batch.news.article.presentation.controller.docs.ArticleCollectorControllerDocs;
 
 import lombok.RequiredArgsConstructor;
 
@@ -22,7 +23,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/news/collector")
-public class ArticleCollectorController {
+public class ArticleCollectorController implements ArticleCollectorControllerDocs {
 	private final ArticleCollectorUseCase articleCollectorUsecase;
 
 	/**
@@ -32,6 +33,7 @@ public class ArticleCollectorController {
 	 * @since 2025-05-10
 	 * @author 함예정
 	 */
+	@Override
 	@PostMapping("/start")
 	public ResponseEntity<ApiResponse<ArticleCollectorStatusResponse>> start() {
 		return success(articleCollectorUsecase.start());
@@ -44,6 +46,7 @@ public class ArticleCollectorController {
 	 * @since 2025-05-10
 	 * @author 함예정
 	 */
+	@Override
 	@DeleteMapping("/stop")
 	public ResponseEntity<ApiResponse<ArticleCollectorStatusResponse>> stop() {
 		return success(articleCollectorUsecase.stop());

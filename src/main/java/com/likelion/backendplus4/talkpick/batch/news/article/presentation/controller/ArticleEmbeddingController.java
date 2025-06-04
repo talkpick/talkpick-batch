@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.likelion.backendplus4.talkpick.batch.common.response.ApiResponse;
 import com.likelion.backendplus4.talkpick.batch.news.article.application.port.out.NewsEmbedUseCase;
+import com.likelion.backendplus4.talkpick.batch.news.article.presentation.controller.docs.ArticleEmbeddingControllerDocs;
 
 import lombok.RequiredArgsConstructor;
 
@@ -21,7 +22,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/news")
-public class ArticleEmbeddingController {
+public class ArticleEmbeddingController implements ArticleEmbeddingControllerDocs {
 	private final NewsEmbedUseCase newsEmbedUseCase;
 
 	/**
@@ -31,6 +32,7 @@ public class ArticleEmbeddingController {
 	 * @author 함예정
 	 * @since 2025-05-29
 	 */
+	@Override
 	@PostMapping("/embed")
 	public ResponseEntity<ApiResponse<Void>> indexAllNews() {
 		newsEmbedUseCase.embedAllNewsInfo();
